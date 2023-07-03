@@ -1,5 +1,6 @@
 <?php namespace Layerok\BaseCode\Events;
 
+use Illuminate\Support\Str;
 use Layerok\Basecode\Classes\Receipt;
 use Layerok\PosterPos\Classes\PosterProducts;
 use Layerok\PosterPos\Classes\PosterUtils;

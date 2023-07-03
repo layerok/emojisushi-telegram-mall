@@ -45,7 +45,7 @@ return [
             "add_sticks_question" => "Бажаєте додати палички до замовлення?",
             "type_delivery_address" => "Введіть адресу доставки",
             "type_your_name" => "Введіть Ваше ім'я",
-            "type_your_phone" => "Введіть Ваш телефон",
+            "type_your_phone" => "Введіть Ваш телефон в форматі +380xxxxxxxxx",
             "add_sticks" => "Додайте бажану кількість паличок",
             "try_again" => "Спробуйте знову"
         ],
