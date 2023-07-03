@@ -5,10 +5,8 @@ use Layerok\TgMall\Classes\Boot\Events;
 use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Events\TgMallOrderHandler;
 use Layerok\TgMall\Models\File as TelegramFile;
-use OFFLINE\Mall\Models\Product;
 use System\Classes\PluginBase;
 use System\Models\File as SystemFile;
-use Telegram\Bot\FileUpload\InputFile;
 use Telegram\Bot\Objects\Message;
 use Event;
 
@@ -29,12 +27,6 @@ class Plugin extends PluginBase
 
         SystemFile::extend(function($model) {
             $model->hasOne['tg'] = [TelegramFile::class, 'key' => 'system_file_id'];
-
-            $model->addDynamicMethod('getTelegramFileId', function () use ($model) {
-                return optional($model->tg)->file_id ?
-                    $model->tg->file_id :
-                    InputFile::create($model->path);
-            });
 
             $model->addDynamicMethod('setTelegramFileId', function (Message $response) use ($model) {
 

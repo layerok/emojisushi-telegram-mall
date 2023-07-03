@@ -8,6 +8,7 @@ use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Classes\Traits\Warn;
 use OFFLINE\Mall\Models\CartProduct;
 use OFFLINE\Mall\Models\Product;
+use Telegram\Bot\FileUpload\InputFile;
 use Telegram\Bot\Keyboard\Keyboard;
 
 class CartHandler extends Handler
@@ -162,26 +163,32 @@ class CartHandler extends Handler
 
         $keyboard = $markup->getKeyboard();
 
-        if (is_null($cartProduct->product->image)) {
-            //  У товара нет изображения
+        $image = $cartProduct->product->image;
+
+        if(isset($image->tg->file_id)) {
+            $response = $this->replyWithPhoto([
+                'photo' => $image->tg->file_id,
+                'caption' => $caption,
+                'reply_markup' => $keyboard,
+                'parse_mode' => 'html',
+            ]);
+
+            $image->setTelegramFileId($response);
+        } else if(isset($image->path)) {
+            $this->replyWithPhoto([
+                'photo' => InputFile::create($image->path),
+                'caption' => $caption,
+                'reply_markup' => $keyboard,
+                'parse_mode' => 'html',
+            ]);
+        } else {
             $this->replyWithMessage([
                 'text' => $caption,
                 'reply_markup' => $keyboard,
                 'parse_mode' => 'html',
             ]);
-            return;
         }
 
-        $image = $cartProduct->product->image;
-
-        $response = $this->replyWithPhoto([
-            'photo' => $image->getTelegramFileId(),
-            'caption' => $caption,
-            'reply_markup' => $keyboard,
-            'parse_mode' => 'html',
-        ]);
-
-        $image->setTelegramFileId($response);
     }
 
     public function editCartProductMessage(CartProduct $cartProduct)
