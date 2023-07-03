@@ -3,22 +3,18 @@ namespace Layerok\TgMall;
 
 use Layerok\TgMall\Classes\Boot\Events;
 use Layerok\TgMall\Classes\Traits\Lang;
+use Layerok\TgMall\Events\TgMallOrderHandler;
 use Layerok\TgMall\Models\File as TelegramFile;
 use Layerok\TgMall\Models\User as TelegramUser;
 
-use OFFLINE\Mall\Classes\Utils\Money;
-use OFFLINE\Mall\Models\Cart;
-use OFFLINE\Mall\Models\CartProduct;
-use OFFLINE\Mall\Models\Currency;
 use OFFLINE\Mall\Models\Customer;
 use OFFLINE\Mall\Models\Product;
 use System\Classes\PluginBase;
 use System\Models\File as SystemFile;
 use Telegram\Bot\FileUpload\InputFile;
 use Telegram\Bot\Objects\Message;
-use Request;
-use Validator;
 use Event;
+
 class Plugin extends PluginBase
 {
     public $require = ['OFFLINE.Mall', 'Layerok.BaseCode'];
@@ -26,6 +22,7 @@ class Plugin extends PluginBase
 
     public function boot() {
         Events::boot();
+        Event::subscribe(new TgMallOrderHandler());
     }
 
     public function register()

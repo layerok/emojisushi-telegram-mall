@@ -1,9 +1,7 @@
 <?php namespace Layerok\BaseCode;
 
 use Backend;
-use Layerok\BaseCode\Events\TgMallOrderHandler;
 use System\Classes\PluginBase;
-use Event;
 use Validator;
 /**
  * BaseCode Plugin Information File
@@ -52,7 +50,6 @@ class Plugin extends PluginBase
             return preg_match($regex, $value);
         });
 
-        Event::subscribe(new TgMallOrderHandler());
     }
 
     /**

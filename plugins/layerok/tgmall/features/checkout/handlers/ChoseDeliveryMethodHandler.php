@@ -1,10 +1,10 @@
 <?php
 
 namespace Layerok\TgMall\Features\Checkout\Handlers;
+
 use Layerok\TgMall\Classes\Callbacks\CallbackQueryBus;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Classes\Traits\Lang;
-use Event;
 use Layerok\TgMall\Features\Checkout\Keyboards\SticksKeyboard;
 use Layerok\TgMall\Features\Checkout\Messages\OrderDeliveryAddressHandler;
 use OFFLINE\Mall\Models\ShippingMethod;
@@ -14,7 +14,6 @@ class ChoseDeliveryMethodHandler extends Handler
     use Lang;
 
     protected $name = "chose_delivery_method";
-
 
     public function run()
     {
@@ -43,6 +42,6 @@ class ChoseDeliveryMethodHandler extends Handler
         }
 
         CallbackQueryBus::instance()->make('wish_to_leave_comment', []);
-        
+
     }
 }

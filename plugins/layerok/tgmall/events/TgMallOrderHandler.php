@@ -1,6 +1,5 @@
-<?php namespace Layerok\BaseCode\Events;
+<?php namespace Layerok\TgMall\Events;
 
-use Illuminate\Support\Str;
 use Layerok\Basecode\Classes\Receipt;
 use Layerok\PosterPos\Classes\PosterProducts;
 use Layerok\PosterPos\Classes\PosterUtils;
