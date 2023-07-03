@@ -40,9 +40,7 @@ class OrderNameHandler extends AbstractMessageHandler
 
     public function handle()
     {
-        $this->getCustomer()->firstname = $this->text;
-        $this->getCustomer()->save();
-
+        // todo: remember user name
         if (isset($this->getTelegramUser()->phone)) {
 
             $k = new IsRightPhoneKeyboard();

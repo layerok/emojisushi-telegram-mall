@@ -6,10 +6,11 @@ use Layerok\PosterPos\Classes\PosterUtils;
 use Layerok\PosterPos\Models\Spot;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Classes\Traits\Lang;
-use Layerok\TgMall\Classes\Utils\CheckoutUtils;
 use Log;
 use OFFLINE\Mall\Classes\Utils\Money;
 use OFFLINE\Mall\Models\Currency;
+use OFFLINE\Mall\Models\PaymentMethod;
+use OFFLINE\Mall\Models\ShippingMethod;
 use poster\src\PosterApi;
 use Telegram\Bot\Api;
 
@@ -21,17 +22,21 @@ class TgMallOrderHandler {
 
         $events->listen('tgmall.order.preconfirm.receipt', function(Handler $handler) {
             $state = $handler->getState();
-            $customer = $handler->getCustomer();
+            $user = $handler->getTelegramUser();
             $cart = $handler->getCart();
-            $products = CheckoutUtils::getProducts($cart, $state);
-            $phone = CheckoutUtils::getPhone($customer);
-            $firstName = CheckoutUtils::getFirstName($customer);
-            $lastName = CheckoutUtils::getLastName($customer);
-            $address = CheckoutUtils::getCLientAddress($state);
-            $change = CheckoutUtils::getChange($state);
-            $comment = CheckoutUtils::getComment($state);
-            $payment_method_name = CheckoutUtils::getPaymentMethodName($state);
-            $delivery_method_name = CheckoutUtils::getDeliveryMethodName($state);
+            $products = $cart->products()->get();
+            $phone = $user['phone'];
+            $firstName = $user->firstname;
+            $lastName = $user->lastname;
+            $address =  $state->getOrderInfoAddress();;
+            $change = $state->getOrderInfoChange();
+            $comment = $state->getOrderInfoComment();
+
+            $payment_method = PaymentMethod::find($state->getOrderInfoPaymentMethodId());
+            $payment_method_name = optional($payment_method)->name;
+            $delivery = ShippingMethod::find($state->getOrderInfoDeliveryMethodId());
+            $delivery_method_name =  optional($delivery)->name;
+
             $sticks = $state->getOrderInfoSticksCount();
             $spot_id = $state->getSpotId();
             $spot = Spot::find($spot_id);
@@ -70,17 +75,21 @@ class TgMallOrderHandler {
 
         $events->listen('tgmall.order.confirmed', function(Handler $handler) {
             $state = $handler->getState();
-            $customer = $handler->getCustomer();
+            $user = $handler->getTelegramUser();
             $cart = $handler->getCart();
-            $products = CheckoutUtils::getProducts($cart, $state);
-            $phone = CheckoutUtils::getPhone($customer);
-            $firstName = CheckoutUtils::getFirstName($customer);
-            $lastName = CheckoutUtils::getLastName($customer);
-            $address = CheckoutUtils::getCLientAddress($state);
-            $change = CheckoutUtils::getChange($state);
-            $comment = CheckoutUtils::getComment($state);
-            $payment_method_name = CheckoutUtils::getPaymentMethodName($state);
-            $delivery_method_name = CheckoutUtils::getDeliveryMethodName($state);
+            $products = $cart->products()->get();
+            $phone = $user->phone;
+            $firstName = $user->firstname;
+            $lastName = $user->lastname;
+            $address = $state->getOrderInfoAddress();
+            $change = $state->getOrderInfoChange();
+            $comment = $state->getOrderInfoComment();
+
+            $payment_method = PaymentMethod::find($state->getOrderInfoPaymentMethodId());
+            $payment_method_name = optional($payment_method)->name;
+            $delivery = ShippingMethod::find($state->getOrderInfoDeliveryMethodId());
+            $delivery_method_name =  optional($delivery)->name;
+
             $sticks = $state->getOrderInfoSticksCount();
             $spot_id = $state->getSpotId();
             $spot = Spot::find($spot_id);

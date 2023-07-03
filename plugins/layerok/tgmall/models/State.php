@@ -72,6 +72,16 @@ class State extends Model
         $this->setStateValue('cart_count_msg', $info);
     }
 
+    public function setSession($sessionId)
+    {
+        $this->setStateValue('session', $sessionId);
+    }
+
+    public function getSession()
+    {
+        return $this->getStateValue('session');
+    }
+
     public function getSpotId() {
         return $this->getStateValue('spot_id');
     }
@@ -226,10 +236,4 @@ class State extends Model
     {
         $this->setOrderInfoValue('change', $value);
     }
-
-    public function getCustomer() {
-        return $this->user->customer;
-    }
-
-
 }

@@ -5,9 +5,6 @@ use Layerok\TgMall\Classes\Boot\Events;
 use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Events\TgMallOrderHandler;
 use Layerok\TgMall\Models\File as TelegramFile;
-use Layerok\TgMall\Models\User as TelegramUser;
-
-use OFFLINE\Mall\Models\Customer;
 use OFFLINE\Mall\Models\Product;
 use System\Classes\PluginBase;
 use System\Models\File as SystemFile;
@@ -65,10 +62,6 @@ class Plugin extends PluginBase
                 $telegramFile->save();
 
             });
-        });
-
-        Customer::extend(function($model) {
-            $model->hasOne['tg'] = [TelegramUser::class];
         });
 
         Product::extend(function($model) {

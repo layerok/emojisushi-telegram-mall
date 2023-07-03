@@ -89,10 +89,6 @@ abstract class Handler implements HandlerInterface
         return $this;
     }
 
-    public function getCustomer() {
-        return $this->telegramUser->customer;
-    }
-
     public function getTelegramUser(): TelegramUser
     {
         return $this->telegramUser;
@@ -108,7 +104,7 @@ abstract class Handler implements HandlerInterface
         if(isset($this->cart)) {
             return $this->cart;
         }
-        return $this->cart = Cart::byUser($this->telegramUser->customer->user);
+        return $this->cart = Cart::bySession();
     }
 
     public function getChatId()
@@ -118,14 +114,10 @@ abstract class Handler implements HandlerInterface
 
     public function deleteMessage($msg_id)
     {
-        try {
-            $this->telegram->deleteMessage([
-                'chat_id' => $this->getChatId(),
-                'message_id' => $msg_id
-            ]);
-        } catch (\Exception $e) {
-            \Log::warning("Caught Exception ('{$e->getMessage()}')\n{$e}\n");
-        }
+        $this->telegram->deleteMessage([
+            'chat_id' => $this->getChatId(),
+            'message_id' => $msg_id
+        ]);
     }
 
     public function editMessageText($msg_id, $params = [])
@@ -136,12 +128,7 @@ abstract class Handler implements HandlerInterface
         ];
 
         $params = array_merge($base, $params);
-
-        try {
-            $this->telegram->editMessageText($params);
-        } catch (\Exception $e) {
-            \Log::warning("Caught Exception ('{$e->getMessage()}')\n{$e}\n");
-        }
+        $this->telegram->editMessageText($params);
     }
 
     public function editMessageReplyMarkup($msg_id, $params = [])
@@ -153,11 +140,8 @@ abstract class Handler implements HandlerInterface
 
         $params = array_merge($base, $params);
 
-        try {
-            $this->telegram->editMessageReplyMarkup($params);
-        } catch (\Exception $e) {
-            \Log::warning("Caught Exception ('{$e->getMessage()}')\n{$e}\n");
-        }
+        $this->telegram->editMessageReplyMarkup($params);
+
     }
 
     /**

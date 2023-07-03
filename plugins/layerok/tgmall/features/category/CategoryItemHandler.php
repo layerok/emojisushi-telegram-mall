@@ -12,6 +12,7 @@ use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Classes\Traits\Warn;
 use OFFLINE\Mall\Models\Category as CategoryModel;
 use Config;
+use Telegram\Bot\FileUpload\InputFile;
 
 class CategoryItemHandler extends Handler
 {
@@ -74,14 +75,12 @@ class CategoryItemHandler extends Handler
         if ($this->arguments['page'] > 1) {
             $deleteMsg = $this->getState()->getDeleteMsgInCategory();
             if ($deleteMsg) {
-                try {
-                    $this->telegram->deleteMessage([
-                        'chat_id' => $this->getChatId(),
-                        'message_id' => $deleteMsg['id']
-                    ]);
-                } catch (\Exception $e) {
-                    \Log::warning("Caught Exception ('{$e->getMessage()}')\n{$e}\n");
-                }
+
+                $this->telegram->deleteMessage([
+                    'chat_id' => $this->getChatId(),
+                    'message_id' => $deleteMsg['id']
+                ]);
+
                 $this->getState()->setDeleteMsgInCategory(null);
             }
         }
@@ -133,10 +132,16 @@ class CategoryItemHandler extends Handler
         ]);
 
         $caption = $product->getCaptionForTelegram();
+        $productImage = $product->image;
 
-        if (!is_null($product->image)) {
+        $pathOrId = optional($productImage->tg)->file_id ?
+            $productImage->tg->file_id :
+            InputFile::create($productImage->path);
+
+
+        if ($pathOrId) {
             $response = $this->replyWithPhoto([
-                'photo' => $product->image->getTelegramFileId(),
+                'photo' => $pathOrId,
                 'caption' => $caption,
                 'reply_markup' => $markup->getKeyboard(),
                 'parse_mode' => 'html',

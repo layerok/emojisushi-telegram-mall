@@ -1,10 +1,8 @@
 <?php namespace Layerok\TgMall\Classes\Messages;
 
-use Layerok\TgMall\Classes\Constants;
 use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Models\State;
 use OFFLINE\Mall\Models\Cart;
-use OFFLINE\Mall\Models\Customer;
 use Telegram\Bot\Api;
 use Telegram\Bot\Objects\Update;
 
@@ -23,9 +21,6 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
 
     protected $text;
 
-    /** @var Customer */
-    protected $customer;
-
     /** @var Cart */
     protected $cart;
 
@@ -43,7 +38,7 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
         $this->chat = $this->update->getChat();
         $this->text = $this->update->getMessage()->text;
 
-        $this->cart = Cart::byUser($this->getCustomer()->user);
+        $this->cart = Cart::bySession();
     }
 
 
@@ -65,10 +60,6 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
         return $this->getTelegramUser()->chat_id;
     }
 
-    public function getCustomer() {
-        return $this->state->getCustomer();
-    }
-
     public function getTelegramUser() {
         return $this->state->user;
     }
@@ -79,14 +70,9 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
     }
 
     public function sendMessage($params) {
-        try {
-            $this->telegram->sendMessage(
-                array_merge($params, ['chat_id' => $this->getChatId()])
-            );
-        } catch (\Exception $e) {
-            \Log::warning("Caught Exception ('{$e->getMessage()}')\n{$e}\n");
-        }
-
+        $this->telegram->sendMessage(
+            array_merge($params, ['chat_id' => $this->getChatId()])
+        );
     }
 
     abstract public function handle();

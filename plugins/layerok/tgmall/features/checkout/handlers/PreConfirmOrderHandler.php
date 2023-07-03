@@ -6,9 +6,10 @@ use Event;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Classes\Keyboards\YesNoKeyboard;
 use Layerok\TgMall\Classes\Traits\Lang;
-use Layerok\TgMall\Classes\Utils\CheckoutUtils;
 use OFFLINE\Mall\Classes\Utils\Money;
 use OFFLINE\Mall\Models\Currency;
+use OFFLINE\Mall\Models\PaymentMethod;
+use OFFLINE\Mall\Models\ShippingMethod;
 
 
 class PreConfirmOrderHandler extends Handler
@@ -19,10 +20,16 @@ class PreConfirmOrderHandler extends Handler
 
     public function run()
     {
-        $products = CheckoutUtils::getProducts($this->getCart(), $this->getState());
-        $phone = CheckoutUtils::getPhone($this->getCustomer());
-        $firstName = CheckoutUtils::getFirstName($this->getCustomer());
-        $lastName = CheckoutUtils::getLastName($this->getCustomer());
+        $user = $this->getTelegramUser();
+        $products = $this->getCart()->products()->get();
+        $phone = $user->phone;
+        $firstName = $user->firstname;
+        $lastName = $user->lastname;
+
+
+        $delivery = ShippingMethod::find($this->getState()->getOrderInfoDeliveryMethodId());
+        $payment_method = PaymentMethod::find($this->getState()->getOrderInfoPaymentMethodId());
+
 
         $receipt = $this->getReceipt();
         $money = app()->make(Money::class);
@@ -33,8 +40,8 @@ class PreConfirmOrderHandler extends Handler
             ->field('last_name', $lastName)
             ->field('phone', $phone)
             ->field('comment', $this->getState()->getOrderInfoComment())
-            ->field('delivery_method_name', CheckoutUtils::getDeliveryMethodName($this->getState()))
-            ->field('payment_method_name', CheckoutUtils::getPaymentMethodName($this->getState()))
+            ->field('delivery_method_name', optional($delivery)->name)
+            ->field('payment_method_name', optional($payment_method)->name)
             ->newLine()
             ->products($products)
             ->newLine()

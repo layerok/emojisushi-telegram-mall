@@ -36,7 +36,7 @@ use Telegram\Bot\Events\UpdateWasReceived;
 use Log;
 use Telegram\Bot\Exceptions\TelegramResponseException;
 use Telegram\Bot\Objects\Update;
-use Event;
+use Session;
 
 class Webhook
 {
@@ -94,7 +94,6 @@ class Webhook
         $this->api->on(UpdateWasReceived::class, function($event) {
             $this->handleUpdate($event);
         });
-
         $this->api->commandsHandler(true);
     }
 
@@ -102,84 +101,100 @@ class Webhook
         $update = $event->update;
         $telegram = $event->telegram;
 
-        $this->telegramUser = $this->createUser($update);
+        try {
+            $this->telegramUser = $this->createUser($update);
 
-        if(!isset($this->telegramUser)) {
-            \Log::error("User was not created. We can't go further without this");
-            $this->answerCallbackQuery($update);
-            return;
-        }
-
-        CallbackQueryBus::instance()
-            ->setTelegram($telegram)
-            ->setTelegramUser($this->telegramUser)
-            ->setUpdate($update);
-
-
-        $this->state = $this->createState();
-        if($update->isType('callback_query')) {
-            $this->handlerInfo = CallbackQueryBus::instance()->parse($update);
-        }
-
-
-
-
-        $is_maintenance = $this->checkMaintenanceMode(
-            $this->api,
-            $update,
-            $this->telegramUser
-        );
-
-        if ($is_maintenance) {
-            $this->answerCallbackQuery($update);
-            return;
-        }
-
-        $spot_id = $this->state->getSpotId();
-        $spot = Spot::where([
-            'id' => $spot_id
-        ])->first();
-
-        if(!$spot) {
-            $k = new SpotsKeyboard();
-            $this->sendMessage([
-                'text' => self::lang('spots.choose'),
-                'reply_markup' => $k->getKeyboard()
-            ]);
-            $this->answerCallbackQuery($update);
-            return;
-        }
-
-        if ($update->isType('callback_query')) {
-
-            $this->state->setMessageHandler(null);
+            if(!isset($this->telegramUser)) {
+                throw new \RuntimeException("User was not created. We can't go further without this");
+            }
 
             CallbackQueryBus::instance()
-                ->handle();
+                ->setTelegram($telegram)
+                ->setTelegramUser($this->telegramUser)
+                ->setUpdate($update);
 
+
+            $this->state = $this->createState();
+
+            if(!$this->state->getSession()) {
+                $sessionId = str_random(100);
+                $this->state->setSession($sessionId);
+            }
+            // it is required for the cart to function correctly
+            Session::put('cart_session_id', $this->state->getSession());
+
+            if($update->isType('callback_query')) {
+                $this->handlerInfo = CallbackQueryBus::instance()->parse($update);
+            }
+
+            $is_maintenance = $this->checkMaintenanceMode(
+                $this->api,
+                $update,
+                $this->telegramUser
+            );
+
+            if ($is_maintenance) {
+                $this->answerCallbackQuery($update);
+                return;
+            }
+
+            $spot_id = $this->state->getSpotId();
+            $spot = Spot::where([
+                'id' => $spot_id
+            ])->first();
+
+            if(!$spot && $this->handlerInfo[0] !== 'change_spot') {
+                $k = new SpotsKeyboard();
+                $this->sendMessage([
+                    'text' => self::lang('spots.choose'),
+                    'reply_markup' => $k->getKeyboard()
+                ]);
+                $this->answerCallbackQuery($update);
+                return;
+            }
+
+            if ($update->isType('callback_query')) {
+
+                $this->state->setMessageHandler(null);
+
+                CallbackQueryBus::instance()
+                    ->handle();
+
+                $this->answerCallbackQuery($update);
+
+            }
+
+            if ($update->isType('message')) {
+
+                if ($update->hasCommand()) {
+                    return;
+                }
+
+                $message_handler = $this->state->getMessageHandler();
+
+                if (!isset($message_handler)) {
+                    return;
+                }
+
+                if (!class_exists($message_handler)) {
+                    throw new \RuntimeException('message handler with [' . $message_handler . '] does not exist');
+                }
+
+                $handler = new $message_handler($telegram, $update, $this->state);
+                $handler->start();
+            }
+        } catch (\Exception $exception) {
+            Log::error('Answered exception' . PHP_EOL . $exception->getMessage() . PHP_EOL . $exception->getTraceAsString());
+            $this->sendMessage([
+                'text' => 'Вибачте сталася неочікувана помилка'
+            ]);
             $this->answerCallbackQuery($update);
-
-        }
-
-        if ($update->isType('message')) {
-
-            if ($update->hasCommand()) {
-                return;
-            }
-
-            $message_handler = $this->state->getMessageHandler();
-
-            if (!isset($message_handler)) {
-                return;
-            }
-
-            if (!class_exists($message_handler)) {
-                \Log::error('message handler with [' . $message_handler . '] does not exist');
-                return;
-            }
-
-            $handler = new $message_handler($telegram, $update, $this->state);
-            $handler->start();
+        } catch (\Error $error) {
+            Log::error('Answered error' . PHP_EOL . $error->getMessage() . PHP_EOL . $error->getTraceAsString());
+            $this->sendMessage([
+                'text' => 'Вибачте сталася неочікувана помилка'
+            ]);
+            $this->answerCallbackQuery($update);
         }
     }
 
@@ -234,20 +249,15 @@ class Webhook
                     'callback_query_id' => $update->getCallbackQuery()->id,
                 ]);
             }
-        } catch (TelegramResponseException $e) {
+        } catch (\Exception $e) {
             Log::error($e);
         }
     }
 
     public function sendMessage($params) {
-        try {
-            $this->api->sendMessage(
-                array_merge($params, ['chat_id' => $this->getChatId()])
-            );
-        } catch (\Exception $e) {
-            \Log::error("Caught Exception ('{$e->getMessage()}')\n{$e}\n");
-        }
-
+        $this->api->sendMessage(
+            array_merge($params, ['chat_id' => $this->getChatId()])
+        );
     }
 
     public function getChatId()
