@@ -8,13 +8,8 @@ use Layerok\PosterPos\Models\Spot;
 
 use Layerok\Telegram\Models\Bot;
 use Layerok\Telegram\Models\Chat;
-use OFFLINE\Mall\Models\Address;
-use OFFLINE\Mall\Models\Customer;
-use OFFLINE\Mall\Models\User;
 use poster\src\PosterApi;
-use RainLab\Location\Models\Country;
 use Symfony\Component\Console\Input\InputOption;
-use DB;
 
 class ImportSpots extends Command {
     protected $name = 'poster:import-spots';
@@ -57,37 +52,9 @@ class ImportSpots extends Command {
 
             $bot_id = $bot ? $bot->id : null;
             $chat_id = $chat ? $chat->id : null;
-            $pass = "qweasdqweaasd";
-
-            $user = User::create([
-                'name' => '!!',
-                'surname' => $record->spot_name,
-                'email' => str_slug($record->spot_name) . "@email.com",
-                'username' => str_slug($record->spot_name),
-                'password' => $pass,
-                'password_confirmation' => $pass
-            ]);
-
-            $customer = new Customer();
-            $customer->firstname = $user->name;
-            $customer->lastname = $user->surname;
-            $customer->user_id = $user->id;
-            $customer->save();
-
-            $address = new Address();
-
-            $address->name = $record->spot_name;
-            $address->lines = $record->spot_adress || $record->spot_name;
-            $address->customer_id = $customer->id;
-            $address->zip = '65125';
-            $address->city = 'Одеса';
-            $address->country_id = Country::where('code', 'UA')->first()->id;
-            $address->save();
-
-            $address->save();
 
             Spot::create([
-                'address_id' => $address->id,
+                'address' => $record->spot_adress || $record->spot_name,
                 'name' => $record->spot_name,
                 'bot_id' => $bot_id,
                 'chat_id' => $chat_id,

@@ -22,13 +22,8 @@ fields:
         type: relation
         label: Tablet
         span: auto
-    city:
-        label: City
-        type: relation
-        span: auto
     address:
         label: Address
-        type: relation
         span: auto
     google_map_url:
         label: Google map url
@@ -50,9 +45,6 @@ fields:
         type: fileupload
         mode: image
         span: auto
-    cover:
-        label: Cover
-        type: mediafinder
     published:
           label: 'layerok.posterpos::lang.extend.published'
           span: left

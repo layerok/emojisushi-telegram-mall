@@ -11,9 +11,10 @@ class RemoveCustomerIdFromUsersTable extends Migration
     public function up()
     {
         Schema::table('layerok_tgmall_users', function (Blueprint $table) {
-            $table->dropColumn('customer_id');
+            if(Schema::hasColumn('layerok_tgmall_users', 'customer_id')) {
+                $table->dropColumn('customer_id');
+            }
         });
-
     }
 
     public function down()

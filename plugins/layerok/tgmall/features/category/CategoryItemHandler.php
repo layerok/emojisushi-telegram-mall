@@ -2,7 +2,6 @@
 
 namespace Layerok\Tgmall\Features\Category;
 
-use Event;
 use Illuminate\Support\Facades\Validator;
 use Layerok\PosterPos\Models\HideProduct;
 use Layerok\PosterPos\Models\Spot;
