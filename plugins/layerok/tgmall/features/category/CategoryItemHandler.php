@@ -132,16 +132,18 @@ class CategoryItemHandler extends Handler
         ]);
 
         $caption = $product->getCaptionForTelegram();
-        $productImage = $product->image;
 
-        $pathOrId = optional($productImage->tg)->file_id ?
-            $productImage->tg->file_id :
-            InputFile::create($productImage->path);
+        if(isset($product->image->tg->file_id)) {
+            $this->replyWithPhoto([
+                'photo' => $product->image->tg->file_id,
+                'caption' => $caption,
+                'reply_markup' => $markup->getKeyboard(),
+                'parse_mode' => 'html',
+            ]);
 
-
-        if ($pathOrId) {
+        } else if(isset($product->image->path)) {
             $response = $this->replyWithPhoto([
-                'photo' => $pathOrId,
+                'photo' => InputFile::create($product->image->path),
                 'caption' => $caption,
                 'reply_markup' => $markup->getKeyboard(),
                 'parse_mode' => 'html',
