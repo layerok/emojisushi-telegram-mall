@@ -154,8 +154,7 @@ class CartHandler extends Handler
 
     public function sendCartProduct($cartProduct)
     {
-
-        $caption = $cartProduct->product->getCaptionForTelegram();
+        $caption = "<b>" . $cartProduct->product->name . "</b>\n\n" . \Html::strip($cartProduct->product->description_short);
 
         $markup = new CartProductKeyboard([
             'cartProduct' => $cartProduct,

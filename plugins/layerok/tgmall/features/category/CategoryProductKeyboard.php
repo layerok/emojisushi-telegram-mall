@@ -16,14 +16,9 @@ class CategoryProductKeyboard extends InlineKeyboard
     use Lang;
     use CallbackData;
 
-    /** @var Cart */
-    protected $cart;
-
-    /** @var Product */
-    protected $product;
-
-    /** @var Money */
-    protected $money;
+    protected ?Cart $cart;
+    protected ?Product $product;
+    protected ?Money $money;
 
     public function build(): void
     {
@@ -32,7 +27,7 @@ class CategoryProductKeyboard extends InlineKeyboard
 
         $this->money = app(Money::class);
 
-        if($this->product->isVariant()) {
+        if($this->product->inventory_management_method === 'variant') {
             $variants = $this->getVariants($this->product);
 
             $variants->map(function($variant) {

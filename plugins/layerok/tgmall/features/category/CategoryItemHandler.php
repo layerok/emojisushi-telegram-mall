@@ -131,7 +131,7 @@ class CategoryItemHandler extends Handler
             'product' => $product
         ]);
 
-        $caption = $product->getCaptionForTelegram();
+        $caption = "<b>" . $product->name . "</b>\n\n" . \Html::strip($product->description_short);
 
         if(isset($product->image->tg->file_id)) {
             $this->replyWithPhoto([
