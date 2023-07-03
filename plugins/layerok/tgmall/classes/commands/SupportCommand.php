@@ -7,12 +7,12 @@ class SupportCommand extends Command
 {
     use Lang;
 
-    protected $name = "support";
+    protected string $name = "support";
 
     /**
      * @var string Command Description
      */
-    protected $description = "Поддержка клиентов";
+    protected string $description = "Поддержка клиентов";
 
     /**
      * @inheritdoc

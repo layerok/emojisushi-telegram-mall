@@ -1,9 +1,11 @@
 <?php namespace Layerok\TgMall\Classes\Commands;
 
+use Layerok\PosterPos\Models\Spot;
 use Layerok\TgMall\Features\Index\MainMenuKeyboard;
 use Layerok\TgMall\Classes\Traits\Lang;
+use Layerok\TgMall\Features\Index\SpotsKeyboard;
+use Layerok\TgMall\Models\User as TelegramUser;
 use Telegram\Bot\Commands\Command;
-use Event;
 
 class StartCommand extends Command
 {
@@ -24,9 +26,20 @@ class StartCommand extends Command
         $update = $this->getUpdate();
         $message = $update->getMessage();
         $chat = $message->getChat();
+        $telegramUser = TelegramUser::where('chat_id', '=', $chat->id)
+            ->first();
 
-        if(!$this->hasSpot($chat->id)) {
-            // if user haven't selected spot, we will display a list of spots to him
+        $spot_id = $telegramUser->state->getSpotId();
+        $spot = Spot::where([
+            'id' => $spot_id
+        ])->first();
+
+        if(!$spot) {
+            $k = new SpotsKeyboard();
+            $this->replyWithMessage([
+                'text' => self::lang('spots.choose'),
+                'reply_markup' => $k->getKeyboard()
+            ]);
             return;
         }
 

@@ -34,7 +34,6 @@ use Telegram\Bot\Api;
 use Telegram\Bot\Commands\HelpCommand;
 use Telegram\Bot\Events\UpdateWasReceived;
 use Log;
-use Telegram\Bot\Exceptions\TelegramResponseException;
 use Telegram\Bot\Objects\Update;
 use Session;
 
@@ -43,16 +42,13 @@ class Webhook
     use HasMaintenanceMode;
     use Lang;
 
-    /** @var TelegramUser */
-    public $telegramUser;
+    public ?TelegramUser $telegramUser;
 
-    /** @var State */
-    public $state;
+    public ?State $state;
 
     public $handlerInfo;
 
-    /** @var Api */
-    protected $api;
+    protected ?Api $api;
 
     public function __construct($botToken)
     {
@@ -104,10 +100,6 @@ class Webhook
         try {
             $this->telegramUser = $this->createUser($update);
 
-            if(!isset($this->telegramUser)) {
-                throw new \RuntimeException("User was not created. We can't go further without this");
-            }
-
             CallbackQueryBus::instance()
                 ->setTelegram($telegram)
                 ->setTelegramUser($this->telegramUser)
@@ -125,6 +117,20 @@ class Webhook
 
             if($update->isType('callback_query')) {
                 $this->handlerInfo = CallbackQueryBus::instance()->parse($update);
+                $spot_id = $this->state->getSpotId();
+                $spot = Spot::where([
+                    'id' => $spot_id
+                ])->first();
+
+                if(!$spot && $this->handlerInfo[0] !== 'change_spot') {
+                    $k = new SpotsKeyboard();
+                    $this->sendMessage([
+                        'text' => self::lang('spots.choose'),
+                        'reply_markup' => $k->getKeyboard()
+                    ]);
+                    $this->answerCallbackQuery($update);
+                    return;
+                }
             }
 
             $is_maintenance = $this->checkMaintenanceMode(
@@ -134,21 +140,6 @@ class Webhook
             );
 
             if ($is_maintenance) {
-                $this->answerCallbackQuery($update);
-                return;
-            }
-
-            $spot_id = $this->state->getSpotId();
-            $spot = Spot::where([
-                'id' => $spot_id
-            ])->first();
-
-            if(!$spot && $this->handlerInfo[0] !== 'change_spot') {
-                $k = new SpotsKeyboard();
-                $this->sendMessage([
-                    'text' => self::lang('spots.choose'),
-                    'reply_markup' => $k->getKeyboard()
-                ]);
                 $this->answerCallbackQuery($update);
                 return;
             }
@@ -184,13 +175,13 @@ class Webhook
                 $handler->start();
             }
         } catch (\Exception $exception) {
-            Log::error('Answered exception' . PHP_EOL . $exception->getMessage() . PHP_EOL . $exception->getTraceAsString());
+            Log::error( $exception->getMessage() . PHP_EOL . $exception->getTraceAsString());
             $this->sendMessage([
                 'text' => 'Вибачте сталася неочікувана помилка'
             ]);
             $this->answerCallbackQuery($update);
         } catch (\Error $error) {
-            Log::error('Answered error' . PHP_EOL . $error->getMessage() . PHP_EOL . $error->getTraceAsString());
+            Log::error($error->getMessage() . PHP_EOL . $error->getTraceAsString());
             $this->sendMessage([
                 'text' => 'Вибачте сталася неочікувана помилка'
             ]);
@@ -210,8 +201,7 @@ class Webhook
             $from = $update->getMessage()
                 ->getFrom();
         } else {
-            Log::error('Update type is: ' . $update->detectType());
-            return null;
+            throw new \RuntimeException('Update type is: ' . $update->detectType());
         }
 
         $telegramUser = TelegramUser::where('chat_id', '=', $chat->id)
