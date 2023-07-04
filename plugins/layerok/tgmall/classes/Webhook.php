@@ -117,11 +117,6 @@ class Webhook
             // it is required for the cart to function correctly
             Session::put('cart_session_id', $this->user->state->getSession());
 
-            $message = $update->getMessage();
-
-            if(isset($message->from)) {
-                $this->userStore->updateFromMessage($this->user, $message);
-            }
 
             if(Settings::get('is_maintenance_mode', env('TG_MALL_IS_MAINTENANCE_MODE', false))) {
                 $this->api->sendMessage([
@@ -142,6 +137,7 @@ class Webhook
                 ->setUpdate($update);
 
             if($update->isType('callback_query')) {
+                $this->userStore->updateFromMessage($this->user, $update->getMessage());
                 $handlerInfo = CallbackQueryBus::instance()->parse($update);
 
                 $spot = Spot::where([
@@ -163,7 +159,7 @@ class Webhook
 
 
             } else if($update->isType('message')) {
-
+                $this->userStore->updateFromMessage($this->user, $update->getMessage());
                 if ($update->hasCommand()) {
                     return;
                 }
