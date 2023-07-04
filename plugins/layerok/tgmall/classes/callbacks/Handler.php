@@ -7,7 +7,6 @@ use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Classes\Traits\Warn;
 
 use Layerok\TgMall\Classes\Webhook;
-use Layerok\TgMall\Models\State;
 use OFFLINE\Mall\Models\Cart;
 use OFFLINE\Mall\Models\CartProduct;
 use Telegram\Bot\Answers\Answerable;
@@ -23,7 +22,7 @@ abstract class Handler implements HandlerInterface
 
     protected ?Api $telegram = null;
 
-    protected ?TelegramUser $telegramUser;
+    protected ?TelegramUser $user;
 
     protected ?Webhook $webhook;
 
@@ -83,15 +82,15 @@ abstract class Handler implements HandlerInterface
     }
 
 
-    public function setTelegramUser(TelegramUser $telegramUser): Handler
+    public function setTelegramUser(TelegramUser $user): Handler
     {
-        $this->telegramUser = $telegramUser;
+        $this->user = $user;
         return $this;
     }
 
     public function getTelegramUser(): TelegramUser
     {
-        return $this->telegramUser;
+        return $this->user;
     }
 
     public function getState()
@@ -109,7 +108,7 @@ abstract class Handler implements HandlerInterface
 
     public function getChatId()
     {
-        return $this->webhook->getChatId();
+        return $this->webhook->user->chat_id;
     }
 
     public function deleteMessage($msg_id)
@@ -153,8 +152,9 @@ abstract class Handler implements HandlerInterface
     }
 
     public function sendMessage($params) {
-        $this->webhook->sendMessage($params);
-
+        $this->telegram->sendMessage(array_merge($params, [
+            'chat_id' => $this->user->chat_id
+        ]));
     }
 
     public function getReceipt(): Receipt

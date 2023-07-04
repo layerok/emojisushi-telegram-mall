@@ -22,31 +22,27 @@ use Layerok\TgMall\Features\Checkout\Handlers\WishToLeaveCommentHandler;
 use Layerok\TgMall\Features\Checkout\Handlers\YesSticksHandler;
 use Layerok\TgMall\Features\Index\ChangeSpotHandler;
 use Layerok\TgMall\Features\Index\ListSpotsHandler;
-use Layerok\TgMall\Features\Index\SpotsKeyboard;
 use Layerok\TgMall\Features\Index\WebsiteHandler;
 use Layerok\Tgmall\Features\Product\AddProductHandler;
 use Layerok\TgMall\Features\Index\StartHandler;
 use Layerok\TgMall\Classes\Commands\StartCommand;
-use Layerok\TgMall\Classes\Traits\HasMaintenanceMode;
-use Layerok\TgMall\Models\State;
+use Layerok\TgMall\Models\Settings;
 use \Layerok\TgMall\Models\User as TelegramUser;
+
 use Telegram\Bot\Api;
 use Telegram\Bot\Commands\HelpCommand;
 use Telegram\Bot\Events\UpdateWasReceived;
 use Log;
-use Telegram\Bot\Objects\Update;
 use Session;
 
 class Webhook
 {
-    use HasMaintenanceMode;
     use Lang;
 
-    public ?TelegramUser $telegramUser;
+    public ?TelegramUser $user;
 
-    public ?State $state;
-
-    public $handlerInfo;
+    public UserStore $userStore;
+    public StateStore $stateStore;
 
     protected ?Api $api;
 
@@ -57,40 +53,45 @@ class Webhook
             StartCommand::class,
             HelpCommand::class
         ]);
-        $handlers = [
-            StartHandler::class,
-            WebsiteHandler::class,
-            CategoryItemsHandler::class,
-            CategoryItemHandler::class,
-            AddProductHandler::class,
-            CartHandler::class,
-            CheckoutHandler::class,
-            NoopHandler::class,
-            EnterPhoneHandler::class,
-            ChosePaymentMethodHandler::class,
-            ChoseDeliveryMethodHandler::class,
-            ListPaymentMethodsHandler::class,
-            ListDeliveryMethodsHandler::class,
-            LeaveCommentHandler::class,
-            PreConfirmOrderHandler::class,
-            ConfirmOrderHandler::class,
-            PreparePaymentChangeHandler::class,
-            YesSticksHandler::class,
-            UpdateSticksCounterHandler::class,
-            WishToLeaveCommentHandler::class,
-            ChangeSpotHandler::class,
-            ListSpotsHandler::class,
-        ];
+        $this->userStore = new UserStore();
+        $this->stateStore = new StateStore();
 
         CallbackQueryBus::instance()
             ->setTelegram($this->api)
             ->setWebhook($this)
-            ->addHandlers($handlers);
+            ->addHandlers([
+                StartHandler::class,
+                WebsiteHandler::class,
+                CategoryItemsHandler::class,
+                CategoryItemHandler::class,
+                AddProductHandler::class,
+                CartHandler::class,
+                CheckoutHandler::class,
+                NoopHandler::class,
+                EnterPhoneHandler::class,
+                ChosePaymentMethodHandler::class,
+                ChoseDeliveryMethodHandler::class,
+                ListPaymentMethodsHandler::class,
+                ListDeliveryMethodsHandler::class,
+                LeaveCommentHandler::class,
+                PreConfirmOrderHandler::class,
+                ConfirmOrderHandler::class,
+                PreparePaymentChangeHandler::class,
+                YesSticksHandler::class,
+                UpdateSticksCounterHandler::class,
+                WishToLeaveCommentHandler::class,
+                ChangeSpotHandler::class,
+                ListSpotsHandler::class,
+            ]);
 
         $this->api->on(UpdateWasReceived::class, function($event) {
             $this->handleUpdate($event);
         });
-        $this->api->commandsHandler(true);
+        try {
+            $this->api->commandsHandler(true);
+        } catch (\Exception $exception) {
+            Log::error($exception->getMessage() . $exception->getTraceAsString());
+        }
     }
 
     public function handleUpdate(UpdateWasReceived $event) {
@@ -98,70 +99,76 @@ class Webhook
         $telegram = $event->telegram;
 
         try {
-            $this->telegramUser = $this->createUser($update);
+            $chat = $update->getChat();
+            $this->user = $this->userStore->findByChat($chat);
 
-            CallbackQueryBus::instance()
-                ->setTelegram($telegram)
-                ->setTelegramUser($this->telegramUser)
-                ->setUpdate($update);
+            if(!$this->user) {
+                $this->user = $this->userStore->createFromChat($chat);
+            }
 
+            if(!$this->user->state) {
+                $this->user->state = $this->stateStore->create($this->user);
+            }
 
-            $this->state = $this->createState();
-
-            if(!$this->state->getSession()) {
+            if(!$this->user->state->hasSession()) {
                 $sessionId = str_random(100);
-                $this->state->setSession($sessionId);
+                $this->user->state->setSession($sessionId);
             }
             // it is required for the cart to function correctly
-            Session::put('cart_session_id', $this->state->getSession());
+            Session::put('cart_session_id', $this->user->state->getSession());
 
-            if($update->isType('callback_query')) {
-                $this->handlerInfo = CallbackQueryBus::instance()->parse($update);
-                $spot_id = $this->state->getSpotId();
-                $spot = Spot::where([
-                    'id' => $spot_id
-                ])->first();
+            $message = $update->getMessage();
 
-                if(!$spot && $this->handlerInfo[0] !== 'change_spot') {
-                    $k = new SpotsKeyboard();
-                    $this->sendMessage([
-                        'text' => self::lang('spots.choose'),
-                        'reply_markup' => $k->getKeyboard()
-                    ]);
-                    $this->answerCallbackQuery($update);
-                    return;
-                }
+            if(isset($message->from)) {
+                $this->userStore->updateFromMessage($this->user, $message);
             }
 
-            $is_maintenance = $this->checkMaintenanceMode(
-                $this->api,
-                $update,
-                $this->telegramUser
-            );
-
-            if ($is_maintenance) {
-                $this->answerCallbackQuery($update);
+            if(Settings::get('is_maintenance_mode', env('TG_MALL_IS_MAINTENANCE_MODE', false))) {
+                $this->api->sendMessage([
+                    'text' =>  'Просимо вибачення. Над ботом тимчасово ведуться технічні роботи. Поки що Ви можете скористатися нашим сайтом https://emojisushi.com.ua',
+                    'chat_id' => $this->user->chat_id
+                ]);
+                if($update->isType('callback_query')) {
+                    $this->api->answerCallbackQuery([
+                        'callback_query_id' => $update->getCallbackQuery()->id,
+                    ]);
+                }
                 return;
             }
 
-            if ($update->isType('callback_query')) {
+            CallbackQueryBus::instance()
+                ->setTelegram($telegram)
+                ->setTelegramUser($this->user)
+                ->setUpdate($update);
 
-                $this->state->setMessageHandler(null);
+            if($update->isType('callback_query')) {
+                $handlerInfo = CallbackQueryBus::instance()->parse($update);
 
-                CallbackQueryBus::instance()
-                    ->handle();
+                $spot = Spot::where([
+                    'id' => $this->user->state->getSpotId()
+                ])->first();
 
-                $this->answerCallbackQuery($update);
+                if(!$spot && $handlerInfo[0] !== 'change_spot') {
+                    CallbackQueryBus::instance()->make('list_spots', []);
+                } else {
+                    $this->user->state->setMessageHandler(null);
 
-            }
+                    CallbackQueryBus::instance()
+                        ->handle();
+                }
 
-            if ($update->isType('message')) {
+                $this->api->answerCallbackQuery([
+                    'callback_query_id' => $update->getCallbackQuery()->id,
+                ]);
+
+
+            } else if($update->isType('message')) {
 
                 if ($update->hasCommand()) {
                     return;
                 }
 
-                $message_handler = $this->state->getMessageHandler();
+                $message_handler = $this->user->state->getMessageHandler();
 
                 if (!isset($message_handler)) {
                     return;
@@ -171,90 +178,46 @@ class Webhook
                     throw new \RuntimeException('message handler with [' . $message_handler . '] does not exist');
                 }
 
-                $handler = new $message_handler($telegram, $update, $this->state);
+                $handler = new $message_handler($telegram, $update, $this->user->state);
                 $handler->start();
+            } else {
+               // do nothing
             }
+
         } catch (\Exception $exception) {
-            Log::error( $exception->getMessage() . PHP_EOL . $exception->getTraceAsString());
-            $this->sendMessage([
-                'text' => 'Вибачте сталася неочікувана помилка'
-            ]);
-            $this->answerCallbackQuery($update);
-        } catch (\Error $error) {
-            Log::error($error->getMessage() . PHP_EOL . $error->getTraceAsString());
-            $this->sendMessage([
-                'text' => 'Вибачте сталася неочікувана помилка'
-            ]);
-            $this->answerCallbackQuery($update);
-        }
-    }
-
-    public function createUser(Update $update) {
-        $chat = $update->getChat();
-
-
-        if($update->isType('callback_query')) {
-            $from = $update->getCallbackQuery()
-                ->getFrom();
-        } else if($update->isType('message')) {
-
-            $from = $update->getMessage()
-                ->getFrom();
-        } else {
-            throw new \RuntimeException('Update type is: ' . $update->detectType());
-        }
-
-        $telegramUser = TelegramUser::where('chat_id', '=', $chat->id)
-            ->first();
-
-        if(isset($telegramUser)) {
-            return $telegramUser;
-        }
-
-        return TelegramUser::create([
-            'firstname' => $from->getFirstName(),
-            'lastname' => $from->getLastName(),
-            'username' => $from->getUsername(),
-            'chat_id' => $chat->id
-        ]);
-    }
-
-    public function createState(): State
-    {
-        if (isset($this->telegramUser->state)) {
-            return $this->telegramUser->state;
-        }
-        return State::create(
-            [
-                'user_id' => $this->telegramUser->id,
-            ]
-        );
-    }
-
-    public function answerCallbackQuery($update)
-    {
-        try {
             if($update->isType('callback_query')) {
-                $this->api->answerCallbackQuery([
-                    'callback_query_id' => $update->getCallbackQuery()->id,
-                ]);
+                try {
+                    $this->api->answerCallbackQuery([
+                        'callback_query_id' => $update->getCallbackQuery()->id,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error($e);
+                }
             }
-        } catch (\Exception $e) {
-            Log::error($e);
+            if($exception->getCode() === 403) {
+                Log::error('bot is blocked');
+            } else {
+                Log::error($update->getMessage() . ' ' . $exception->getMessage() . PHP_EOL . $exception->getTraceAsString());
+            }
+
+        } catch (\Error $error) {
+
+            if($update->isType('callback_query')) {
+                try {
+                    $this->api->answerCallbackQuery([
+                        'callback_query_id' => $update->getCallbackQuery()->id,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error($e);
+                }
+            }
+            if($error->getCode() === 403) {
+                Log::error('bot is blocked');
+            } else {
+                Log::error($error->getMessage() . PHP_EOL . $error->getTraceAsString());
+            }
+
         }
     }
-
-    public function sendMessage($params) {
-        $this->api->sendMessage(
-            array_merge($params, ['chat_id' => $this->getChatId()])
-        );
-    }
-
-    public function getChatId()
-    {
-        return $this->telegramUser->chat_id;
-    }
-
-
 
 }

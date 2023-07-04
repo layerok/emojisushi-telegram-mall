@@ -82,6 +82,10 @@ class State extends Model
         return $this->getStateValue('session');
     }
 
+    public function hasSession() {
+        return !!$this->getSession();
+    }
+
     public function getSpotId() {
         return $this->getStateValue('spot_id');
     }

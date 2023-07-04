@@ -54,6 +54,7 @@ class StartCommand extends Command
 
         $markup = new MainMenuKeyboard();
 
+
         $this->replyWithMessage([
             'text' => $text,
             'reply_markup' => $markup->getKeyboard()
