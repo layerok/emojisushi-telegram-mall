@@ -1,13 +1,12 @@
 <?php namespace Layerok\TgMall\Classes\Callbacks;
 
 use Layerok\TgMall\Classes\Traits\CallbackData;
-use Layerok\TgMall\Classes\Webhook;
+
 use Layerok\TgMall\Models\User as TelegramUser;
 use October\Rain\Support\Traits\Singleton;
 use Telegram\Bot\Answers\AnswerBus;
 use Telegram\Bot\Api;
 use Telegram\Bot\Objects\Update;
-use Config;
 use Exception;
 
 class CallbackQueryBus extends AnswerBus
@@ -19,9 +18,7 @@ class CallbackQueryBus extends AnswerBus
 
     protected $handlers;
 
-    protected $telegramUser;
-
-    public $webhook;
+    protected $user;
 
     /** @var Update */
     protected $update;
@@ -31,9 +28,9 @@ class CallbackQueryBus extends AnswerBus
         $this->telegram = $telegram;
     }
 
-    public function setTelegramUser(TelegramUser $telegramUser): self
+    public function setTelegramUser(TelegramUser $user): self
     {
-        $this->telegramUser = $telegramUser;
+        $this->user = $user;
         return $this;
     }
 
@@ -57,8 +54,7 @@ class CallbackQueryBus extends AnswerBus
             \Log::error('Handler [' . $name . '] is not found');
             return;
         }
-        $handler->setTelegramUser($this->telegramUser);
-        $handler->setWebhook($this->webhook);
+        $handler->setTelegramUser($this->user);
         $handler->make($this->telegram, $this->update, $arguments);
     }
 
@@ -129,8 +125,4 @@ class CallbackQueryBus extends AnswerBus
         return new $handler();
     }
 
-    public function setWebhook(Webhook $webhook): self {
-        $this->webhook = $webhook;
-        return $this;
-    }
 }

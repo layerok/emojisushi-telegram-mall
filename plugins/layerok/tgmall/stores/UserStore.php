@@ -1,5 +1,5 @@
 <?php
-namespace Layerok\TgMall\Classes;
+namespace Layerok\TgMall\Stores;
 
 use Illuminate\Support\Collection;
 use Layerok\TgMall\Models\User as TelegramUser;

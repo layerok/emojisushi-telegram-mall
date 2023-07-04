@@ -1,9 +1,11 @@
-<?php namespace Layerok\TgMall\Classes;
+<?php namespace Layerok\TgMall\Controllers;
 
 use Layerok\PosterPos\Models\Spot;
 use Layerok\TgMall\Classes\Callbacks\CallbackQueryBus;
 use Layerok\TgMall\Classes\Callbacks\NoopHandler;
+use Layerok\TgMall\Stores\StateStore;
 use Layerok\TgMall\Classes\Traits\Lang;
+use Layerok\TgMall\Stores\UserStore;
 use Layerok\TgMall\Features\Checkout\Handlers\ConfirmOrderHandler;
 use Layerok\Tgmall\Features\Cart\CartHandler;
 use Layerok\Tgmall\Features\Category\CategoryItemHandler;
@@ -35,7 +37,7 @@ use Telegram\Bot\Events\UpdateWasReceived;
 use Log;
 use Session;
 
-class Webhook
+class WebhookController
 {
     use Lang;
 
@@ -46,9 +48,10 @@ class Webhook
 
     protected ?Api $api;
 
-    public function __construct($botToken)
+    public function __invoke()
     {
-        $this->api = new Api($botToken);
+        $bot_token = \Config::get('layerok.tgmall::credentials.bot_token');
+        $this->api = new Api($bot_token);
         $this->api->addCommands([
             StartCommand::class,
             HelpCommand::class
@@ -58,7 +61,6 @@ class Webhook
 
         CallbackQueryBus::instance()
             ->setTelegram($this->api)
-            ->setWebhook($this)
             ->addHandlers([
                 StartHandler::class,
                 WebsiteHandler::class,

@@ -12,7 +12,7 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
 
     protected Update $update;
 
-    protected Api $telegram;
+    protected Api $api;
 
     /** @var State */
     protected $state;
@@ -30,9 +30,9 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
 
     public function handleErrors(): void { }
 
-    public function __construct(Api $telegram, Update $update, State $state) {
+    public function __construct(Api $api, Update $update, State $state) {
         $this->update = $update;
-        $this->telegram = $telegram;
+        $this->api = $api;
         $this->state = $state;
 
         $this->chat = $this->update->getChat();
@@ -70,7 +70,7 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
     }
 
     public function sendMessage($params) {
-        $this->telegram->sendMessage(
+        $this->api->sendMessage(
             array_merge($params, ['chat_id' => $this->getChatId()])
         );
     }

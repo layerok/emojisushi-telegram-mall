@@ -1,5 +1,5 @@
 <?php
-namespace Layerok\TgMall\Classes;
+namespace Layerok\TgMall\Stores;
 
 use Layerok\TgMall\Models\State;
 use Layerok\TgMall\Models\User;
