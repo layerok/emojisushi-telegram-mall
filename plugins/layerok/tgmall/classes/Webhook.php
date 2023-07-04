@@ -194,11 +194,7 @@ class Webhook
                     Log::error($e);
                 }
             }
-            if($exception->getCode() === 403) {
-                Log::error('bot is blocked');
-            } else {
-                Log::error($update->getMessage() . ' ' . $exception->getMessage() . PHP_EOL . $exception->getTraceAsString());
-            }
+            Log::error($exception->getMessage() . PHP_EOL . $exception->getTraceAsString());
 
         } catch (\Error $error) {
 
@@ -211,12 +207,7 @@ class Webhook
                     Log::error($e);
                 }
             }
-            if($error->getCode() === 403) {
-                Log::error('bot is blocked');
-            } else {
-                Log::error($error->getMessage() . PHP_EOL . $error->getTraceAsString());
-            }
-
+            Log::error($error->getMessage() . PHP_EOL . $error->getTraceAsString());
         }
     }
 
