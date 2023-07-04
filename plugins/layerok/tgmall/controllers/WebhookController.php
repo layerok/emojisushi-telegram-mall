@@ -139,8 +139,9 @@ class WebhookController
                 ->setUpdate($update);
 
             if($update->isType('callback_query')) {
-                $this->userStore->updateFromMessage($this->user, $update->getMessage());
+                $this->userStore->updateFromCallbackQuery($this->user, $update->getCallbackQuery());
                 $handlerInfo = CallbackQueryBus::instance()->parse($update);
+
 
                 $spot = Spot::where([
                     'id' => $this->user->state->getSpotId()

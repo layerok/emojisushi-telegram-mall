@@ -3,6 +3,7 @@ namespace Layerok\TgMall\Stores;
 
 use Illuminate\Support\Collection;
 use Layerok\TgMall\Models\User as TelegramUser;
+use Telegram\Bot\Objects\CallbackQuery;
 
 class UserStore {
 
@@ -27,6 +28,20 @@ class UserStore {
             'firstname' => $from->getFirstName(),
             'lastname' => $from->getLastName(),
             'username' => $from->getUsername(),
+        ]);
+    }
+
+    /**
+     * @param TelegramUser $user
+     * @param CallbackQuery $callbackQuery
+     * @return bool
+     */
+    public function updateFromCallbackQuery(TelegramUser $user, $callbackQuery) {
+
+        return $user->update([
+            'firstname' => $callbackQuery->from->firstName,
+            'lastname' => $callbackQuery->from->lastName,
+            'username' => $callbackQuery->from->username,
         ]);
     }
 }
