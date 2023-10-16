@@ -6,8 +6,7 @@ use Illuminate\Validation\Rule;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Classes\Traits\Warn;
-use OFFLINE\Mall\Models\CartProduct;
-use OFFLINE\Mall\Models\Product;
+use Layerok\TgMall\Facades\EmojisushiApi;
 use Telegram\Bot\FileUpload\InputFile;
 use Telegram\Bot\Keyboard\Keyboard;
 
@@ -16,11 +15,9 @@ class CartHandler extends Handler
     use Warn;
     use Lang;
 
-    protected $name = "cart";
+    protected string $name = "cart";
 
-    public $product;
-
-    public $types = ['remove', 'update', 'list'];
+    public array $types = ['remove', 'update', 'list'];
 
     public function validate(): bool
     {
@@ -29,7 +26,6 @@ class CartHandler extends Handler
                 'required',
                 Rule::in($this->types),
             ],
-            'id' => 'exists:offline_mall_cart_products,id',
             'qty' => 'integer'
         ];
 
@@ -61,7 +57,6 @@ class CartHandler extends Handler
                 $this->updateProduct();
                 break;
             case "remove":
-                $this->product = Product::find($this->arguments['id']);
                 $this->removeProduct();
                 break;
         }
@@ -71,28 +66,32 @@ class CartHandler extends Handler
 
     public function updateProduct()
     {
-        $cart = $this->getCart();
+        $cart = EmojisushiApi::getCart();
 
-        $cartProduct = $cart
-            ->products()
+        $cartProduct = collect($cart['data'])
             ->where('id', '=', $this->arguments['id'])
             ->first();
 
-        if (isset($cartProduct) && ($cartProduct->quantity + $this->arguments['qty']) < 1) {
+        if (isset($cartProduct) && ($cartProduct['quantity'] + $this->arguments['qty']) < 1) {
             return;
         }
 
-        $cart->addProduct(
-            $cartProduct->product,
-            $this->arguments['qty'],
-            $cartProduct->variant
+        $cart = EmojisushiApi::addCartProduct(
+            array_merge([
+                'product_id'=> $cartProduct['product']['id'],
+                'quantity' => $this->arguments['qty']
+            ], $cartProduct['variant'] ? [
+                'variant_id' => $cartProduct['variant']['id'],
+            ]: [])
         );
-        $cart->refresh();
-        $cartProduct->refresh();
+
+        $cartProduct = collect($cart['data'])
+            ->where('id', '=', $this->arguments['id'])
+            ->first();
 
         $this->editCartProductMessage($cartProduct);
 
-        $this->editCartFooterMessage();
+        $this->editCartFooterMessage($cart);
 
     }
 
@@ -102,10 +101,9 @@ class CartHandler extends Handler
             $this->getTriggerMessageId()
         );
 
-        $cart = $this->getCart();
+        $cart = EmojisushiApi::getCart();
 
-        $cartProduct = $cart
-            ->products()
+        $cartProduct = collect($cart['data'])
             ->where('id', '=', $this->arguments['id'])
             ->first();
 
@@ -113,26 +111,32 @@ class CartHandler extends Handler
             return;
         }
 
-        $cart->removeProduct($cartProduct);
-        $cart->refresh();
+        $cart = EmojisushiApi::addCartProduct([
+            'product_id' => $cartProduct['product']['id'],
+            'quantity' => $cartProduct['quantity'] * -1
+        ]);
 
-        $this->editCartFooterMessage();
+        $this->editCartFooterMessage($cart);
     }
 
 
     public function showCart()
     {
+        $cart = EmojisushiApi::getCart();
+
         $this->replyWithMessage([
             'text' => self::lang('buttons.cart')
         ]);
 
-        $this->listCartProducts();
+        collect($cart['data'])->map(function ($cartProduct) {
+            $this->sendCartProduct($cartProduct);
+        });
 
         $response = $this->replyWithMessage(
-            $this->cartFooterMessage()
+            $this->cartFooterMessage($cart)
         );
 
-        if ($this->getCart()->products->count() === 0) {
+        if (count($cart['data']) === 0) {
             return;
         }
 
@@ -146,16 +150,13 @@ class CartHandler extends Handler
         );
     }
 
-    public function listCartProducts()
+    public function sendCartProduct(array $cartProduct)
     {
-        $this->getCart()->products->map(function ($cartProduct) {
-            $this->sendCartProduct($cartProduct);
-        });
-    }
-
-    public function sendCartProduct($cartProduct)
-    {
-        $caption = "<b>" . $cartProduct->product->name . "</b>\n\n" . \Html::strip($cartProduct->product->description_short);
+        $caption = sprintf(
+            "<b>%s</b>\n\n%s",
+                $cartProduct['product']['name'],
+                \Html::strip($cartProduct['product']['description_short'])
+            );
 
         $markup = new CartProductKeyboard([
             'cartProduct' => $cartProduct,
@@ -163,20 +164,21 @@ class CartHandler extends Handler
 
         $keyboard = $markup->getKeyboard();
 
-        $image = $cartProduct->product->image;
-
-        if(isset($image->tg->file_id)) {
+        if(\Cache::has("telegram.files." . $cartProduct['product']['id'])) {
             $response = $this->replyWithPhoto([
-                'photo' => $image->tg->file_id,
+                'photo' => \Cache::get("telegram.files." . $cartProduct['product']['id']),
                 'caption' => $caption,
                 'reply_markup' => $keyboard,
                 'parse_mode' => 'html',
             ]);
 
-            $image->setTelegramFileId($response);
-        } else if(isset($image->path)) {
+            \Cache::set(
+                "telegram.files." . $cartProduct['product']['id'],
+                $response->getPhoto()->last()['file_id']
+            );
+        } else if(isset($cartProduct['product']['image_sets'][0]['images'][0]['path'])) {
             $this->replyWithPhoto([
-                'photo' => InputFile::create($image->path),
+                'photo' => InputFile::create($cartProduct['product']['image_sets'][0]['images'][0]['path']),
                 'caption' => $caption,
                 'reply_markup' => $keyboard,
                 'parse_mode' => 'html',
@@ -191,7 +193,7 @@ class CartHandler extends Handler
 
     }
 
-    public function editCartProductMessage(CartProduct $cartProduct)
+    public function editCartProductMessage($cartProduct)
     {
         $markup = new CartProductKeyboard([
             'cartProduct' => $cartProduct,
@@ -207,7 +209,7 @@ class CartHandler extends Handler
         );
     }
 
-    public function editCartFooterMessage()
+    public function editCartFooterMessage($cart)
     {
         $cartTotalMsg = $this->getState()->getCartTotalMsg();
 
@@ -215,35 +217,36 @@ class CartHandler extends Handler
             return;
         }
 
-        $cartTotal = $this->getCart()->totals()->totalPostTaxes();
-
-        if ($cartTotalMsg['total'] == $cartTotal) {
+        if ($cartTotalMsg['total'] == $cart['total']) {
             // Общая стоимость товаров в корзине совпадает с тем что написано в сообщении
             return;
         }
-        $this->editMessageReplyMarkup($cartTotalMsg['id'], $this->cartFooterMessage());
-        $this->getState()->setCartTotalMsgTotal($cartTotal);
+        $this->editMessageReplyMarkup(
+            $cartTotalMsg['id'],
+            $this->cartFooterMessage($cart)
+        );
+        $this->getState()->setCartTotalMsgTotal($cart['total']);
     }
 
 
-    public function cartFooterMessage(): array
+    public function cartFooterMessage($cart): array
     {
-        $text = $this->getCart()->products->count() === 0 ?
+        $text = count($cart['data']) === 0 ?
             self::lang('texts.cart_is_empty') :
             self::lang('texts.cart');
         return [
             'text' => $text,
-            'reply_markup' => $this->cartFooterKeyboard()
+            'reply_markup' => $this->cartFooterKeyboard($cart)
         ];
     }
 
-    public function cartFooterKeyboard(): Keyboard
+    public function cartFooterKeyboard($cart): Keyboard
     {
-        if ($this->getCart()->products->count() === 0) {
+        if (count($cart['data']) === 0) {
             $markup = new CartEmptyKeyboard();
         } else {
             $markup = new CartFooterKeyboard([
-                'cart' => $this->getCart()
+                'cart' => $cart
             ]);
         }
 

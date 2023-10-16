@@ -6,11 +6,11 @@ use Telegram\Bot\Keyboard\Keyboard;
 
 abstract class InlineKeyboard
 {
-    protected $keyboard;
-    protected $vars;
-    protected $rows = [[]];
-    protected $rowIndex = 0;
-    protected $listeners = [];
+    protected Keyboard $keyboard;
+    protected array $vars;
+    protected array $rows = [[]];
+    protected int $rowIndex = 0;
+    protected array $listeners = [];
 
     function __construct($vars = [])
     {

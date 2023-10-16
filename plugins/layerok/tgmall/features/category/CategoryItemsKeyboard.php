@@ -3,6 +3,7 @@
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
 use Layerok\TgMall\Classes\Traits\CallbackData;
 use Layerok\TgMall\Classes\Traits\Lang;
+use Layerok\TgMall\Facades\EmojisushiApi;
 
 
 class CategoryItemsKeyboard extends InlineKeyboard
@@ -12,17 +13,14 @@ class CategoryItemsKeyboard extends InlineKeyboard
 
     public function build(): void
     {
-        $categories = collect($this->vars['categories']);
-
-        $categories->map(function ($row) {
-
+        collect($this->vars['categories'])->map(function ($row) {
             $this->append(
                 [
-                    'text' => $row->name,
+                    'text' => $row['name'],
                     'callback_data' => self::prepareCallbackData(
                         'category_item',
                         [
-                            'id' => $row->id,
+                            'id' => $row['id'],
                             'page' => 1
                         ]
                     )

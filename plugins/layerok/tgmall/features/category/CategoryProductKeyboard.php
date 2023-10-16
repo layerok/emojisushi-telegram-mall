@@ -1,38 +1,29 @@
 <?php namespace Layerok\Tgmall\Features\Category;
 
-use Illuminate\Support\Collection;
-
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
 use Layerok\TgMall\Classes\Traits\CallbackData;
 use Layerok\TgMall\Classes\Traits\Lang;
-use OFFLINE\Mall\Classes\Utils\Money;
-use OFFLINE\Mall\Models\Cart;
-use OFFLINE\Mall\Models\Currency;
-use OFFLINE\Mall\Models\Product;
-use OFFLINE\Mall\Models\Variant;
+use Layerok\TgMall\Facades\EmojisushiApi;
 
 class CategoryProductKeyboard extends InlineKeyboard
 {
     use Lang;
     use CallbackData;
 
-    protected ?Cart $cart;
-    protected ?Product $product;
-    protected ?Money $money;
+    protected array $product;
 
     public function build(): void
     {
-        $this->cart = $this->vars['cart'];
         $this->product = $this->vars['product'];
 
-        $this->money = app(Money::class);
-
-        if($this->product->inventory_management_method === 'variant') {
-            $variants = $this->getVariants($this->product);
-
-            $variants->map(function($variant) {
-                $this->makeButtonsRow($variant);
+        if($this->product['inventory_management_method'] === 'variant') {
+            $variants = array_filter($this->product['variants'], function($variant) {
+                return $variant['published'];
             });
+
+            array_map(function($variant) {
+                $this->makeButtonsRow($variant);
+            }, $variants);
 
         } else {
             $this->makeButtonsRow($this->product);
@@ -40,43 +31,30 @@ class CategoryProductKeyboard extends InlineKeyboard
     }
 
 
-    public function getVariants(Product $product): Collection
-    {
-        return $product->variants()->published()->get();
-    }
-
     public function makeButtonsRow($entry)
     {
-        $arguments = [
-            'qty' =>  1
-        ];
-        $totalPrice = $this->money->format(
-            $entry->price()->price * 1,
-            null,
-            Currency::$defaultCurrency
-        );
-
         $this->append([
-            'text' => self::lang('buttons.price') . ": " . $totalPrice,
+            'text' => self::lang('buttons.price') . ": " . $entry['prices'][0]['price_formatted'],
             'callback_data' => self::prepareCallbackData('noop')
         ]);
 
-        if($entry instanceof Variant) {
-            $product = $entry->product;
-            $variant = $entry;
-            $arguments['variant_id'] = $variant['id'];
+        if(isset($entry['product_id'])) {
             $this->append([
-                'text' => $variant->getPropertiesDescriptionAttribute(),
+                'text' => $entry['description'],
                 'callback_data' => self::prepareCallbackData('noop')
             ]);
-
-        } else {
-            $product = $entry;
-            $variant = null;
-            $arguments['product_id'] = $product['id'];
         }
+        $variant = isset($entry['product_id']) ? $entry: null;
+        $product = isset($entry['product_id']) ? $entry['product']: $entry;
 
-        if ($this->cart->isInCart($product, $variant)) {
+        $inCart = EmojisushiApi::getCartProduct(array_merge([
+            'product_id' => $product['id'],
+        ], $variant ? [
+            'variant_id' => $variant['id']
+        ]: []));
+
+
+        if (!!$inCart) {
             $this->append([
                 'text' => self::lang('buttons.added_to_cart'),
                 'callback_data' => self::prepareCallbackData('noop')
@@ -86,7 +64,12 @@ class CategoryProductKeyboard extends InlineKeyboard
                 'text' => self::lang('buttons.add_to_cart'),
                 'callback_data' => self::prepareCallbackData(
                     'product_add',
-                    $arguments
+                    array_merge(
+                        ['qty' =>  1],
+                        isset($entry['product_id']) ?
+                            ['variant_id' => $entry['id']] :
+                            ['product_id' => $entry['id']]
+                    )
                 )
             ]);
         }
@@ -94,6 +77,5 @@ class CategoryProductKeyboard extends InlineKeyboard
 
         $this->nextRow();
     }
-
 
 }

@@ -1,9 +1,10 @@
 <?php
 namespace Layerok\TgMall\Features\Index;
-use Layerok\PosterPos\Models\Spot;
+
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
 use Layerok\TgMall\Classes\Traits\CallbackData;
 use Layerok\TgMall\Classes\Traits\Lang;
+use Layerok\TgMall\Facades\EmojisushiApi;
 
 class SpotsKeyboard extends InlineKeyboard
 {
@@ -12,15 +13,17 @@ class SpotsKeyboard extends InlineKeyboard
 
     public function build(): void
     {
-        Spot::where('published', '1')->get()->each(function($spot) {
+        $spotsRes = EmojisushiApi::getSpots();
+
+        array_map(function($spot) {
             $this->append([
-                'text' => $spot->name,
+                'text' => $spot['name'],
                 'callback_data' => self::prepareCallbackData(
                     'change_spot',
-                    [$spot->id]
+                    [$spot['id']]
                 )
             ])->nextRow();
-        });
+        }, $spotsRes['data']);
 
     }
 }

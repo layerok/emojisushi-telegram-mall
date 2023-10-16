@@ -1,8 +1,8 @@
 <?php namespace Layerok\TgMall\Controllers;
 
-use Layerok\PosterPos\Models\Spot;
 use Layerok\TgMall\Classes\Callbacks\CallbackQueryBus;
 use Layerok\TgMall\Classes\Callbacks\NoopHandler;
+use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Stores\StateStore;
 use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Stores\UserStore;
@@ -50,6 +50,9 @@ class WebhookController
 
     public function __invoke()
     {
+        EmojisushiApi::init([
+            'sessionId' => '44234f3423423', // todo: unique session id for every user
+        ]);
         $bot_token = \Config::get('layerok.tgmall::credentials.bot_token');
         $this->api = new Api($bot_token);
         $this->api->addCommands([
@@ -142,10 +145,9 @@ class WebhookController
                 $this->userStore->updateFromCallbackQuery($this->user, $update->getCallbackQuery());
                 $handlerInfo = CallbackQueryBus::instance()->parse($update);
 
-
-                $spot = Spot::where([
-                    'id' => $this->user->state->getSpotId()
-                ])->first();
+                $spot = EmojisushiApi::getSpot([
+                    'slug_or_id' => $this->user->state->getSpotId()
+                ]);
 
                 if(!$spot && $handlerInfo[0] !== 'change_spot') {
                     CallbackQueryBus::instance()->make('list_spots', []);

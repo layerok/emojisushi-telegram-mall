@@ -25,13 +25,13 @@ class CartProductKeyboard extends InlineKeyboard
                     'cart',
                     [
                         'type' => 'update',
-                        'id' => $cartProduct->id,
+                        'id' => $cartProduct['id'],
                         'qty' => -1
                     ]
                 ),
             ])
             ->append([
-                'text' => $cartProduct->quantity,
+                'text' => $cartProduct['quantity'],
                 'callback_data' => self::prepareCallbackData('noop')
             ])
             ->append([
@@ -40,7 +40,7 @@ class CartProductKeyboard extends InlineKeyboard
                     'cart',
                     [
                         'type' => 'update',
-                        'id' => $cartProduct->id,
+                        'id' => $cartProduct['id'],
                         'qty' => 1
                     ]
                 )
@@ -51,14 +51,14 @@ class CartProductKeyboard extends InlineKeyboard
                     'cart',
                     [
                         'type' => 'remove',
-                        'id' => $cartProduct->id,
+                        'id' => $cartProduct['id'],
                     ]
                 ),
             ])
             ->nextRow()
             ->append([
                 'text' => self::lang('buttons.price') . ': ' . $money->format(
-                        $cartProduct->price()->price * $cartProduct->quantity,
+                        $cartProduct['price']['UAH'] * $cartProduct['quantity'],
                         null,
                         Currency::$defaultCurrency
                     ),

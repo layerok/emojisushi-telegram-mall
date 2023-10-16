@@ -6,24 +6,21 @@ use Illuminate\Support\Facades\Validator;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Classes\Traits\Warn;
+use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\Tgmall\Features\Category\CategoryFooterKeyboard;
 use Layerok\Tgmall\Features\Category\CategoryProductKeyboard;
-use OFFLINE\Mall\Classes\Exceptions\OutOfStockException;
-use OFFLINE\Mall\Models\Product;
-use OFFLINE\Mall\Models\Variant;
+
 
 class AddProductHandler extends Handler
 {
     use Lang;
     use Warn;
 
-    protected $name = "product_add";
+    protected string $name = "product_add";
 
-    /** @var Product */
-    protected $product;
+    protected array $product;
 
-    /** @var Variant */
-    protected $variant;
+    protected ?array $variant;
 
     public function validate(): bool
     {
@@ -51,35 +48,33 @@ class AddProductHandler extends Handler
 
     public function run()
     {
-
-        if(isset($this->arguments['product_id'])) {
+        if (isset($this->arguments['product_id'])) {
             $this->variant = null;
-            $this->product = Product::find($this->arguments['product_id']);
-        } else if(isset($this->arguments['variant_id'])) {
-            $this->variant = Variant::find($this->arguments['variant_id']);
-            $this->product = $this->variant->product;
-        }
-
-        try {
-            $this->getCart()->addProduct(
-                $this->product,
-                $this->arguments['qty'],
-                $this->variant
-            );
-        } catch (OutOfStockException $e) {
-            $this->replyWithMessage([
-                'chat_id' => $this->getChatId(),
-                'text' => $e->getMessage()
+            $this->product = EmojisushiApi::getProduct([
+                'product_id' => $this->arguments['product_id']
             ]);
-            return;
+        } else if (isset($this->arguments['variant_id'])) {
+            $this->variant = EmojisushiApi::getVariant([
+                'variant_id' => $this->arguments['variant_id']
+            ]);
+            $this->product = EmojisushiApi::getProduct([
+                'product_id' => $this->variant['product_id']
+            ]);
         }
 
-        $this->getCart()->refresh();
+        $cart = EmojisushiApi::addCartProduct(
+            array_merge([
+                'product_id' => $this->product['id'],
+                'quantity' => $this->arguments['qty'],
+            ], $this->variant ? [
+                'variant_id' => $this->variant['id']
+            ]: [])
+        );
+
 
         $cartCountMsg = $this->getState()->getCartCountMsg();
 
         $markup = new CategoryProductKeyboard([
-            'cart' => $this->getCart(),
             'product' => $this->product,
         ]);
 
@@ -94,14 +89,14 @@ class AddProductHandler extends Handler
             ]
         );
 
-        if ($cartCountMsg['count'] == $this->getCart()->products->count()) {
+        if ($cartCountMsg['count'] == $cart['totalQuantity']) {
             // Кол-во товаров в корзине совпадает с тем, что написано в сообщении
             return;
         }
 
         $markup = new CategoryFooterKeyboard([
-            'cart' => $this->getCart(),
-            'category_id' =>$cartCountMsg['category_id'],
+            'cart' => $cart,
+            'category_id' => $cartCountMsg['category_id'],
             'page' => $cartCountMsg['page']
         ]);
 
@@ -111,5 +106,6 @@ class AddProductHandler extends Handler
 
 
     }
+
 
 }

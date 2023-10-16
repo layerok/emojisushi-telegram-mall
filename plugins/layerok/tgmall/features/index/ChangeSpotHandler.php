@@ -2,16 +2,16 @@
 
 namespace Layerok\TgMall\Features\Index;
 
-use Layerok\PosterPos\Models\Spot;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Classes\Traits\Lang;
+use Layerok\TgMall\Facades\EmojisushiApi;
 
 
 class ChangeSpotHandler extends Handler
 {
     use Lang;
 
-    protected $name = "change_spot";
+    protected string $name = "change_spot";
 
     public function run()
     {
@@ -21,11 +21,13 @@ class ChangeSpotHandler extends Handler
         $from = $update->getMessage()
             ->getChat();
 
-        $spot = Spot::where('id', $id)->first();
+        $spot = EmojisushiApi::getSpot([
+            'slug_or_id' => $id
+        ]);
 
         $response = $this->replyWithMessage([
             'chat_id' => $from->id,
-            'text' => self::lang('spots.changed') . ': ' . $spot->name
+            'text' => self::lang('spots.changed') . ': ' . $spot['name']
         ]);
 
         $this->telegram->pinChatMessage([

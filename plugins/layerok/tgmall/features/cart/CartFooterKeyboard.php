@@ -3,8 +3,6 @@
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
 use Layerok\TgMall\Classes\Traits\CallbackData;
 use Layerok\TgMall\Classes\Traits\Lang;
-use OFFLINE\Mall\Classes\Utils\Money;
-use OFFLINE\Mall\Models\Currency;
 
 class CartFooterKeyboard extends InlineKeyboard
 {
@@ -15,14 +13,9 @@ class CartFooterKeyboard extends InlineKeyboard
     {
         $cart = $this->vars['cart'];
 
-        if ($cart->products->count() !== 0) {
-            $money = app()->make(Money::class);
+        if (count($cart['data']) !== 0) {
             $total = self::lang('texts.all_amount_order', [
-                'price' => $money->format(
-                    $cart->totals()->totalPostTaxes(),
-                    null,
-                    Currency::$defaultCurrency
-                )]
+                'price' => $cart['total']]
             );
 
             $this->append([

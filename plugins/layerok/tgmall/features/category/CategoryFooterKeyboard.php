@@ -3,7 +3,7 @@
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
 use Layerok\TgMall\Classes\Traits\CallbackData;
 use Layerok\TgMall\Classes\Traits\Lang;
-use OFFLINE\Mall\Models\Category;
+use Layerok\TgMall\Facades\EmojisushiApi;
 use Config;
 
 class CategoryFooterKeyboard extends InlineKeyboard
@@ -13,48 +13,42 @@ class CategoryFooterKeyboard extends InlineKeyboard
 
     public function build(): void
     {
-        $cart = $this->vars['cart'];
-        $category_id = $this->vars['category_id'];
-        $page = $this->vars['page'];
-
-        $cart->refresh();
-
         $limit = Config::get('layerok.tgmall::settings.products.per_page', 10);
 
-        if($limit < 1) {
-            $limit = 1;
-        }
+        $categories = EmojisushiApi::getCategories()['data'];
+        $category = array_filter($categories, function($c) {
+            return $c['id'] === $this->vars['category_id'];
+        })[0];
 
-        $all = Category::where('id', '=', $category_id)->first()->products;
-        $count = $all->count();
+        $products = EmojisushiApi::getProducts([
+            'category_slug' => $category['slug'],
+        ])['data'];
 
-        $lastPage = ceil($count / $limit);
+
+        $lastPage = ceil(count($products) / max(1, $limit));
 
 
-        if ($lastPage > $page) {
+        if ($lastPage > $this->vars['page']) {
             $this->append([
                 'text' => self::lang('buttons.load_more'),
                 'callback_data' => self::prepareCallbackData(
                     'category_item',
                     [
-                        'id' => $category_id,
-                        'page' => $page + 1
+                        'id' => $category['id'],
+                        'page' => $this->vars['page'] + 1
                     ]
                 )
             ])->nextRow();
         }
 
-        $cart_amount_text = $cart->products->count() ? " (" . $cart->products->count() . ")": '';
-        $cart_text = self::lang('buttons.cart') . $cart_amount_text;
+        $cart = EmojisushiApi::getCart();
 
         $this
             ->append([
-                'text' => $cart_text,
+                'text' => self::lang('buttons.cart') .
+                    (count($cart['data']) ? sprintf("(%s)", count($cart['data'])) : ''),
                 'callback_data' => self::prepareCallbackData(
-                    'cart',
-                    [
-                        'type' => 'list'
-                    ]
+                    'cart', ['type' => 'list']
                 )
             ])
             ->nextRow()

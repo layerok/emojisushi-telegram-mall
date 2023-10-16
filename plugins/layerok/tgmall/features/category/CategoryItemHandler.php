@@ -3,13 +3,10 @@
 namespace Layerok\Tgmall\Features\Category;
 
 use Illuminate\Support\Facades\Validator;
-use Layerok\PosterPos\Models\HideProduct;
-use Layerok\PosterPos\Models\Spot;
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use OFFLINE\Mall\Models\Product;
+use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Classes\Traits\Warn;
-use OFFLINE\Mall\Models\Category as CategoryModel;
 use Config;
 use Telegram\Bot\FileUpload\InputFile;
 
@@ -18,12 +15,11 @@ class CategoryItemHandler extends Handler
     use Lang;
     use Warn;
 
-    protected $name = "category_item";
+    protected string $name = "category_item";
 
     public function validate():bool
     {
         $rules = [
-            'id' => 'required|exists:offline_mall_categories,id',
             'page' => 'required|integer|min:1'
         ];
 
@@ -89,66 +85,55 @@ class CategoryItemHandler extends Handler
     {
         $limit = Config::get('layerok.tgmall::settings.products.per_page', 10);
         $offset = ($this->arguments['page'] - 1) * $limit;
-        $category = CategoryModel::where('id', '=', $this->arguments['id'])->first();
 
-        $query = $category->products()->where('published', '=', '1');
+        $categories = EmojisushiApi::getCategories()['data'];
 
-;
-        $state = $this->getState();
-        $spot_id = $state->getSpotId();
+        $category = array_filter($categories, function($category) {
+            return $this->arguments['id'] === $category['id'];
+        })[0]; // todo: check if category exists first
 
-        $spot = Spot::where('id', $spot_id)->first();
+        $products = EmojisushiApi::getProducts([
+            'category_slug' => $category['slug'],
+            'offset' => $offset,
+            'limit' => $limit
+        ])['data'];
 
-        $hidden = HideProduct::where([
-            'spot_id' => $spot->id
-        ])->pluck('product_id');
-
-        $query->whereNotIn('offline_mall_products.id', $hidden);
-
-        $query->limit($limit)
-            ->offset($offset);
-
-
-        $productsInCategory = $query->get();
-
-        $productsInCategory->map(
-            function (
-                $product
-            ) use (
-                $productsInCategory,
-                $limit
-            ) {
-                $this->sendProduct($product);
-            }
-        );
+        array_map(function ($product) {
+            $this->sendProduct($product);
+        }, $products);
     }
 
-    public function sendProduct(Product $product)
+    public function sendProduct(array $product)
     {
         $markup = new CategoryProductKeyboard([
-            'cart' => $this->getCart(),
             'product' => $product
         ]);
 
-        $caption = "<b>" . $product->name . "</b>\n\n" . \Html::strip($product->description_short);
+        $caption = sprintf(
+            "<b>%s</b>\n\n%s",
+            $product['name'],
+            \Html::strip($product['description_short'])
+        );
 
-        if(isset($product->image->tg->file_id)) {
+        if(\Cache::has("telegram.files." . $product['id'])) {
             $this->replyWithPhoto([
-                'photo' => $product->image->tg->file_id,
+                'photo' => \Cache::get("telegram.files." . $product['id']),
                 'caption' => $caption,
                 'reply_markup' => $markup->getKeyboard(),
                 'parse_mode' => 'html',
             ]);
-
-        } else if(isset($product->image->path)) {
+        } else if(isset($product['image_sets'][0]['images'][0]['path'])) {
             $response = $this->replyWithPhoto([
-                'photo' => InputFile::create($product->image->path),
+                'photo' => InputFile::create($product['image_sets'][0]['images'][0]['path']),
                 'caption' => $caption,
                 'reply_markup' => $markup->getKeyboard(),
                 'parse_mode' => 'html',
             ]);
 
-            $product->image->setTelegramFileId($response);
+            \Cache::set(
+                "telegram.files." . $product['id'],
+                $response->getPhoto()->last()['file_id']
+            );
         } else {
             $this->replyWithMessage([
                 'text' => $caption,
@@ -157,5 +142,4 @@ class CategoryItemHandler extends Handler
             ]);
         }
     }
-
 }

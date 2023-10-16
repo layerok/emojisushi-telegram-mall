@@ -5,6 +5,7 @@ use Layerok\TgMall\Classes\Boot\Events;
 use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Events\TgMallOrderHandler;
 use Layerok\TgMall\Models\File as TelegramFile;
+use Layerok\TgMall\Services\EmojisushiApi;
 use System\Classes\PluginBase;
 use System\Models\File as SystemFile;
 use Telegram\Bot\Objects\Message;
@@ -54,6 +55,10 @@ class Plugin extends PluginBase
                 $telegramFile->save();
 
             });
+        });
+
+        $this->app->singleton('emojisushi.api', function() {
+            return new EmojisushiApi();
         });
 
     }
