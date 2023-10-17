@@ -157,7 +157,7 @@ class Checkout extends MallComponent
 
         $cart = Cart::byUser($user);
         if ( ! $cart->payment_method_id) {
-            $cart->setPaymentMethod(BPaymentMethod::getDefault());
+            $cart->setPaymentMethod(PaymentMethod::getDefault());
         }
         $this->setVar('cart', $cart);
 

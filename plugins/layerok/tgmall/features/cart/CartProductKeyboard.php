@@ -5,8 +5,6 @@ namespace Layerok\Tgmall\Features\Cart;
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
 use Layerok\TgMall\Classes\Traits\CallbackData;
 use Layerok\TgMall\Classes\Traits\Lang;
-use OFFLINE\Mall\Classes\Utils\Money;
-use OFFLINE\Mall\Models\Currency;
 
 class CartProductKeyboard extends InlineKeyboard
 {
@@ -16,8 +14,7 @@ class CartProductKeyboard extends InlineKeyboard
     public function build(): void
     {
         $cartProduct = $this->vars['cartProduct'];
-        // todo: get rid of Money
-        $money = app()->make(Money::class);
+
 
         $this
             ->append([
@@ -58,11 +55,11 @@ class CartProductKeyboard extends InlineKeyboard
             ])
             ->nextRow()
             ->append([
-                'text' => self::lang('buttons.price') . ': ' . $money->format(
-                        $cartProduct['price']['UAH'] * $cartProduct['quantity'],
-                        null,
-                        Currency::$defaultCurrency
-                    ),
+                'text' => sprintf(
+                    '%s: %s ₴',
+                    self::lang('buttons.price'),
+                    (number_format($cartProduct['price']['UAH'] * $cartProduct['quantity'] / 100, 0))
+                ),
                 'callback_data' => self::prepareCallbackData('noop')
             ]);
 
