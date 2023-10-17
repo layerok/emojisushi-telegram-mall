@@ -10,7 +10,7 @@ class YesSticksHandler extends Handler
 {
     use Lang;
 
-    protected $name = "yes_sticks";
+    protected string $name = "yes_sticks";
 
     public function run() {
 

@@ -10,7 +10,7 @@ class PreparePaymentChangeHandler extends Handler
 {
     use Lang;
 
-    protected $name = "prepare_payment_change";
+    protected string $name = "prepare_payment_change";
 
     public function run()
     {

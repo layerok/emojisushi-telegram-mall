@@ -17,8 +17,7 @@ class ChangeSpotHandler extends Handler
     {
         $id = $this->arguments[0];
         $this->getState()->setSpotId($id);
-        $update = $this->getUpdate();
-        $from = $update->getMessage()
+        $from = $this->getUpdate()->getMessage()
             ->getChat();
 
         $spot = EmojisushiApi::getSpot([

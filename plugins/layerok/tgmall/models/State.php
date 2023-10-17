@@ -1,7 +1,6 @@
 <?php namespace Layerok\TgMall\Models;
 
 use October\Rain\Database\Model;
-use OFFLINE\Mall\Models\PaymentMethod;
 use Layerok\TgMall\Models\User as TelegramUser;
 
 

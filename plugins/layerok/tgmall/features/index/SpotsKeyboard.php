@@ -13,7 +13,7 @@ class SpotsKeyboard extends InlineKeyboard
 
     public function build(): void
     {
-        $spotsRes = EmojisushiApi::getSpots();
+        $spots = EmojisushiApi::getSpots()['data'];
 
         array_map(function($spot) {
             $this->append([
@@ -23,7 +23,7 @@ class SpotsKeyboard extends InlineKeyboard
                     [$spot['id']]
                 )
             ])->nextRow();
-        }, $spotsRes['data']);
+        }, $spots);
 
     }
 }

@@ -19,6 +19,11 @@ use Illuminate\Support\Facades\Facade;
  * @method static array getCart(array $params = [], array $guzzleOptions = [])
  * @method static array getCartProduct(array $params = [], array $guzzleOptions = [])
  * @method static array addCartProduct(array $params = [], array $guzzleOptions = [])
+ * @method static array getPaymentMethods(array $params = [], array $guzzleOptions = [])
+ * @method static array getPaymentMethod(array $params = [], array $guzzleOptions = [])
+ * @method static array getShippingMethods(array $params = [], array $guzzleOptions = [])
+ * @method static array getShippingMethod(array $params = [], array $guzzleOptions = [])
+ * @method static array clearCart(array $params = [], array $guzzleOptions = [])
  *
  *
  * @see  \Layerok\TgMall\Services\EmojisushiApi;

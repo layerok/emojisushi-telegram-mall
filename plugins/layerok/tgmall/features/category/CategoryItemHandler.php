@@ -42,8 +42,10 @@ class CategoryItemHandler extends Handler
         $this->ifDeleteMessage();
         $this->listProducts();
 
+        $cart = EmojisushiApi::getCart();
+
         $markup = new CategoryFooterKeyboard([
-            'cart' => $this->getCart(),
+            'cart' => $cart,
             'category_id' => $this->arguments['id'],
             'page' => $this->arguments['page']
         ]);
@@ -61,7 +63,7 @@ class CategoryItemHandler extends Handler
             'id' => $msg_id,
             'category_id' => $this->arguments['id'],
             'page' => $this->arguments['page'],
-            'count' => $this->getCart()->products->count()
+            'count' => count($cart['data'])
         ]);
     }
 

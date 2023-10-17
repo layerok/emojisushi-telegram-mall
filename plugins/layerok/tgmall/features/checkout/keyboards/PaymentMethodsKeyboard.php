@@ -4,7 +4,7 @@ namespace Layerok\TgMall\Features\Checkout\Keyboards;
 
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
 use Layerok\TgMall\Classes\Traits\CallbackData;
-use OFFLINE\Mall\Models\PaymentMethod;
+use Layerok\TgMall\Facades\EmojisushiApi;
 
 class PaymentMethodsKeyboard extends InlineKeyboard
 {
@@ -12,16 +12,16 @@ class PaymentMethodsKeyboard extends InlineKeyboard
 
     public function build(): void
     {
-        $methods = PaymentMethod::orderBy('sort_order', 'ASC')->get();
+        $paymentMethods = EmojisushiApi::getPaymentMethods()['data'];
 
-        $methods->map(function ($item) {
+        array_map(function ($method) {
             $this->append([
-                'text' => $item->name,
+                'text' => $method['name'],
                 'callback_data' => self::prepareCallbackData(
                     'chose_payment_method',
-                    ['id' => $item->id]
+                    ['id' => $method['id']]
                 )
             ])->nextRow();
-        });
+        }, $paymentMethods);
     }
 }

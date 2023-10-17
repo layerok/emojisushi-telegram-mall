@@ -11,7 +11,7 @@ class UpdateSticksCounterHandler extends Handler
 {
     use Lang;
 
-    protected $name = "update_sticks_counter";
+    protected string $name = "update_sticks_counter";
 
     public function run()
     {

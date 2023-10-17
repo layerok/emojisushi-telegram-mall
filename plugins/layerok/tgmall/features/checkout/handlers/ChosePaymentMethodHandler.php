@@ -5,22 +5,23 @@ namespace Layerok\TgMall\Features\Checkout\Handlers;
 use Layerok\TgMall\Classes\Callbacks\CallbackQueryBus;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Classes\Traits\Lang;
+use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Features\Checkout\Keyboards\PreparePaymentChangeKeyboard;
-use OFFLINE\Mall\Models\PaymentMethod;
 
 class ChosePaymentMethodHandler extends Handler
 {
     use Lang;
 
-    protected $name = "chose_payment_method";
+    protected string $name = "chose_payment_method";
 
     public function run()
     {
         $id = $this->arguments['id'];
         $this->getState()->setOrderInfoPaymentMethodId($id);
 
-        $method = PaymentMethod::find($id);
-        if ($method->code == 'cash') {
+        $method = EmojisushiApi::getPaymentMethod(['id' => $id]);
+
+        if ($method['code'] == 'cash') {
             // наличными
             $k = new PreparePaymentChangeKeyboard();
             $this->sendMessage([

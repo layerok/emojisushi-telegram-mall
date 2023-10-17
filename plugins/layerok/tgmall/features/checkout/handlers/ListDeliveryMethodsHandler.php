@@ -11,7 +11,7 @@ class ListDeliveryMethodsHandler extends Handler
 {
     use Lang;
 
-    protected $name = "list_delivery_methods";
+    protected string $name = "list_delivery_methods";
 
     public function run()
     {

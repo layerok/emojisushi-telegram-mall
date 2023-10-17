@@ -10,7 +10,7 @@ class ListSpotsHandler extends Handler
 {
     use Lang;
 
-    protected $name = "list_spots";
+    protected string $name = "list_spots";
 
     public function run()
     {

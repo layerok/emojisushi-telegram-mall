@@ -8,7 +8,7 @@ use Layerok\TgMall\Features\Checkout\Messages\OrderCommentHandler;
 class LeaveCommentHandler extends Handler
 {
 
-    protected $name = "leave_comment";
+    protected string $name = "leave_comment";
 
     public function run()
     {

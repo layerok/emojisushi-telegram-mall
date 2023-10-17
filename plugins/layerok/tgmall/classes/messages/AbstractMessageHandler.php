@@ -2,7 +2,6 @@
 
 use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Models\State;
-use OFFLINE\Mall\Models\Cart;
 use Telegram\Bot\Api;
 use Telegram\Bot\Objects\Update;
 
@@ -21,8 +20,6 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
 
     protected $text;
 
-    /** @var Cart */
-    protected $cart;
 
     public function validate(): bool {
         return true;
@@ -37,8 +34,6 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
 
         $this->chat = $this->update->getChat();
         $this->text = $this->update->getMessage()->text;
-
-        $this->cart = Cart::bySession();
     }
 
 
@@ -64,10 +59,6 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
         return $this->state->user;
     }
 
-    public function getCart(): Cart
-    {
-        return $this->cart;
-    }
 
     public function sendMessage($params) {
         $this->api->sendMessage(

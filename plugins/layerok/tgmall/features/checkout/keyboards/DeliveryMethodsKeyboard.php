@@ -3,7 +3,7 @@ namespace Layerok\TgMall\Features\Checkout\Keyboards;
 
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
 use Layerok\TgMall\Classes\Traits\CallbackData;
-use OFFLINE\Mall\Models\ShippingMethod;
+use Layerok\TgMall\Facades\EmojisushiApi;
 
 class DeliveryMethodsKeyboard extends InlineKeyboard
 {
@@ -11,16 +11,16 @@ class DeliveryMethodsKeyboard extends InlineKeyboard
 
     public function build(): void
     {
-        $methods = ShippingMethod::orderBy('sort_order', 'ASC')->get();
+        $methods = EmojisushiApi::getShippingMethods()['data'];
 
-        $methods->map(function ($item) {
+        array_map(function ($method) {
             $this->append([
-                'text' => $item->name,
+                'text' => $method['name'],
                 'callback_data' => self::prepareCallbackData(
                     'chose_delivery_method',
-                    ['id' => $item->id]
+                    ['id' => $method['id']]
                 )
             ])->nextRow();
-        });
+        }, $methods);
     }
 }

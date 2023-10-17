@@ -3,14 +3,10 @@
 use Layerok\Basecode\Classes\Receipt;
 use Layerok\PosterPos\Classes\PosterProducts;
 use Layerok\PosterPos\Classes\PosterUtils;
-use Layerok\PosterPos\Models\Spot;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Classes\Traits\Lang;
+use Layerok\TgMall\Facades\EmojisushiApi;
 use Log;
-use OFFLINE\Mall\Classes\Utils\Money;
-use OFFLINE\Mall\Models\Currency;
-use OFFLINE\Mall\Models\PaymentMethod;
-use OFFLINE\Mall\Models\ShippingMethod;
 use poster\src\PosterApi;
 use Telegram\Bot\Api;
 
@@ -19,12 +15,10 @@ class TgMallOrderHandler {
 
     public function subscribe($events)
     {
-
         $events->listen('tgmall.order.preconfirm.receipt', function(Handler $handler) {
             $state = $handler->getState();
             $user = $handler->getTelegramUser();
-            $cart = $handler->getCart();
-            $products = $cart->products()->get();
+
             $phone = $user['phone'];
             $firstName = $user->firstname;
             $lastName = $user->lastname;
@@ -32,43 +26,35 @@ class TgMallOrderHandler {
             $change = $state->getOrderInfoChange();
             $comment = $state->getOrderInfoComment();
 
-            $payment_method = PaymentMethod::find($state->getOrderInfoPaymentMethodId());
-            $payment_method_name = optional($payment_method)->name;
-            $delivery = ShippingMethod::find($state->getOrderInfoDeliveryMethodId());
-            $delivery_method_name =  optional($delivery)->name;
+            $payment_method = EmojisushiApi::getPaymentMethod(['id' => $state->getOrderInfoPaymentMethodId()]);
+            $shipping_method = EmojisushiApi::getShippingMethod(['id' => $state->getOrderInfoDeliveryMethodId()]);
 
-            $sticks = $state->getOrderInfoSticksCount();
-            $spot_id = $state->getSpotId();
-            $spot = Spot::find($spot_id);
+            $spot = EmojisushiApi::getSpot(['slug_or_id'=> $state->getSpotId()]);
 
+            $cart = EmojisushiApi::getCart();
             $posterProducts = new PosterProducts();
 
             $posterProducts
-                ->addCartProducts($products)
+                ->addCartProducts($cart['data'])
                 ->addProduct(
                     492,
                     $this->t('sticks_name'),
-                    $sticks
+                    $state->getOrderInfoSticksCount()
                 );
-            $money = app()->make(Money::class);
 
             return $this->buildReceipt([
                 'headline' =>  $this->t('confirm_order_question'),
                 'first_name' => $firstName,
                 'last_name' => $lastName,
                 'phone' => $phone,
-                'delivery_method_name' => $delivery_method_name,
-                'payment_method_name' => $payment_method_name,
+                'delivery_method_name' => $shipping_method['name'] ?? null,
+                'payment_method_name' => $payment_method['name'] ?? null,
                 'address' => $address,
                 'change' => $change,
                 'comment' => $comment,
                 'products' => $posterProducts->all(),
-                'total' => $money->format(
-                    $cart->totals()->totalPostTaxes(),
-                    null,
-                    Currency::$defaultCurrency
-                ),
-                'spot_name' => $spot->name,
+                'total' => $cart['total'],
+                'spot_name' => $spot['name'],
                 'target' => $this->t('bot')
             ]);
         });
@@ -76,8 +62,7 @@ class TgMallOrderHandler {
         $events->listen('tgmall.order.confirmed', function(Handler $handler) {
             $state = $handler->getState();
             $user = $handler->getTelegramUser();
-            $cart = $handler->getCart();
-            $products = $cart->products()->get();
+
             $phone = $user->phone;
             $firstName = $user->firstname;
             $lastName = $user->lastname;
@@ -85,26 +70,27 @@ class TgMallOrderHandler {
             $change = $state->getOrderInfoChange();
             $comment = $state->getOrderInfoComment();
 
-            $payment_method = PaymentMethod::find($state->getOrderInfoPaymentMethodId());
-            $payment_method_name = optional($payment_method)->name;
-            $delivery = ShippingMethod::find($state->getOrderInfoDeliveryMethodId());
-            $delivery_method_name =  optional($delivery)->name;
+            $payment_method = EmojisushiApi::getPaymentMethod(['id' => $state->getOrderInfoPaymentMethodId()]);
+            $shipping_method = EmojisushiApi::getShippingMethod(['id' => $state->getOrderInfoDeliveryMethodId()]);
+
 
             $sticks = $state->getOrderInfoSticksCount();
-            $spot_id = $state->getSpotId();
-            $spot = Spot::find($spot_id);
+            $spot = EmojisushiApi::getSpot(['slug_or_id' => $state->getSpotId()]);
 
-            if (!count($products) > 0) {
+
+            $cart = EmojisushiApi::getCart();
+            if (!count($cart['data']) > 0) {
                 $handler->sendMessage([
                     'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.cart_is_empty'),
                 ]);
                 return false;
             }
 
+
             $posterProducts = new PosterProducts();
 
             $posterProducts
-                ->addCartProducts($products)
+                ->addCartProducts($cart['data'])
                 ->addProduct(
                     492,
                     $this->t('sticks_name'),
@@ -113,8 +99,8 @@ class TgMallOrderHandler {
 
             $poster_comment = PosterUtils::getComment([
                 'comment' => $comment,
-                'payment_method_name' => $payment_method_name,
-                'delivery_method_name' => $delivery_method_name,
+                'payment_method_name' => $payment_method['name'] ?? null,
+                'delivery_method_name' => $shipping_method['name'] ?? null,
                 'change' => $change
             ],  function($key) {
                 return $this->t($key);
@@ -122,51 +108,44 @@ class TgMallOrderHandler {
 
             $tablet_id = $spot->tablet->tablet_id ?? env('POSTER_FALLBACK_TABLET_ID');
 
+            $result = $this->sendPoster([
+                'spot_id' => $tablet_id,
+                'phone' => $phone,
+                'products' => $posterProducts->all(),
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'comment' => $poster_comment,
+                'address' => $address
+            ]);
 
-                $result = $this->sendPoster([
-                    'spot_id' => $tablet_id,
-                    'phone' => $phone,
-                    'products' => $posterProducts->all(),
-                    'first_name' => $firstName,
-                    'last_name' => $lastName,
-                    'comment' => $poster_comment,
-                    'address' => $address
+            if (isset($result->error)) {
+                $poster_err =  $result->message;
+
+                $handler->sendMessage([
+                    'text' => $poster_err
                 ]);
 
-                if (isset($result->error)) {
-                    $poster_err =  $result->message;
+                Log::error($poster_err);
+                return false;
+            }
 
-                    $handler->sendMessage([
-                        'text' => $poster_err
-                    ]);
-
-                    Log::error($poster_err);
-                    return false;
-                }
-
-
-            $token = optional($spot->bot)->token ?? env('TELEGRAM_FALLBACK_BOT_TOKEN');
-            $chat_id = optional($spot->chat)->internal_id ?? env('TELEGRAM_FALLBACK_CHAT_ID');
+            $token = $spot['bot']['token'] ?? env('TELEGRAM_FALLBACK_BOT_TOKEN');
+            $chat_id = $spot['chat']['internal_id'] ?? env('TELEGRAM_FALLBACK_CHAT_ID');
             $api = new Api($token);
-            $money = app()->make(Money::class);
 
             $receipt = $this->buildReceipt([
                 'headline' =>  $this->t('new_order'),
                 'first_name' => $firstName,
                 'last_name' => $lastName,
                 'phone' => $phone,
-                'delivery_method_name' => $delivery_method_name,
-                'payment_method_name' => $payment_method_name,
+                'payment_method_name' => $payment_method['name'] ?? null,
+                'delivery_method_name' => $shipping_method['name'] ?? null,
                 'address' => $address,
                 'change' => $change,
                 'comment' => $comment,
                 'products' => $posterProducts->all(),
-                'total' => $money->format(
-                    $cart->totals()->totalPostTaxes(),
-                    null,
-                    Currency::$defaultCurrency
-                ),
-                'spot_name' => $spot->name,
+                'total' => $cart['total'],
+                'spot_name' => $spot['name'],
                 'target' => $this->t('bot')
             ]);
 

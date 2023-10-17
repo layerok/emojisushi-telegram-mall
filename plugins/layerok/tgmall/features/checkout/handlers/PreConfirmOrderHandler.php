@@ -3,36 +3,45 @@
 namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Event;
+use Layerok\Basecode\Classes\Receipt;
+use Layerok\PosterPos\Classes\PosterProducts;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Classes\Keyboards\YesNoKeyboard;
 use Layerok\TgMall\Classes\Traits\Lang;
-use OFFLINE\Mall\Classes\Utils\Money;
-use OFFLINE\Mall\Models\Currency;
-use OFFLINE\Mall\Models\PaymentMethod;
-use OFFLINE\Mall\Models\ShippingMethod;
+use Layerok\TgMall\Facades\EmojisushiApi;
 
 
 class PreConfirmOrderHandler extends Handler
 {
     use Lang;
 
-    protected $name = "pre_confirm_order";
+    protected string $name = "pre_confirm_order";
 
     public function run()
     {
         $user = $this->getTelegramUser();
-        $products = $this->getCart()->products()->get();
+        $cart = EmojisushiApi::getCart();
+
         $phone = $user->phone;
         $firstName = $user->firstname;
         $lastName = $user->lastname;
 
-
-        $delivery = ShippingMethod::find($this->getState()->getOrderInfoDeliveryMethodId());
-        $payment_method = PaymentMethod::find($this->getState()->getOrderInfoPaymentMethodId());
-
+        $payment_method = EmojisushiApi::getPaymentMethod([
+            'id' => $this->getState()->getOrderInfoPaymentMethodId()
+        ]);
+        $shipping_method = EmojisushiApi::getShippingMethod([
+            'id' => $this->getState()->getOrderInfoDeliveryMethodId()
+        ]);
 
         $receipt = $this->getReceipt();
-        $money = app()->make(Money::class);
+        $posterProducts = new PosterProducts();
+        $posterProducts
+            ->addCartProducts($cart['data'])
+            ->addProduct(
+                492,
+                self::lang('receipt.sticks_name'),
+                $this->getState()->getOrderInfoSticksCount()
+            );
 
         $receipt
             ->headline(self::lang('receipt.confirm_order_question'))
@@ -40,16 +49,12 @@ class PreConfirmOrderHandler extends Handler
             ->field('last_name', $lastName)
             ->field('phone', $phone)
             ->field('comment', $this->getState()->getOrderInfoComment())
-            ->field('delivery_method_name', optional($delivery)->name)
-            ->field('payment_method_name', optional($payment_method)->name)
+            ->field('delivery_method_name', $shipping_method['name'] ?? null)
+            ->field('payment_method_name', $payment_method['name'] ?? null)
             ->newLine()
-            ->products($products)
+            ->products($posterProducts->all())
             ->newLine()
-            ->field('total', $money->format(
-                $this->getCart()->totals()->totalPostTaxes(),
-                null,
-                Currency::$defaultCurrency
-            ));
+            ->field('total', $cart['total']);
 
         if($result = Event::fire('tgmall.order.preconfirm.receipt', [$this], true)) {
             $receipt = $result;
@@ -70,5 +75,23 @@ class PreConfirmOrderHandler extends Handler
             'reply_markup' => $k->getKeyboard()
         ]);
         $this->getState()->setMessageHandler(null);
+    }
+
+    public function getReceipt(): Receipt
+    {
+        $receipt = new Receipt();
+
+        $receipt->setProductNameResolver(function(array $cartProduct) {
+            return $cartProduct['name'];
+        });
+        $receipt->setProductCountResolver(function(array $cartProduct) {
+            return $cartProduct['count'];
+        });
+
+        $receipt->setTransResolver(function($key) {
+            return self::lang('receipt.' . $key);
+        });
+
+        return $receipt;
     }
 }

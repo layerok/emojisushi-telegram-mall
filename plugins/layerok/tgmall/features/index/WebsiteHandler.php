@@ -10,7 +10,7 @@ class WebsiteHandler extends Handler
 {
     use Lang;
 
-    protected $name = "website";
+    protected string $name = "website";
 
     public function run()
     {

@@ -11,7 +11,7 @@ class WishToLeaveCommentHandler extends Handler
 {
     use Lang;
 
-    protected $name = "wish_to_leave_comment";
+    protected string $name = "wish_to_leave_comment";
 
     public function run()
     {

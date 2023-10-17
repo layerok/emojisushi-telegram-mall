@@ -29,8 +29,7 @@ class MainMenuKeyboard extends InlineKeyboard
 
 
         });
-        $this
-            ->append([
+        $this->append([
                 'text' => self::lang('buttons.categories'),
                 'callback_data' => self::prepareCallbackData('category_items', [])
             ])

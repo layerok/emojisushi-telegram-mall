@@ -10,7 +10,7 @@ class CheckoutHandler extends Handler
 {
     use Lang;
 
-    protected $name = "checkout";
+    protected string $name = "checkout";
 
     public function run()
     {

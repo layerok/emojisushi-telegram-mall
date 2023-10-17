@@ -2,6 +2,7 @@
 
 namespace Layerok\TgMall\Services;
 
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Utils;
@@ -52,12 +53,10 @@ class EmojisushiApi {
     }
 
     /**
-     * @param array $params {
-     *   slug_or_id
-     * }
+     * @param array{slug_or_id: string|int} $params
      * @param array $guzzleOptions
      * @return mixed
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
     public function getCity( array $params = [], array $guzzleOptions = []) {
         $res = $this->guzzleClient->get(
@@ -70,12 +69,10 @@ class EmojisushiApi {
     }
 
     /**
-     * @param array $params {
-     *   slug_or_id
-     * }
+     * @param array{slug_or_id: string|int} $params
      * @param array $guzzleOptions
      * @return mixed
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
     public function getSpot( array $params = [], array $guzzleOptions = []) {
         $res = $this->guzzleClient->get(
@@ -108,14 +105,10 @@ class EmojisushiApi {
     }
 
     /**
-     * @param array $params {
-     *  offset,
-     *  limit,
-     *  category_slug
-     * }
-     * @param array $guzzleOptions
+     * @param array{offset?: string|int, limit?: string|int} $params
+     * $param array $guzzleOptions
      * @return mixed
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
     public function getProducts(array $params = [], array $guzzleOptions = []) {
         $res = $this->guzzleClient->get(
@@ -128,15 +121,16 @@ class EmojisushiApi {
     }
 
     /**
-     * @param array $params {
-     *  product_id,
-     * }
+     * @param array{product_id: string|int} $params
      * @param array $guzzleOptions
      * @return mixed
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
     public function getProduct(array $params = [], array $guzzleOptions = []) {
-        $products = $this->getProducts(['limit' => 44543534, 'category_slug' => 'menu'])['data'];
+        $products = $this->getProducts(
+            ['limit' => 44543534, 'category_slug' => 'menu'],
+            $guzzleOptions
+        )['data'];
         $found = array_filter(
             $products,
             function($p) use($params) { return $params['product_id'] == $p['id']; }
@@ -146,15 +140,13 @@ class EmojisushiApi {
     }
 
     /**
-     * @param array $params {
-     *  variant_id,
-     * }
+     * @param array{variant_id: string|int} $params
      * @param array $guzzleOptions
      * @return mixed
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
     public function getVariant(array $params = [], array $guzzleOptions = []) {
-        $products = $this->getProducts(['limit' => 44543534, 'category_slug' => 'menu'])['data'];
+        $products = $this->getProducts(['limit' => 44543534, 'category_slug' => 'menu'], $guzzleOptions)['data'];
         $found = array_filter($products, function ($product) use($params) {
             return in_array($params['variant_id'], array_map(fn($v) => $v['id'], $product['variants']));
         })[0] ?? null;
@@ -172,11 +164,10 @@ class EmojisushiApi {
     }
 
     /**
-     * @param array $params {
-     *  includeSpots,
-     *  includeDistricts
-     * }
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @param array{includeSpots?: bool,includeDistricts?:bool} $params
+     * @param array $guzzleOptions
+     * @return mixed
+     * @throws GuzzleException
      */
     public function getCities( array $params = [], array $guzzleOptions = []) {
         $res = $this->guzzleClient->get(
@@ -199,12 +190,10 @@ class EmojisushiApi {
     }
 
     /**
-     * @param array $params {
-     *  product_id,
-     *  quantity,
-     *  variant_id
-     * }
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @param array{product_id:string|int, quantity:string|int, variant_id:string|int} $params
+     * @param array $guzzleOptions
+     * @return mixed
+     * @throws GuzzleException
      */
     public function addCartProduct(array $params = [], array $guzzleOptions = []) {
         $res = $this->guzzleClient->post(
@@ -217,10 +206,10 @@ class EmojisushiApi {
     }
 
     /**
-     * @param array $params {
-     *  cart_product_id,
-     * }
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @param array{cart_product_id: string|int } $params
+     * @param array $guzzleOptions
+     * @return mixed
+     * @throws GuzzleException
      */
     public function removeFromCart(array $params = [], array $guzzleOptions = []) {
         $res = $this->guzzleClient->post(
@@ -233,14 +222,13 @@ class EmojisushiApi {
     }
 
     /**
-     * @param array $params {
-     *  product_id,
-     *  variant_id
-     * }
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @param array{product_id: string|int, variant_id: string|int} $params
+     * @param array $guzzleOptions
+     * @return mixed
+     * @throws GuzzleException
      */
     public function getCartProduct(array $params = [], array $guzzleOptions = []) {
-        $cart = $this->getCart();
+        $cart = $this->getCart([], $guzzleOptions);
         $found = array_filter($cart['data'], function($cartProduct) use($params) {
             if(isset($params['variant_id'])) {
                 if($cartProduct['variant_id'] !== $params['variant_id']) {
@@ -253,5 +241,85 @@ class EmojisushiApi {
         $found = array_values($found);
 
         return $found[0] ?? null;
+    }
+
+    /**
+     * @param array{offset?: string|int, limit?: string|int} $params
+     * @param array $guzzleOptions
+     * @return mixed
+     * @throws GuzzleException
+     */
+    public function getPaymentMethods(array $params = [], array $guzzleOptions = []) {
+        $res = $this->guzzleClient->get(
+            'payments',
+            array_merge_recursive($guzzleOptions, [
+                'query' => $params
+            ]),
+        );
+        return json_decode($res->getBody(), true);
+    }
+
+    /**
+     * @param array{offset?: string|int, limit?: string|int} $params
+     * @param array $guzzleOptions
+     * @return mixed
+     * @throws GuzzleException
+     */
+    public function getShippingMethods(array $params = [], array $guzzleOptions = []) {
+        $res = $this->guzzleClient->get(
+            'shipping',
+            array_merge_recursive($guzzleOptions, [
+                'query' => $params
+            ]),
+        );
+        return json_decode($res->getBody(), true);
+    }
+
+    /**
+     * @param array{id:string|int} $params
+     * @param array $guzzleOptions
+     * @return mixed|null
+     * @throws GuzzleException
+     */
+    public function getShippingMethod(array $params = [], array $guzzleOptions = []) {
+        $methods = $this->getShippingMethods([
+            'limit' => 4342342342
+        ], $guzzleOptions)['data'];
+        $found = array_filter($methods, function($method) use($params) {
+            return $method['id'] === $params['id'];
+        });
+        return array_values($found)[0] ?? null;
+    }
+
+    /**
+     * @param array{id:string|int} $params
+     * @param array $guzzleOptions
+     * @return mixed|null
+     * @throws GuzzleException
+     */
+    public function getPaymentMethod(array $params = [], array $guzzleOptions = []) {
+        $methods = $this->getPaymentMethods([
+            'limit' => 4342342342
+        ], $guzzleOptions)['data'];
+        $found = array_filter($methods, function($method) use($params) {
+            return $method['id'] === $params['id'];
+        });
+        return array_values($found)[0] ?? null;
+    }
+
+    /**
+     * @param array $params
+     * @param array $guzzleOptions
+     * @return mixed
+     * @throws GuzzleException
+     */
+    public function clearCart(array $params = [], array $guzzleOptions = []) {
+        $res = $this->guzzleClient->post(
+            'cart/clear',
+            array_merge_recursive($guzzleOptions, [
+                'json' => $params
+            ]),
+        );
+        return json_decode($res->getBody(), true);
     }
 }

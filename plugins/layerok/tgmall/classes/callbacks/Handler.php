@@ -2,13 +2,9 @@
 
 namespace Layerok\TgMall\Classes\Callbacks;
 
-use Layerok\BaseCode\Classes\Receipt;
+
 use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Classes\Traits\Warn;
-
-
-use OFFLINE\Mall\Models\Cart;
-use OFFLINE\Mall\Models\CartProduct;
 use Telegram\Bot\Answers\Answerable;
 use Telegram\Bot\Api;
 use Telegram\Bot\Objects\Update;
@@ -96,14 +92,6 @@ abstract class Handler implements HandlerInterface
         return $this->getTelegramUser()->state;
     }
 
-    public function getCart(): Cart
-    {
-        if(isset($this->cart)) {
-            return $this->cart;
-        }
-        return $this->cart = Cart::bySession();
-    }
-
     public function getChatId()
     {
         $update = $this->telegram->getWebhookUpdate(false);
@@ -156,24 +144,4 @@ abstract class Handler implements HandlerInterface
             'chat_id' => $this->user->chat_id
         ]));
     }
-
-    public function getReceipt(): Receipt
-    {
-        $receipt = new Receipt();
-
-        $receipt->setProductNameResolver(function(CartProduct $cartProduct) {
-            return $cartProduct->product->name;
-        });
-        $receipt->setProductCountResolver(function(CartProduct $cartProduct) {
-            return $cartProduct->quantity;
-        });
-
-        $receipt->setTransResolver(function($key) {
-            return self::lang('receipt.' . $key);
-        });
-
-        return $receipt;
-    }
-
-
 }

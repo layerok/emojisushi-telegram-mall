@@ -10,7 +10,7 @@ class ListPaymentMethodsHandler extends Handler
 {
     use Lang;
 
-    protected $name = "list_payment_methods";
+    protected string $name = "list_payment_methods";
 
 
     public function run()

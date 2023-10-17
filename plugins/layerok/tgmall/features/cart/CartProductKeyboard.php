@@ -16,6 +16,7 @@ class CartProductKeyboard extends InlineKeyboard
     public function build(): void
     {
         $cartProduct = $this->vars['cartProduct'];
+        // todo: get rid of Money
         $money = app()->make(Money::class);
 
         $this

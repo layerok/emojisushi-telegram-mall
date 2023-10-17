@@ -5,6 +5,7 @@ namespace Layerok\TgMall\Features\Checkout\Handlers;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Classes\Traits\Lang;
 use Event;
+use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Features\Checkout\Keyboards\OrderConfirmedKeyboard;
 
 
@@ -12,7 +13,7 @@ class ConfirmOrderHandler extends Handler
 {
     use Lang;
 
-    public $name = "confirm_order";
+    public string $name = "confirm_order";
 
     public function run()
     {
@@ -22,7 +23,7 @@ class ConfirmOrderHandler extends Handler
 
             $k = new OrderConfirmedKeyboard();
 
-            $this->getCart()->products()->delete();
+            EmojisushiApi::clearCart();
 
 
             $this->sendMessage([

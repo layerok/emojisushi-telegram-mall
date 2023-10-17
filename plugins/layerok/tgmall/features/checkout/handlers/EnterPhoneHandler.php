@@ -9,7 +9,7 @@ use Layerok\TgMall\Features\Checkout\Messages\OrderPhoneMessageHandler;
 class EnterPhoneHandler extends Handler
 {
     use Lang;
-    protected $name = "enter_phone";
+    protected string $name = "enter_phone";
 
     public function run()
     {

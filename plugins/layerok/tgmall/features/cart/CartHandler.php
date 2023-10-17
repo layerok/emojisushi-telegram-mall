@@ -145,7 +145,7 @@ class CartHandler extends Handler
         $this->getState()->setCartTotalMsg(
             [
                 'id' => $msg_id,
-                'total' => $this->getCart()->totals()->totalPostTaxes()
+                'total' => $cart['total']
             ]
         );
     }
