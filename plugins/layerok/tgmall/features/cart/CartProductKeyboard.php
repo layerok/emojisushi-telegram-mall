@@ -3,14 +3,9 @@
 namespace Layerok\Tgmall\Features\Cart;
 
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
-use Layerok\TgMall\Classes\Traits\CallbackData;
-use Layerok\TgMall\Classes\Traits\Lang;
 
 class CartProductKeyboard extends InlineKeyboard
 {
-    use Lang;
-    use CallbackData;
-
     public function build(): void
     {
         $cartProduct = $this->vars['cartProduct'];
@@ -18,49 +13,49 @@ class CartProductKeyboard extends InlineKeyboard
 
         $this
             ->append([
-                'text' => self::lang('buttons.minus'),
-                'callback_data' => self::prepareCallbackData(
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.minus'),
+                'callback_data' => json_encode([
                     'cart',
                     [
                         'type' => 'update',
                         'id' => $cartProduct['id'],
                         'qty' => -1
                     ]
-                ),
+                ]),
             ])
             ->append([
                 'text' => $cartProduct['quantity'],
-                'callback_data' => self::prepareCallbackData('noop')
+                'callback_data' => json_encode(['noop', []])
             ])
             ->append([
-                'text' => self::lang('buttons.plus'),
-                'callback_data' => self::prepareCallbackData(
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.plus'),
+                'callback_data' => json_encode([
                     'cart',
                     [
                         'type' => 'update',
                         'id' => $cartProduct['id'],
                         'qty' => 1
                     ]
-                )
+                ])
             ])
             ->append([
-                'text' => self::lang('buttons.del'),
-                'callback_data' => self::prepareCallbackData(
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.del'),
+                'callback_data' => json_encode([
                     'cart',
                     [
                         'type' => 'remove',
                         'id' => $cartProduct['id'],
                     ]
-                ),
+                ]),
             ])
             ->nextRow()
             ->append([
                 'text' => sprintf(
                     '%s: %s ₴',
-                    self::lang('buttons.price'),
+                    \Lang::get('layerok.tgmall::lang.telegram.buttons.price'),
                     (number_format($cartProduct['price']['UAH'] * $cartProduct['quantity'] / 100, 0))
                 ),
-                'callback_data' => self::prepareCallbackData('noop')
+                'callback_data' => json_encode(['noop', []])
             ]);
 
     }

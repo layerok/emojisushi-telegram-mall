@@ -1,15 +1,11 @@
 <?php namespace Layerok\TgMall\Features\Index;
 
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
-use Layerok\TgMall\Classes\Traits\CallbackData;
-use Layerok\TgMall\Classes\Traits\Lang;
+
 use Event;
 
 class MainMenuKeyboard extends InlineKeyboard
 {
-    use Lang;
-    use CallbackData;
-
     public function build(): void
     {
         Event::fire('tgmall.keyboard.main.beforeBuild', [$this]);
@@ -19,10 +15,10 @@ class MainMenuKeyboard extends InlineKeyboard
             if($ri == 1 && $ci == 1) {
                 $this->nextRow()
                     ->append([
-                        'text' => self::lang('spots.change'),
-                        'callback_data' => self::prepareCallbackData(
-                            'list_spots'
-                        )
+                        'text' => \Lang::get('layerok.tgmall::lang.telegram.spots.change'),
+                        'callback_data' => json_encode([
+                            'list_spots', []
+                        ])
                     ]);
 
             };
@@ -30,22 +26,22 @@ class MainMenuKeyboard extends InlineKeyboard
 
         });
         $this->append([
-                'text' => self::lang('buttons.categories'),
-                'callback_data' => self::prepareCallbackData('category_items', [])
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.categories'),
+                'callback_data' => json_encode(['category_items', []])
             ])
             ->append([
-                'text' => self::lang('buttons.cart'),
-                'callback_data' => self::prepareCallbackData(
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.cart'),
+                'callback_data' => json_encode([
                     'cart',
                     ['type' => 'list']
-                )
+                ])
             ])
             ->nextRow()
             ->append([
                 'text' => '🌐 Вебсайт',
-                'callback_data' => self::prepareCallbackData(
+                'callback_data' => json_encode([
                     'website'
-                )
+                ])
             ]);
     }
 

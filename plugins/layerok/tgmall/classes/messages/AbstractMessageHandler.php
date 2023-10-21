@@ -1,14 +1,11 @@
 <?php namespace Layerok\TgMall\Classes\Messages;
 
-use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Models\State;
 use Telegram\Bot\Api;
 use Telegram\Bot\Objects\Update;
 
 abstract class AbstractMessageHandler implements MessageHandlerInterface
 {
-    use Lang;
-
     protected Update $update;
 
     protected Api $api;

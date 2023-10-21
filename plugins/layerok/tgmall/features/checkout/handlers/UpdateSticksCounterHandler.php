@@ -3,14 +3,11 @@
 namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Features\Checkout\Keyboards\SticksCounterKeyboard;
 
 
 class UpdateSticksCounterHandler extends Handler
 {
-    use Lang;
-
     protected string $name = "update_sticks_counter";
 
     public function run()

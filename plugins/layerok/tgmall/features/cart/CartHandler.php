@@ -4,7 +4,6 @@
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Classes\Traits\Warn;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Telegram\Bot\FileUpload\InputFile;
@@ -13,7 +12,6 @@ use Telegram\Bot\Keyboard\Keyboard;
 class CartHandler extends Handler
 {
     use Warn;
-    use Lang;
 
     protected string $name = "cart";
 
@@ -125,7 +123,7 @@ class CartHandler extends Handler
         $cart = EmojisushiApi::getCart();
 
         $this->replyWithMessage([
-            'text' => self::lang('buttons.cart')
+            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.cart')
         ]);
 
         collect($cart['data'])->map(function ($cartProduct) {
@@ -232,8 +230,8 @@ class CartHandler extends Handler
     public function cartFooterMessage($cart): array
     {
         $text = count($cart['data']) === 0 ?
-            self::lang('texts.cart_is_empty') :
-            self::lang('texts.cart');
+            \Lang::get('layerok.tgmall::lang.telegram.texts.cart_is_empty') :
+            \Lang::get('layerok.tgmall::lang.telegram.texts.cart');
         return [
             'text' => $text,
             'reply_markup' => $this->cartFooterKeyboard($cart)

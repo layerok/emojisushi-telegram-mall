@@ -1,38 +1,34 @@
 <?php namespace Layerok\Tgmall\Features\Cart;
 
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
-use Layerok\TgMall\Classes\Traits\CallbackData;
-use Layerok\TgMall\Classes\Traits\Lang;
 
 class CartFooterKeyboard extends InlineKeyboard
 {
-    use Lang;
-    use CallbackData;
 
     public function build(): void
     {
         $cart = $this->vars['cart'];
 
         if (count($cart['data']) !== 0) {
-            $total = self::lang('texts.all_amount_order', [
+            $total = \Lang::get('layerok.tgmall::lang.telegram.texts.all_amount_order', [
                 'price' => $cart['total']]
             );
 
             $this->append([
                 'text' => $total,
-                'callback_data' => self::prepareCallbackData('noop')
+                'callback_data' => json_encode(['noop', []])
             ])->nextRow()->append([
-                'text' => self::lang('buttons.take_order'),
-                'callback_data' => self::prepareCallbackData('checkout')
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.take_order'),
+                'callback_data' => json_encode(['checkout', []])
             ])->nextRow();
         }
 
         $this->append([
-            'text' => self::lang('buttons.to_categories'),
-            'callback_data' => self::prepareCallbackData('category_items')
+            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.to_categories'),
+            'callback_data' => json_encode(['category_items', []])
         ])->nextRow()->append([
-            'text' => self::lang('buttons.in_menu_main'),
-            'callback_data' => self::prepareCallbackData('start')
+            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.in_menu_main'),
+            'callback_data' => json_encode(['start', []])
         ]);
 
     }

@@ -2,15 +2,12 @@
 
 use Layerok\PosterPos\Models\Spot;
 use Layerok\TgMall\Features\Index\MainMenuKeyboard;
-use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Features\Index\SpotsKeyboard;
 use Layerok\TgMall\Models\User as TelegramUser;
 use Telegram\Bot\Commands\Command;
 
 class StartCommand extends Command
 {
-    use Lang;
-
     protected string $name = "start";
 
     /**
@@ -37,7 +34,7 @@ class StartCommand extends Command
         if(!$spot) {
             $k = new SpotsKeyboard();
             $this->replyWithMessage([
-                'text' => self::lang('spots.choose'),
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.spots.choose'),
                 'reply_markup' => $k->getKeyboard()
             ]);
             return;
@@ -48,7 +45,7 @@ class StartCommand extends Command
             ->getChat();
 
         $text = sprintf(
-            self::lang('texts.welcome'),
+            \Lang::get('layerok.tgmall::lang.telegram.texts.welcome'),
             $from->firstName
         );
 

@@ -2,8 +2,6 @@
 
 namespace Layerok\TgMall\Classes\Callbacks;
 
-
-use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Classes\Traits\Warn;
 use Telegram\Bot\Answers\Answerable;
 use Telegram\Bot\Api;
@@ -14,7 +12,6 @@ abstract class Handler implements HandlerInterface
 {
     use Answerable;
     use Warn;
-    use Lang;
 
     protected ?Api $telegram = null;
 
@@ -25,9 +22,9 @@ abstract class Handler implements HandlerInterface
      */
     protected Update $update;
 
-    protected $arguments = [];
+    protected array $arguments = [];
 
-    protected $errors = [];
+    protected array $errors = [];
 
     abstract public function run();
 

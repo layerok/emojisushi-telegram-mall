@@ -5,14 +5,11 @@ namespace Layerok\TgMall\Features\Checkout\Messages;
 use Illuminate\Support\Facades\Validator;
 use Layerok\TgMall\Classes\Callbacks\CallbackQueryBus;
 use Layerok\TgMall\Classes\Messages\AbstractMessageHandler;
-use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Features\Checkout\Keyboards\IsRightPhoneKeyboard;
 
 class OrderNameHandler extends AbstractMessageHandler
 {
-    use Lang;
-
-    protected $errors;
+    protected array $errors;
 
     public function validate(): bool
     {
@@ -45,14 +42,20 @@ class OrderNameHandler extends AbstractMessageHandler
 
             $k = new IsRightPhoneKeyboard();
             $this->sendMessage([
-                'text' => self::lang('texts.right_phone_number') . ' ' . $this->getTelegramUser()->phone . '?',
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.right_phone_number') . ' ' . $this->getTelegramUser()->phone . '?',
                 'reply_markup' => $k->getKeyboard(),
             ]);
 
             return;
         }
 
-        CallbackQueryBus::instance()->make('enter_phone', []);
+        CallbackQueryBus::instance()->make(
+            'enter_phone',
+            [],
+            $this->getTelegramUser(),
+            $this->update,
+            $this->api
+        );
 
     }
 

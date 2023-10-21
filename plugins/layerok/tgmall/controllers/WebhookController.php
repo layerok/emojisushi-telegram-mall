@@ -4,7 +4,6 @@ use Layerok\TgMall\Classes\Callbacks\CallbackQueryBus;
 use Layerok\TgMall\Classes\Callbacks\NoopHandler;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Stores\StateStore;
-use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Stores\UserStore;
 use Layerok\TgMall\Features\Checkout\Handlers\ConfirmOrderHandler;
 use Layerok\Tgmall\Features\Cart\CartHandler;
@@ -29,7 +28,6 @@ use Layerok\Tgmall\Features\Product\AddProductHandler;
 use Layerok\TgMall\Features\Index\StartHandler;
 use Layerok\TgMall\Classes\Commands\StartCommand;
 use Layerok\TgMall\Models\Settings;
-use \Layerok\TgMall\Models\User as TelegramUser;
 
 use Telegram\Bot\Api;
 use Telegram\Bot\Commands\HelpCommand;
@@ -39,10 +37,6 @@ use Session;
 
 class WebhookController
 {
-    use Lang;
-
-    public ?TelegramUser $user;
-
     public UserStore $userStore;
     public StateStore $stateStore;
 
@@ -50,9 +44,6 @@ class WebhookController
 
     public function __invoke()
     {
-        EmojisushiApi::init([
-            'sessionId' => '44234f3423423', // todo: unique session id for every user
-        ]);
         $bot_token = \Config::get('layerok.tgmall::credentials.bot_token');
         $this->api = new Api($bot_token);
         $this->api->addCommands([
@@ -63,7 +54,6 @@ class WebhookController
         $this->stateStore = new StateStore();
 
         CallbackQueryBus::instance()
-            ->setTelegram($this->api)
             ->addHandlers([
                 StartHandler::class,
                 WebsiteHandler::class,
@@ -101,32 +91,31 @@ class WebhookController
 
     public function handleUpdate(UpdateWasReceived $event) {
         $update = $event->update;
-        $telegram = $event->telegram;
 
         try {
-            $chat = $update->getChat();
-            $this->user = $this->userStore->findByChat($chat);
+            $user = $this->userStore->findByChat($update->getChat()) ??
+                $this->userStore->createFromChat($update->getChat());
 
-            if(!$this->user) {
-                $this->user = $this->userStore->createFromChat($chat);
+            if(!$user->state) {
+                $user->state = $this->stateStore->create($user);
             }
 
-            if(!$this->user->state) {
-                $this->user->state = $this->stateStore->create($this->user);
-            }
+            $sessionId = $user->state->hasSession() ?
+                $user->state->getSession() :
+                str_random(100);
 
-            if(!$this->user->state->hasSession()) {
-                $sessionId = str_random(100);
-                $this->user->state->setSession($sessionId);
-            }
+            EmojisushiApi::init([
+                'sessionId' => $sessionId,
+            ]);
+            $user->state->setSession($sessionId);
             // it is required for the cart to function correctly
-            Session::put('cart_session_id', $this->user->state->getSession());
+            Session::put('cart_session_id', $sessionId);
 
 
-            if(Settings::get('is_maintenance_mode', env('TG_MALL_IS_MAINTENANCE_MODE', false))) {
+            if($this->isMaintenance()) {
                 $this->api->sendMessage([
-                    'text' =>  'Просимо вибачення. Над ботом тимчасово ведуться технічні роботи. Поки що Ви можете скористатися нашим сайтом https://emojisushi.com.ua',
-                    'chat_id' => $this->user->chat_id
+                    'text' =>  \Lang::get('layerok.tgmall::lang.telegram.maintenance_msg'),
+                    'chat_id' => $user->chat_id
                 ]);
                 if($update->isType('callback_query')) {
                     $this->api->answerCallbackQuery([
@@ -136,26 +125,27 @@ class WebhookController
                 return;
             }
 
-            CallbackQueryBus::instance()
-                ->setTelegram($telegram)
-                ->setTelegramUser($this->user)
-                ->setUpdate($update);
 
             if($update->isType('callback_query')) {
-                $this->userStore->updateFromCallbackQuery($this->user, $update->getCallbackQuery());
+                $this->userStore->updateFromCallbackQuery($user, $update->getCallbackQuery());
                 $handlerInfo = CallbackQueryBus::instance()->parse($update);
 
                 $spot = EmojisushiApi::getSpot([
-                    'slug_or_id' => $this->user->state->getSpotId()
+                    'slug_or_id' => $user->state->getSpotId()
                 ]);
 
                 if(!$spot && $handlerInfo[0] !== 'change_spot') {
-                    CallbackQueryBus::instance()->make('list_spots', []);
+                    CallbackQueryBus::instance()->make(
+                        'list_spots',
+                        [],
+                        $user,
+                        $update, $this->api
+                    );
                 } else {
-                    $this->user->state->setMessageHandler(null);
+                    $user->state->setMessageHandler(null);
 
                     CallbackQueryBus::instance()
-                        ->handle();
+                        ->handle($user, $update, $this->api);
                 }
 
                 $this->api->answerCallbackQuery([
@@ -164,12 +154,12 @@ class WebhookController
 
 
             } else if($update->isType('message')) {
-                $this->userStore->updateFromMessage($this->user, $update->getMessage());
+                $this->userStore->updateFromMessage($user, $update->getMessage());
                 if ($update->hasCommand()) {
                     return;
                 }
 
-                $message_handler = $this->user->state->getMessageHandler();
+                $message_handler = $user->state->getMessageHandler();
 
                 if (!isset($message_handler)) {
                     return;
@@ -179,7 +169,7 @@ class WebhookController
                     throw new \RuntimeException('message handler with [' . $message_handler . '] does not exist');
                 }
 
-                $handler = new $message_handler($telegram, $update, $this->user->state);
+                $handler = new $message_handler($event->telegram, $update, $user->state);
                 $handler->start();
             } else {
                // do nothing
@@ -210,6 +200,10 @@ class WebhookController
             }
             Log::error($error->getMessage() . PHP_EOL . $error->getTraceAsString());
         }
+    }
+
+    public function isMaintenance(): bool {
+        return Settings::get('is_maintenance_mode', env('TG_MALL_IS_MAINTENANCE_MODE', false));
     }
 
 }

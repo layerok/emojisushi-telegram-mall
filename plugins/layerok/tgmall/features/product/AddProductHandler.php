@@ -4,7 +4,6 @@ namespace Layerok\Tgmall\Features\Product;
 
 use Illuminate\Support\Facades\Validator;
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Classes\Traits\Warn;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\Tgmall\Features\Category\CategoryFooterKeyboard;
@@ -13,7 +12,6 @@ use Layerok\Tgmall\Features\Category\CategoryProductKeyboard;
 
 class AddProductHandler extends Handler
 {
-    use Lang;
     use Warn;
 
     protected string $name = "product_add";

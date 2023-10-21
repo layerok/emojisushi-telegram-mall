@@ -5,14 +5,12 @@ namespace Layerok\Tgmall\Features\Category;
 use Illuminate\Support\Facades\Validator;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Facades\EmojisushiApi;
-use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Classes\Traits\Warn;
 use Config;
 use Telegram\Bot\FileUpload\InputFile;
 
 class CategoryItemHandler extends Handler
 {
-    use Lang;
     use Warn;
 
     protected string $name = "category_item";
@@ -51,7 +49,7 @@ class CategoryItemHandler extends Handler
         ]);
 
         $message = $this->replyWithMessage([
-            'text' => self::lang('texts.triple_dot'),
+            'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.triple_dot'),
             'reply_markup' => $markup->getKeyboard()
         ]);
 

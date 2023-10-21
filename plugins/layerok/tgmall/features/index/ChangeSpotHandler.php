@@ -3,14 +3,11 @@
 namespace Layerok\TgMall\Features\Index;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Facades\EmojisushiApi;
 
 
 class ChangeSpotHandler extends Handler
 {
-    use Lang;
-
     protected string $name = "change_spot";
 
     public function run()
@@ -26,7 +23,7 @@ class ChangeSpotHandler extends Handler
 
         $response = $this->replyWithMessage([
             'chat_id' => $from->id,
-            'text' => self::lang('spots.changed') . ': ' . $spot['name']
+            'text' => \Lang::get('layerok.tgmall::lang.telegram.spots.changed') . ': ' . $spot['name']
         ]);
 
         $this->telegram->pinChatMessage([
@@ -36,7 +33,7 @@ class ChangeSpotHandler extends Handler
 
 
         $text = sprintf(
-            self::lang('texts.welcome'),
+            \Lang::get('layerok.tgmall::lang.telegram.texts.welcome'),
             $from->getFirstName()
         );
 

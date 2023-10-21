@@ -3,12 +3,10 @@
 namespace Layerok\TgMall\Features\Index;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\Traits\Lang;
 
 
 class StartHandler extends Handler
 {
-    use Lang;
     protected string $name = "start";
 
     public function run()
@@ -18,7 +16,7 @@ class StartHandler extends Handler
             ->getChat();
 
         $text = sprintf(
-            self::lang('texts.welcome'),
+            \Lang::get('layerok.tgmall::lang.telegram.texts.welcome'),
             $from->getFirstName()
         );
 

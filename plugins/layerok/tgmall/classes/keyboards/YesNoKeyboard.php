@@ -2,23 +2,17 @@
 
 namespace Layerok\TgMall\Classes\Keyboards;
 
-use Layerok\TgMall\Classes\Traits\CallbackData;
-use Layerok\TgMall\Classes\Traits\Lang;
 
 class YesNoKeyboard extends InlineKeyboard
 {
-
-    use Lang;
-    use CallbackData;
-
     public function build(): void
     {
         $this->append([
-            'text' => self::lang('buttons.yes'),
-            'callback_data' => self::prepareCallbackData($this->vars['yes']['handler'])
+            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.yes'),
+            'callback_data' => json_encode([$this->vars['yes']['handler'], []]),
         ])->append([
-            'text' => self::lang('buttons.no'),
-            'callback_data' => self::prepareCallbackData($this->vars['no']['handler'])
+            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.no'),
+            'callback_data' => json_encode([$this->vars['no']['handler'], []])
         ]);
     }
 }

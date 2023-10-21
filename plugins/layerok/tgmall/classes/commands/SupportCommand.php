@@ -1,12 +1,9 @@
 <?php namespace Layerok\TgMall\Classes\Commands;
 
-use Layerok\TgMall\Classes\Traits\Lang;
 use Telegram\Bot\Commands\Command;
 
 class SupportCommand extends Command
 {
-    use Lang;
-
     protected string $name = "support";
 
     /**

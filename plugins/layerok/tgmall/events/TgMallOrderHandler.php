@@ -4,14 +4,13 @@ use Layerok\Basecode\Classes\Receipt;
 use Layerok\PosterPos\Classes\PosterProducts;
 use Layerok\PosterPos\Classes\PosterUtils;
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\Traits\Lang;
+
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Log;
 use poster\src\PosterApi;
 use Telegram\Bot\Api;
 
 class TgMallOrderHandler {
-    use Lang;
 
     public function subscribe($events)
     {

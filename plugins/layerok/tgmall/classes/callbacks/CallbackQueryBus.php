@@ -1,61 +1,32 @@
 <?php namespace Layerok\TgMall\Classes\Callbacks;
 
-use Layerok\TgMall\Classes\Traits\CallbackData;
-
-use Layerok\TgMall\Models\User as TelegramUser;
 use October\Rain\Support\Traits\Singleton;
-use Telegram\Bot\Answers\AnswerBus;
 use Telegram\Bot\Api;
 use Telegram\Bot\Objects\Update;
 use Exception;
 
-class CallbackQueryBus extends AnswerBus
+class CallbackQueryBus
 {
     use Singleton;
-    use CallbackData;
 
-    protected ?Api $telegram;
+    protected array $handlers;
 
-    protected $handlers;
-
-    protected $user;
-
-    /** @var Update */
-    protected $update;
-
-    public function __construct(Api $telegram = null)
+    public function handle($user, Update $update, Api $telegram): void
     {
-        $this->telegram = $telegram;
+        [$name, $arguments] = $this->parse($update);
+
+        $this->make($name, $arguments, $user, $update, $telegram);
     }
 
-    public function setTelegramUser(TelegramUser $user): self
-    {
-        $this->user = $user;
-        return $this;
-    }
-
-    public function setUpdate(Update $update): self
-    {
-        $this->update = $update;
-        return $this;
-    }
-
-    public function handle(): void
-    {
-        [$name, $arguments] = $this->parse($this->update);
-
-        $this->make($name, $arguments);
-    }
-
-    public function make($name, $arguments) {
+    public function make($name, $arguments, $user, $update, Api $telegram) {
         $handler = $this->find($name);
 
         if(!isset($handler)) {
             \Log::error('Handler [' . $name . '] is not found');
             return;
         }
-        $handler->setTelegramUser($this->user);
-        $handler->make($this->telegram, $this->update, $arguments);
+        $handler->setTelegramUser($user);
+        $handler->make($telegram, $update, $arguments);
     }
 
     public function parse(Update $update): array
@@ -82,15 +53,19 @@ class CallbackQueryBus extends AnswerBus
         }
     }
 
-    public function addHandler($handler) {
-        $handler = $this->resolveHandler($handler);
+    public function addHandler($handler): void {
+        if (!is_object($handler)) {
+            if (! class_exists($handler)) {
+                throw new Exception(
+                    sprintf(
+                        'Handler class "%s" not found! Please make sure the class exists.',
+                        $handler
+                    )
+                );
+            }
 
-        $this->handlers[$handler->getName()] = $handler;
-    }
-
-    private function resolveHandler($handler)
-    {
-        $handler = $this->makeHandlerObj($handler);
+            $handler = new $handler();
+        }
 
         if (! ($handler instanceof HandlerInterface)) {
             throw new Exception(
@@ -101,28 +76,23 @@ class CallbackQueryBus extends AnswerBus
             );
         }
 
-        return $handler;
+        $this->handlers[$handler->getName()] = $handler;
     }
 
-    private function makeHandlerObj($handler)
+    public static function parseCallbackData($data): array
     {
-        if (is_object($handler)) {
-            return $handler;
-        }
-        if (! class_exists($handler)) {
-            throw new Exception(
-                sprintf(
-                    'Handler class "%s" not found! Please make sure the class exists.',
-                    $handler
-                )
-            );
-        }
-
-        if ($this->telegram->hasContainer()) {
-            return $this->buildDependencyInjectedAnswer($handler);
+        $data = json_decode($data, true);
+        try {
+            $name = $data[0];
+            $arguments = $data[1] ?? [];
+            return [$name, $arguments];
+        } catch (\ErrorException $e) {
+            \Log::error('Cannot parse callback query data. Error happened inside [' . self::class . ']');
+            \Log::error($e);
+            return ['noop', []];
         }
 
-        return new $handler();
     }
+
 
 }

@@ -1,18 +1,11 @@
 <?php namespace  Layerok\Tgmall\Features\Category;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
-use Layerok\TgMall\Classes\Traits\CallbackData;
-use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Facades\EmojisushiApi;
 
 class CategoryItemsHandler extends Handler
 {
-    use Lang;
-    use CallbackData;
-
     protected string $name = "category_items";
-
 
     public function run()
     {
@@ -21,12 +14,12 @@ class CategoryItemsHandler extends Handler
         ]);
 
         $keyboard->append([
-            'text' => self::lang('buttons.in_menu_main'),
-            'callback_data' => self::prepareCallbackData('start')
+            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.in_menu_main'),
+            'callback_data' => json_encode(['start', []])
         ]);
 
         $replyWith = [
-            'text' => self::lang('texts.category'),
+            'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.category'),
             'reply_markup' => $keyboard->getKeyboard()
         ];
 

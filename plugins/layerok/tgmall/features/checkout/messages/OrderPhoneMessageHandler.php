@@ -5,13 +5,10 @@ namespace Layerok\TgMall\Features\Checkout\Messages;
 use Illuminate\Support\Facades\Validator;
 use Layerok\TgMall\Classes\Callbacks\CallbackQueryBus;
 use Layerok\TgMall\Classes\Messages\AbstractMessageHandler;
-use Layerok\TgMall\Classes\Traits\Lang;
 
 class OrderPhoneMessageHandler extends AbstractMessageHandler
 {
-    use Lang;
-
-    protected $errors;
+    protected array $errors;
 
     public function validate(): bool
     {
@@ -52,7 +49,7 @@ class OrderPhoneMessageHandler extends AbstractMessageHandler
         $this->getTelegramUser()->save();
 
 
-        CallbackQueryBus::instance()->make('list_payment_methods', []);
+        CallbackQueryBus::instance()->make('list_payment_methods', [], $this->getTelegramUser(), $this->update, $this->api);
 
         $this->state->setMessageHandler(null);
     }
@@ -61,7 +58,7 @@ class OrderPhoneMessageHandler extends AbstractMessageHandler
     {
         foreach ($this->errors as $error) {
             $this->sendMessage([
-                'text' => $error . '. ' . self::lang('texts.try_again')
+                'text' => $error . '. ' . \Lang::get('layerok.tgmall::lang.telegram.texts.try_again')
             ]);
         }
     }

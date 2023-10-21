@@ -4,13 +4,10 @@ namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Classes\Keyboards\YesNoKeyboard;
-use Layerok\TgMall\Classes\Traits\Lang;
 
 
 class WishToLeaveCommentHandler extends Handler
 {
-    use Lang;
-
     protected string $name = "wish_to_leave_comment";
 
     public function run()
@@ -27,7 +24,7 @@ class WishToLeaveCommentHandler extends Handler
 
 
         $this->sendMessage([
-            'text' => self::lang('texts.leave_comment_question'),
+            'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.leave_comment_question'),
             'reply_markup' => $k->getKeyboard()
         ]);
     }

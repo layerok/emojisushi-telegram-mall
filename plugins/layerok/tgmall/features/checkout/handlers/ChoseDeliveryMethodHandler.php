@@ -4,15 +4,13 @@ namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Layerok\TgMall\Classes\Callbacks\CallbackQueryBus;
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\Traits\Lang;
+
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Features\Checkout\Keyboards\SticksKeyboard;
 use Layerok\TgMall\Features\Checkout\Messages\OrderDeliveryAddressHandler;
 
 class ChoseDeliveryMethodHandler extends Handler
 {
-    use Lang;
-
     protected string $name = "chose_delivery_method";
 
     public function run()
@@ -24,7 +22,7 @@ class ChoseDeliveryMethodHandler extends Handler
         if ($method['code'] === 'courier') {
             // доставка курьером
             $this->sendMessage([
-                'text' => self::lang('texts.type_delivery_address'),
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.type_delivery_address'),
             ]);
             $this->getState()->setMessageHandler(OrderDeliveryAddressHandler::class);
 
@@ -33,7 +31,7 @@ class ChoseDeliveryMethodHandler extends Handler
             $k = new SticksKeyboard();
             // был выбран самовывоз
             $this->sendMessage([
-                'text' => self::lang('texts.add_sticks_question'),
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.add_sticks_question'),
                 'reply_markup' => $k->getKeyboard()
             ]);
             $this->getState()->setMessageHandler(null);
@@ -41,7 +39,13 @@ class ChoseDeliveryMethodHandler extends Handler
             return;
         }
 
-        CallbackQueryBus::instance()->make('wish_to_leave_comment', []);
+        CallbackQueryBus::instance()->make(
+            'wish_to_leave_comment',
+            [],
+            $this->getTelegramUser(),
+            $this->update,
+            $this->getTelegram()
+        );
 
     }
 }

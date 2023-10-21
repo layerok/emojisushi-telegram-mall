@@ -7,14 +7,11 @@ use Layerok\Basecode\Classes\Receipt;
 use Layerok\PosterPos\Classes\PosterProducts;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Classes\Keyboards\YesNoKeyboard;
-use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Facades\EmojisushiApi;
 
 
 class PreConfirmOrderHandler extends Handler
 {
-    use Lang;
-
     protected string $name = "pre_confirm_order";
 
     public function run()
@@ -39,12 +36,12 @@ class PreConfirmOrderHandler extends Handler
             ->addCartProducts($cart['data'])
             ->addProduct(
                 492,
-                self::lang('receipt.sticks_name'),
+                \Lang::get('layerok.tgmall::lang.telegram.receipt.sticks_name'),
                 $this->getState()->getOrderInfoSticksCount()
             );
 
         $receipt
-            ->headline(self::lang('receipt.confirm_order_question'))
+            ->headline(\Lang::get('layerok.tgmall::lang.telegram.receipt.confirm_order_question'))
             ->field('first_name', $firstName)
             ->field('last_name', $lastName)
             ->field('phone', $phone)
@@ -89,7 +86,7 @@ class PreConfirmOrderHandler extends Handler
         });
 
         $receipt->setTransResolver(function($key) {
-            return self::lang('receipt.' . $key);
+            return \Lang::get('layerok.tgmall::lang.telegram.receipt.' . $key);
         });
 
         return $receipt;

@@ -2,7 +2,7 @@
 namespace Layerok\TgMall;
 
 use Layerok\TgMall\Classes\Boot\Events;
-use Layerok\TgMall\Classes\Traits\Lang;
+
 use Layerok\TgMall\Events\TgMallOrderHandler;
 use Layerok\TgMall\Models\File as TelegramFile;
 use Layerok\TgMall\Services\EmojisushiApi;
@@ -14,7 +14,6 @@ use Event;
 class Plugin extends PluginBase
 {
     public $require = ['OFFLINE.Mall', 'Layerok.BaseCode'];
-    use Lang;
 
     public function boot() {
         Events::boot();

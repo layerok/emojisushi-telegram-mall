@@ -3,7 +3,6 @@
 namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\Traits\Lang;
 use Event;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Features\Checkout\Keyboards\OrderConfirmedKeyboard;
@@ -11,8 +10,6 @@ use Layerok\TgMall\Features\Checkout\Keyboards\OrderConfirmedKeyboard;
 
 class ConfirmOrderHandler extends Handler
 {
-    use Lang;
-
     public string $name = "confirm_order";
 
     public function run()
@@ -27,7 +24,7 @@ class ConfirmOrderHandler extends Handler
 
 
             $this->sendMessage([
-                'text' => self::lang('texts.thank_you'),
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.thank_you'),
                 'reply_markup' => $k->getKeyboard()
             ]);
         }

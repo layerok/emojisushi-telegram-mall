@@ -1,15 +1,10 @@
 <?php namespace Layerok\Tgmall\Features\Category;
 
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
-use Layerok\TgMall\Classes\Traits\CallbackData;
-use Layerok\TgMall\Classes\Traits\Lang;
 use Layerok\TgMall\Facades\EmojisushiApi;
 
 class CategoryProductKeyboard extends InlineKeyboard
 {
-    use Lang;
-    use CallbackData;
-
     protected array $product;
 
     public function build(): void
@@ -34,14 +29,14 @@ class CategoryProductKeyboard extends InlineKeyboard
     public function makeButtonsRow($entry)
     {
         $this->append([
-            'text' => self::lang('buttons.price') . ": " . $entry['prices'][0]['price_formatted'],
-            'callback_data' => self::prepareCallbackData('noop')
+            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.price') . ": " . $entry['prices'][0]['price_formatted'],
+            'callback_data' => json_encode(['noop', []])
         ]);
 
         if(isset($entry['product_id'])) {
             $this->append([
                 'text' => $entry['description'],
-                'callback_data' => self::prepareCallbackData('noop')
+                'callback_data' => json_encode(['noop', []])
             ]);
         }
         $variant = isset($entry['product_id']) ? $entry: null;
@@ -56,13 +51,13 @@ class CategoryProductKeyboard extends InlineKeyboard
 
         if (!!$inCart) {
             $this->append([
-                'text' => self::lang('buttons.added_to_cart'),
-                'callback_data' => self::prepareCallbackData('noop')
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.added_to_cart'),
+                'callback_data' => json_encode(['noop', []])
             ]);
         } else {
            $this->append([
-                'text' => self::lang('buttons.add_to_cart'),
-                'callback_data' => self::prepareCallbackData(
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.add_to_cart'),
+                'callback_data' => json_encode([
                     'product_add',
                     array_merge(
                         ['qty' =>  1],
@@ -70,7 +65,7 @@ class CategoryProductKeyboard extends InlineKeyboard
                             ['variant_id' => $entry['id']] :
                             ['product_id' => $entry['id']]
                     )
-                )
+                ])
             ]);
         }
 
