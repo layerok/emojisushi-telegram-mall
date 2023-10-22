@@ -3,8 +3,8 @@
 namespace Layerok\TgMall\Features\Checkout\Messages;
 
 use Illuminate\Support\Facades\Validator;
-use Layerok\TgMall\Classes\Callbacks\CallbackQueryBus;
 use Layerok\TgMall\Classes\Messages\AbstractMessageHandler;
+use Layerok\TgMall\Features\Checkout\Handlers\ListPaymentMethodsHandler;
 
 class OrderPhoneMessageHandler extends AbstractMessageHandler
 {
@@ -48,8 +48,10 @@ class OrderPhoneMessageHandler extends AbstractMessageHandler
         $this->getTelegramUser()->phone = $this->text;
         $this->getTelegramUser()->save();
 
-
-        CallbackQueryBus::instance()->make('list_payment_methods', [], $this->getTelegramUser(), $this->update, $this->api);
+        $handler = new ListPaymentMethodsHandler();
+        $handler->setTelegramUser($this->getTelegramUser());
+        $handler->setTelegram($this->api);
+        $handler->make($this->api, $this->update, []);
 
         $this->state->setMessageHandler(null);
     }

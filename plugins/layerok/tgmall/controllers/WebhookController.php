@@ -1,6 +1,6 @@
 <?php namespace Layerok\TgMall\Controllers;
 
-use Layerok\TgMall\Classes\Callbacks\CallbackQueryBus;
+use Layerok\TgMall\Classes\Callbacks\HandlerInterface;
 use Layerok\TgMall\Classes\Callbacks\NoopHandler;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Stores\StateStore;
@@ -34,6 +34,7 @@ use Telegram\Bot\Commands\HelpCommand;
 use Telegram\Bot\Events\UpdateWasReceived;
 use Log;
 use Session;
+use Telegram\Bot\Objects\Update;
 
 class WebhookController
 {
@@ -41,6 +42,8 @@ class WebhookController
     public StateStore $stateStore;
 
     protected ?Api $api;
+
+    protected array $handlers;
 
     public function __invoke()
     {
@@ -53,8 +56,7 @@ class WebhookController
         $this->userStore = new UserStore();
         $this->stateStore = new StateStore();
 
-        CallbackQueryBus::instance()
-            ->addHandlers([
+        $this->addHandlers([
                 StartHandler::class,
                 WebsiteHandler::class,
                 CategoryItemsHandler::class,
@@ -128,24 +130,23 @@ class WebhookController
 
             if($update->isType('callback_query')) {
                 $this->userStore->updateFromCallbackQuery($user, $update->getCallbackQuery());
-                $handlerInfo = CallbackQueryBus::instance()->parse($update);
+                $handlerInfo = $this->parse($update);
 
                 $spot = EmojisushiApi::getSpot([
                     'slug_or_id' => $user->state->getSpotId()
                 ]);
 
                 if(!$spot && $handlerInfo[0] !== 'change_spot') {
-                    CallbackQueryBus::instance()->make(
-                        'list_spots',
-                        [],
-                        $user,
-                        $update, $this->api
-                    );
+                    $handler = new ListSpotsHandler();
+                    $handler->setTelegramUser($user);
+                    $handler->setTelegram($this->api);
+                    $handler->make($this->api, $update, []);
                 } else {
                     $user->state->setMessageHandler(null);
 
-                    CallbackQueryBus::instance()
-                        ->handle($user, $update, $this->api);
+                    [$name, $arguments] = $handlerInfo;
+
+                    $this->make($name, $arguments, $user, $update, $this->api);
                 }
 
                 $this->api->answerCallbackQuery([
@@ -206,4 +207,72 @@ class WebhookController
         return Settings::get('is_maintenance_mode', env('TG_MALL_IS_MAINTENANCE_MODE', false));
     }
 
+    public function parse(Update $update): array
+    {
+        $data = json_decode($update->getCallbackQuery()->getData(), true);
+        try {
+            $name = $data[0];
+            $arguments = $data[1] ?? [];
+            return [$name, $arguments];
+        } catch (\ErrorException $e) {
+            \Log::error('Cannot parse callback query data. Error happened inside [' . self::class . ']');
+            \Log::error($e);
+            return ['noop', []];
+        }
+
+    }
+
+    public function make($name, $arguments, $user, $update, Api $telegram) {
+        $handler = $this->find($name);
+
+        if(!isset($handler)) {
+            \Log::error('Handler [' . $name . '] is not found');
+            return;
+        }
+        $handler->setTelegramUser($user);
+        $handler->make($telegram, $update, $arguments);
+    }
+
+
+
+    public function find($name)
+    {
+        return $this->handlers[$name] ??
+            collect($this->handlers)->filter(function ($command) use ($name) {
+                return $command instanceof $name;
+            })->first() ?? null;
+    }
+
+
+    public function addHandlers($handlers) {
+        foreach($handlers as $handler) {
+            $this->addHandler($handler);
+        }
+    }
+
+    public function addHandler($handler): void {
+        if (!is_object($handler)) {
+            if (! class_exists($handler)) {
+                throw new \Exception(
+                    sprintf(
+                        'Handler class "%s" not found! Please make sure the class exists.',
+                        $handler
+                    )
+                );
+            }
+
+            $handler = new $handler();
+        }
+
+        if (! ($handler instanceof HandlerInterface)) {
+            throw new \Exception(
+                sprintf(
+                    'Handler class "%s" should be an instance of "Layerok\TgMall\Classes\Callbacks\HandlerInterface"',
+                    get_class($handler)
+                )
+            );
+        }
+
+        $this->handlers[$handler->getName()] = $handler;
+    }
 }

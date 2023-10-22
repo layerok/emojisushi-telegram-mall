@@ -2,7 +2,6 @@
 
 namespace Layerok\TgMall\Features\Checkout\Handlers;
 
-use Layerok\TgMall\Classes\Callbacks\CallbackQueryBus;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Features\Checkout\Keyboards\PreparePaymentChangeKeyboard;
@@ -29,13 +28,9 @@ class ChosePaymentMethodHandler extends Handler
             return;
         }
 
-        CallbackQueryBus::instance()->make(
-            'list_delivery_methods',
-            [],
-            $this->getTelegramUser(),
-            $this->update,
-            $this->getTelegram()
-        );
-
+        $handler = new ListDeliveryMethodsHandler();
+        $handler->setTelegramUser($this->getTelegramUser());
+        $handler->setTelegram($this->getTelegram());
+        $handler->make($this->getTelegram(), $this->update, []);
     }
 }

@@ -2,7 +2,6 @@
 
 namespace Layerok\TgMall\Features\Checkout\Handlers;
 
-use Layerok\TgMall\Classes\Callbacks\CallbackQueryBus;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 
 use Layerok\TgMall\Facades\EmojisushiApi;
@@ -39,13 +38,9 @@ class ChoseDeliveryMethodHandler extends Handler
             return;
         }
 
-        CallbackQueryBus::instance()->make(
-            'wish_to_leave_comment',
-            [],
-            $this->getTelegramUser(),
-            $this->update,
-            $this->getTelegram()
-        );
-
+        $handler = new WishToLeaveCommentHandler();
+        $handler->setTelegramUser($this->getTelegramUser());
+        $handler->setTelegram($this->getTelegram());
+        $handler->make($this->getTelegram(), $this->update, []);
     }
 }

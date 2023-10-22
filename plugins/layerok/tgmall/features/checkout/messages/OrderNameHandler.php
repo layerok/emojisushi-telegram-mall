@@ -3,8 +3,8 @@
 namespace Layerok\TgMall\Features\Checkout\Messages;
 
 use Illuminate\Support\Facades\Validator;
-use Layerok\TgMall\Classes\Callbacks\CallbackQueryBus;
 use Layerok\TgMall\Classes\Messages\AbstractMessageHandler;
+use Layerok\TgMall\Features\Checkout\Handlers\EnterPhoneHandler;
 use Layerok\TgMall\Features\Checkout\Keyboards\IsRightPhoneKeyboard;
 
 class OrderNameHandler extends AbstractMessageHandler
@@ -49,14 +49,10 @@ class OrderNameHandler extends AbstractMessageHandler
             return;
         }
 
-        CallbackQueryBus::instance()->make(
-            'enter_phone',
-            [],
-            $this->getTelegramUser(),
-            $this->update,
-            $this->api
-        );
-
+        $handler = new EnterPhoneHandler();
+        $handler->setTelegramUser($this->getTelegramUser());
+        $handler->setTelegram($this->api);
+        $handler->make($this->api, $this->update, []);
     }
 
     public function handleErrors(): void

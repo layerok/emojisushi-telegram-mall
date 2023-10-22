@@ -2,8 +2,8 @@
 
 namespace Layerok\TgMall\Features\Checkout\Messages;
 
-use Layerok\TgMall\Classes\Callbacks\CallbackQueryBus;
 use Layerok\TgMall\Classes\Messages\AbstractMessageHandler;
+use Layerok\TgMall\Features\Checkout\Handlers\ListDeliveryMethodsHandler;
 
 
 class OrderPrepareChangeMessageHandler extends AbstractMessageHandler
@@ -12,12 +12,10 @@ class OrderPrepareChangeMessageHandler extends AbstractMessageHandler
     {
         $this->state->setOrderInfoChange($this->text);
 
-        CallbackQueryBus::instance()->make(
-            'list_delivery_methods',
-            [], $this->getTelegramUser(),
-            $this->update,
-            $this->api
-        );
+        $handler = new ListDeliveryMethodsHandler();
+        $handler->setTelegramUser($this->getTelegramUser());
+        $handler->setTelegram($this->api);
+        $handler->make($this->api, $this->update, []);
 
         $this->state->setMessageHandler(null);
     }
