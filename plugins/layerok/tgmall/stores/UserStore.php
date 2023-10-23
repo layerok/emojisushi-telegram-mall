@@ -2,6 +2,7 @@
 namespace Layerok\TgMall\Stores;
 
 use Illuminate\Support\Collection;
+use Layerok\TgMall\Models\State;
 use Layerok\TgMall\Models\User as TelegramUser;
 use Telegram\Bot\Objects\CallbackQuery;
 
@@ -13,12 +14,18 @@ class UserStore {
     }
 
     public function createFromChat(Collection $chat): TelegramUser {
-        return TelegramUser::create([
+        $user = TelegramUser::create([
             'firstname' => null,
             'lastname' => null,
             'username' => null,
-            'chat_id' => $chat->id
+            'chat_id' => $chat->id,
         ]);
+        State::create(
+            [
+                'user_id' => $user->id,
+            ]
+        );
+        return $user;
     }
 
     public function updateFromMessage(TelegramUser $user, $message) {

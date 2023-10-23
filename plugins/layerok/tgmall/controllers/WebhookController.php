@@ -3,6 +3,7 @@
 use Layerok\TgMall\Classes\Callbacks\HandlerInterface;
 use Layerok\TgMall\Classes\Callbacks\NoopHandler;
 use Layerok\TgMall\Facades\EmojisushiApi;
+use Layerok\TgMall\Models\User;
 use Layerok\TgMall\Stores\StateStore;
 use Layerok\TgMall\Stores\UserStore;
 use Layerok\TgMall\Features\Checkout\Handlers\ConfirmOrderHandler;
@@ -36,243 +37,206 @@ use Log;
 use Session;
 use Telegram\Bot\Objects\Update;
 
+
 class WebhookController
 {
     public UserStore $userStore;
     public StateStore $stateStore;
 
-    protected ?Api $api;
+    public ?Api $api;
 
-    protected array $handlers;
+    public array $handlers = [
+        StartHandler::class,
+        WebsiteHandler::class,
+        CategoryItemsHandler::class,
+        CategoryItemHandler::class,
+        AddProductHandler::class,
+        CartHandler::class,
+        CheckoutHandler::class,
+        NoopHandler::class,
+        EnterPhoneHandler::class,
+        ChosePaymentMethodHandler::class,
+        ChoseDeliveryMethodHandler::class,
+        ListPaymentMethodsHandler::class,
+        ListDeliveryMethodsHandler::class,
+        LeaveCommentHandler::class,
+        PreConfirmOrderHandler::class,
+        ConfirmOrderHandler::class,
+        PreparePaymentChangeHandler::class,
+        YesSticksHandler::class,
+        UpdateSticksCounterHandler::class,
+        WishToLeaveCommentHandler::class,
+        ChangeSpotHandler::class,
+        ListSpotsHandler::class,
+    ];
 
     public function __invoke()
     {
-        $bot_token = \Config::get('layerok.tgmall::credentials.bot_token');
-        $this->api = new Api($bot_token);
+        foreach ($this->handlers as $handler) {
+            $handler = new $handler();
+            if (!($handler instanceof HandlerInterface)) {
+                $message = sprintf(
+                    'Handler class "%s" should be an instance of "%s"',
+                    get_class($handler),
+                    HandlerInterface::class
+                );
+                Log::error($this->formatException(new \Exception($message)));
+            }
+        }
+
+        $this->userStore = new UserStore();
+        $this->stateStore = new StateStore();
+
+        $this->api = new Api(\Config::get('layerok.tgmall::credentials.bot_token'));
         $this->api->addCommands([
             StartCommand::class,
             HelpCommand::class
         ]);
-        $this->userStore = new UserStore();
-        $this->stateStore = new StateStore();
+        $this->api->on(UpdateWasReceived::class, function (UpdateWasReceived $event) {
+            try {
+                $this->handleUpdate($event);
+            } catch (\Exception $exception) {
+                Log::error($this->formatException($exception));
+            } catch (\Error $error) {
+                Log::error($this->formatError($error));
+            }
 
-        $this->addHandlers([
-                StartHandler::class,
-                WebsiteHandler::class,
-                CategoryItemsHandler::class,
-                CategoryItemHandler::class,
-                AddProductHandler::class,
-                CartHandler::class,
-                CheckoutHandler::class,
-                NoopHandler::class,
-                EnterPhoneHandler::class,
-                ChosePaymentMethodHandler::class,
-                ChoseDeliveryMethodHandler::class,
-                ListPaymentMethodsHandler::class,
-                ListDeliveryMethodsHandler::class,
-                LeaveCommentHandler::class,
-                PreConfirmOrderHandler::class,
-                ConfirmOrderHandler::class,
-                PreparePaymentChangeHandler::class,
-                YesSticksHandler::class,
-                UpdateSticksCounterHandler::class,
-                WishToLeaveCommentHandler::class,
-                ChangeSpotHandler::class,
-                ListSpotsHandler::class,
-            ]);
-
-        $this->api->on(UpdateWasReceived::class, function($event) {
-            $this->handleUpdate($event);
+            if ($event->update->isType('callback_query')) {
+                try {
+                    $this->api->answerCallbackQuery([
+                        'callback_query_id' => $event->update->getCallbackQuery()->id,
+                    ]);
+                } catch (\Exception $exception) {
+                    Log::error($this->formatException($exception));
+                }
+            }
         });
+
         try {
             $this->api->commandsHandler(true);
         } catch (\Exception $exception) {
-            Log::error($exception->getMessage() . $exception->getTraceAsString());
-        }
-    }
-
-    public function handleUpdate(UpdateWasReceived $event) {
-        $update = $event->update;
-
-        try {
-            $user = $this->userStore->findByChat($update->getChat()) ??
-                $this->userStore->createFromChat($update->getChat());
-
-            if(!$user->state) {
-                $user->state = $this->stateStore->create($user);
-            }
-
-            $sessionId = $user->state->hasSession() ?
-                $user->state->getSession() :
-                str_random(100);
-
-            EmojisushiApi::init([
-                'sessionId' => $sessionId,
-            ]);
-            $user->state->setSession($sessionId);
-            // it is required for the cart to function correctly
-            Session::put('cart_session_id', $sessionId);
-
-
-            if($this->isMaintenance()) {
-                $this->api->sendMessage([
-                    'text' =>  \Lang::get('layerok.tgmall::lang.telegram.maintenance_msg'),
-                    'chat_id' => $user->chat_id
-                ]);
-                if($update->isType('callback_query')) {
-                    $this->api->answerCallbackQuery([
-                        'callback_query_id' => $update->getCallbackQuery()->id,
-                    ]);
-                }
-                return;
-            }
-
-
-            if($update->isType('callback_query')) {
-                $this->userStore->updateFromCallbackQuery($user, $update->getCallbackQuery());
-                $handlerInfo = $this->parse($update);
-
-                $spot = EmojisushiApi::getSpot([
-                    'slug_or_id' => $user->state->getSpotId()
-                ]);
-
-                if(!$spot && $handlerInfo[0] !== 'change_spot') {
-                    $handler = new ListSpotsHandler();
-                    $handler->setTelegramUser($user);
-                    $handler->setTelegram($this->api);
-                    $handler->make($this->api, $update, []);
-                } else {
-                    $user->state->setMessageHandler(null);
-
-                    [$name, $arguments] = $handlerInfo;
-
-                    $this->make($name, $arguments, $user, $update, $this->api);
-                }
-
-                $this->api->answerCallbackQuery([
-                    'callback_query_id' => $update->getCallbackQuery()->id,
-                ]);
-
-
-            } else if($update->isType('message')) {
-                $this->userStore->updateFromMessage($user, $update->getMessage());
-                if ($update->hasCommand()) {
-                    return;
-                }
-
-                $message_handler = $user->state->getMessageHandler();
-
-                if (!isset($message_handler)) {
-                    return;
-                }
-
-                if (!class_exists($message_handler)) {
-                    throw new \RuntimeException('message handler with [' . $message_handler . '] does not exist');
-                }
-
-                $handler = new $message_handler($event->telegram, $update, $user->state);
-                $handler->start();
-            } else {
-               // do nothing
-            }
-
-        } catch (\Exception $exception) {
-            if($update->isType('callback_query')) {
-                try {
-                    $this->api->answerCallbackQuery([
-                        'callback_query_id' => $update->getCallbackQuery()->id,
-                    ]);
-                } catch (\Exception $e) {
-                    Log::error($e);
-                }
-            }
-            Log::error($exception->getMessage() . PHP_EOL . $exception->getTraceAsString());
-
+            Log::error($this->formatException($exception));
         } catch (\Error $error) {
-
-            if($update->isType('callback_query')) {
-                try {
-                    $this->api->answerCallbackQuery([
-                        'callback_query_id' => $update->getCallbackQuery()->id,
-                    ]);
-                } catch (\Exception $e) {
-                    Log::error($e);
-                }
-            }
-            Log::error($error->getMessage() . PHP_EOL . $error->getTraceAsString());
+            Log::error($this->formatError($error));
         }
     }
 
-    public function isMaintenance(): bool {
-        return Settings::get('is_maintenance_mode', env('TG_MALL_IS_MAINTENANCE_MODE', false));
-    }
-
-    public function parse(Update $update): array
+    public function handleUpdate(UpdateWasReceived $event)
     {
-        $data = json_decode($update->getCallbackQuery()->getData(), true);
-        try {
-            $name = $data[0];
-            $arguments = $data[1] ?? [];
-            return [$name, $arguments];
-        } catch (\ErrorException $e) {
-            \Log::error('Cannot parse callback query data. Error happened inside [' . self::class . ']');
-            \Log::error($e);
-            return ['noop', []];
-        }
-
-    }
-
-    public function make($name, $arguments, $user, $update, Api $telegram) {
-        $handler = $this->find($name);
-
-        if(!isset($handler)) {
-            \Log::error('Handler [' . $name . '] is not found');
+        if ($this->isMaintenance()) {
+            $this->api->sendMessage([
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.maintenance_msg'),
+                'chat_id' => $event->update->getChat()->id
+            ]);
             return;
         }
-        $handler->setTelegramUser($user);
-        $handler->make($telegram, $update, $arguments);
-    }
 
+        $update = $event->update;
 
+        $user = $this->userStore->findByChat($update->getChat()) ??
+            $this->userStore->createFromChat($update->getChat());
 
-    public function find($name)
-    {
-        return $this->handlers[$name] ??
-            collect($this->handlers)->filter(function ($command) use ($name) {
-                return $command instanceof $name;
-            })->first() ?? null;
-    }
-
-
-    public function addHandlers($handlers) {
-        foreach($handlers as $handler) {
-            $this->addHandler($handler);
-        }
-    }
-
-    public function addHandler($handler): void {
-        if (!is_object($handler)) {
-            if (! class_exists($handler)) {
-                throw new \Exception(
-                    sprintf(
-                        'Handler class "%s" not found! Please make sure the class exists.',
-                        $handler
-                    )
-                );
+        // actualize user information
+        switch($update->detectType()) {
+            case "callback_query": {
+                $this->userStore->updateFromCallbackQuery($user, $update->getCallbackQuery());
+                break;
             }
-
-            $handler = new $handler();
+            case "message": {
+                $this->userStore->updateFromMessage($user, $update->getMessage());
+                break;
+            }
         }
 
-        if (! ($handler instanceof HandlerInterface)) {
-            throw new \Exception(
+        $sessionId = $user->state->hasSession() ?
+            $user->state->getSession() :
+            str_random(100);
+
+        EmojisushiApi::init([
+            'sessionId' => $sessionId,
+        ]);
+        $user->state->setSession($sessionId);
+        // it is required for the cart to function correctly
+        Session::put('cart_session_id', $sessionId);
+
+        switch($update->detectType()) {
+            case "callback_query": {
+                $this->handleCallbackQuery($update, $user);
+                break;
+            }
+            case "message": {
+                $this->handleMessage($update, $user);
+                break;
+            }
+        }
+
+    }
+
+    public function handleMessage(Update $update, User $user) {
+        if ($update->hasCommand()) {
+            return;
+        }
+
+        $message_handler = $user->state->getMessageHandler();
+
+        if (!isset($message_handler)) {
+            return;
+        }
+
+        if (!class_exists($message_handler)) {
+            throw new \RuntimeException(
                 sprintf(
-                    'Handler class "%s" should be an instance of "Layerok\TgMall\Classes\Callbacks\HandlerInterface"',
-                    get_class($handler)
+                    'message handler with [%s] does not exist',
+                    $message_handler
                 )
             );
         }
 
-        $this->handlers[$handler->getName()] = $handler;
+        $handler = new $message_handler($this->api, $update, $user->state);
+        $handler->start();
     }
+
+    public function handleCallbackQuery(Update $update, User $user) {
+        [$handlerName, $arguments] = json_decode($update->getCallbackQuery()->getData(), true);
+
+        $spot = EmojisushiApi::getSpot([
+            'slug_or_id' => $user->state->getSpotId()
+        ]);
+
+        if (!$spot && $handlerName !== 'change_spot') {
+            $handler = new ListSpotsHandler();
+            $handler->setTelegramUser($user);
+            $handler->setTelegram($this->api);
+            $handler->make($this->api, $update, []);
+            return;
+        }
+
+        $user->state->setMessageHandler(null);
+
+        $handler = collect($this->handlers)->mapWithKeys(function ($handler) {
+            $inst = new $handler();
+            return [$inst->getName() => $inst];
+        })->get($handlerName);
+
+        if (!isset($handler)) {
+            throw new \RuntimeException('Handler [' . $handlerName . '] is not found');
+        }
+
+        $handler->setTelegramUser($user);
+        $handler->make($this->api, $update, $arguments);
+    }
+
+    public function formatException(\Exception $exception): string {
+        return $exception->getMessage() . PHP_EOL . $exception->getTraceAsString();
+    }
+
+    public function formatError(\Error $error): string {
+        return $error->getMessage() . PHP_EOL . $error->getTraceAsString();
+    }
+
+    public function isMaintenance(): bool
+    {
+        return Settings::get('is_maintenance_mode', env('TG_MALL_IS_MAINTENANCE_MODE', false));
+    }
+
 }
