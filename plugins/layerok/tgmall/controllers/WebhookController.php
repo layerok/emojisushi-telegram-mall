@@ -1,6 +1,5 @@
 <?php namespace Layerok\TgMall\Controllers;
 
-use http\Exception\RuntimeException;
 use Layerok\TgMall\Classes\Callbacks\NoopHandler;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Models\User;
