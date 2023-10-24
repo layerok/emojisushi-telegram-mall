@@ -72,77 +72,71 @@ class WebhookController
 
     public function __invoke()
     {
-        foreach ($this->handlers as $handler) {
-            $handler = new $handler();
-            if (!($handler instanceof HandlerInterface)) {
-                $message = sprintf(
-                    'Handler class "%s" should be an instance of "%s"',
-                    get_class($handler),
-                    HandlerInterface::class
-                );
-                Log::error($this->formatException(new \Exception($message)));
-            }
-        }
-
-        $this->userStore = new UserStore();
-        $this->stateStore = new StateStore();
-
-        $this->api = new Api(\Config::get('layerok.tgmall::credentials.bot_token'));
-        $this->api->addCommands([
-            StartCommand::class,
-            HelpCommand::class
-        ]);
-        $this->api->on(UpdateWasReceived::class, function (UpdateWasReceived $event) {
-            try {
-                $this->handleUpdate($event);
-            } catch (\Exception $exception) {
-                Log::error($this->formatException($exception));
-            } catch (\Error $error) {
-                Log::error($this->formatError($error));
+        try {
+            foreach ($this->handlers as $handler) {
+                $this->assertHandlerInterface(new $handler());
             }
 
-            if ($event->update->isType('callback_query')) {
-                try {
+            $this->userStore = new UserStore();
+            $this->stateStore = new StateStore();
+
+            $this->api = new Api(\Config::get('layerok.tgmall::credentials.bot_token'));
+            $this->api->addCommands([
+                StartCommand::class,
+                HelpCommand::class
+            ]);
+
+            $this->api->on(UpdateWasReceived::class, function (UpdateWasReceived $event) {
+                if ($this->isMaintenance()) {
+                    $this->api->sendMessage([
+                        'text' => \Lang::get('layerok.tgmall::lang.telegram.maintenance_msg'),
+                        'chat_id' => $event->update->getChat()->id
+                    ]);
+                } else {
+                    $this->handleUpdate($event);
+                }
+
+                if ($event->update->isType('callback_query')) {
                     $this->api->answerCallbackQuery([
                         'callback_query_id' => $event->update->getCallbackQuery()->id,
                     ]);
-                } catch (\Exception $exception) {
-                    Log::error($this->formatException($exception));
                 }
-            }
-        });
-
-        try {
+            });
             $this->api->commandsHandler(true);
         } catch (\Exception $exception) {
-            Log::error($this->formatException($exception));
+            Log::error($exception->getMessage() . PHP_EOL . $exception->getTraceAsString());
         } catch (\Error $error) {
-            Log::error($this->formatError($error));
+            Log::error($error->getMessage() . PHP_EOL . $error->getTraceAsString());
+        }
+    }
+
+    public function assertHandlerInterface($handler)
+    {
+        if (!($handler instanceof HandlerInterface)) {
+            throw new \RuntimeException(sprintf(
+                'Handler class "%s" should be an instance of "%s"',
+                get_class($handler),
+                HandlerInterface::class
+            ));
         }
     }
 
     public function handleUpdate(UpdateWasReceived $event)
     {
-        if ($this->isMaintenance()) {
-            $this->api->sendMessage([
-                'text' => \Lang::get('layerok.tgmall::lang.telegram.maintenance_msg'),
-                'chat_id' => $event->update->getChat()->id
-            ]);
-            return;
-        }
-
         $update = $event->update;
 
         $user = $this->userStore->findByChat($update->getChat()) ??
             $this->userStore->createFromChat($update->getChat());
 
         // actualize user information
-        switch($update->detectType()) {
-            case "callback_query": {
+        switch ($update->detectType()) {
+            case "callback_query":
+            {
                 $this->userStore->updateFromCallbackQuery($user, $update->getCallbackQuery());
                 break;
             }
-            case "message": {
+            case "message":
+            {
                 $this->userStore->updateFromMessage($user, $update->getMessage());
                 break;
             }
@@ -159,20 +153,22 @@ class WebhookController
         // it is required for the cart to function correctly
         Session::put('cart_session_id', $sessionId);
 
-        switch($update->detectType()) {
-            case "callback_query": {
+        switch ($update->detectType()) {
+            case "callback_query":
+            {
                 $this->handleCallbackQuery($update, $user);
                 break;
             }
-            case "message": {
+            case "message":
+            {
                 $this->handleMessage($update, $user);
                 break;
             }
         }
-
     }
 
-    public function handleMessage(Update $update, User $user) {
+    public function handleMessage(Update $update, User $user)
+    {
         if ($update->hasCommand()) {
             return;
         }
@@ -196,7 +192,8 @@ class WebhookController
         $handler->start();
     }
 
-    public function handleCallbackQuery(Update $update, User $user) {
+    public function handleCallbackQuery(Update $update, User $user)
+    {
         [$handlerName, $arguments] = json_decode($update->getCallbackQuery()->getData(), true);
 
         $spot = EmojisushiApi::getSpot([
@@ -224,14 +221,6 @@ class WebhookController
 
         $handler->setTelegramUser($user);
         $handler->make($this->api, $update, $arguments);
-    }
-
-    public function formatException(\Exception $exception): string {
-        return $exception->getMessage() . PHP_EOL . $exception->getTraceAsString();
-    }
-
-    public function formatError(\Error $error): string {
-        return $error->getMessage() . PHP_EOL . $error->getTraceAsString();
     }
 
     public function isMaintenance(): bool
