@@ -15,32 +15,30 @@ class ChoseDeliveryMethodHandler extends Handler
     public function run()
     {
         $id = $this->arguments['id'];
-        $this->getState()->setOrderInfoDeliveryMethodId($id);
+        $this->getUser()->state->setOrderInfoDeliveryMethodId($id);
 
         $method = EmojisushiApi::getShippingMethod(['id' => $id]);
         if ($method['code'] === 'courier') {
             // доставка курьером
-            $this->sendMessage([
+            $this->replyWithMessage([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.type_delivery_address'),
             ]);
-            $this->getState()->setMessageHandler(OrderDeliveryAddressHandler::class);
+            $this->getUser()->state->setMessageHandler(OrderDeliveryAddressHandler::class);
 
             return;
         } else if($method['code'] === 'takeaway') {
             $k = new SticksKeyboard();
             // был выбран самовывоз
-            $this->sendMessage([
+            $this->replyWithMessage([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.add_sticks_question'),
                 'reply_markup' => $k->getKeyboard()
             ]);
-            $this->getState()->setMessageHandler(null);
+            $this->getUser()->state->setMessageHandler(null);
 
             return;
         }
 
-        $handler = new WishToLeaveCommentHandler();
-        $handler->setTelegramUser($this->getTelegramUser());
-        $handler->setTelegram($this->getTelegram());
-        $handler->make($this->getTelegram(), $this->update, []);
+        $handler = new WishToLeaveCommentHandler($this->getUser(), $this->getApi());
+        $handler->make($this->update, []);
     }
 }

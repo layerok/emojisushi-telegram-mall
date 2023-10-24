@@ -18,18 +18,16 @@ class UpdateSticksCounterHandler extends Handler
             return;
         }
 
-        $this->getState()->setOrderInfoSticksCount($count);
+        $this->getUser()->state->setOrderInfoSticksCount($count);
 
         $k = new SticksCounterKeyboard([
             'count' => $count
         ]);
 
-
-        $this->editMessageReplyMarkup(
-            $this->getTriggerMessageId(),
-            [
-                'reply_markup' => $k->getKeyboard()
-            ]
-        );
+        $this->api->editMessageReplyMarkup([
+            'message_id' => $this->getUpdate()->getMessage()->message_id,
+            'chat_id' => $this->getUpdate()->getChat()->id,
+            'reply_markup' => $k->getKeyboard()
+        ]);
     }
 }

@@ -10,18 +10,13 @@ class CategoryFooterKeyboard extends InlineKeyboard
     {
         $limit = Config::get('layerok.tgmall::settings.products.per_page', 10);
 
-        $categories = EmojisushiApi::getCategories()['data'];
-        $category = array_filter($categories, function($c) {
-            return $c['id'] === $this->vars['category_id'];
-        })[0];
+        $category = EmojisushiApi::getCategory(['id' => $this->vars['category_id']]);
 
         $products = EmojisushiApi::getProducts([
             'category_slug' => $category['slug'],
         ])['data'];
 
-
         $lastPage = ceil(count($products) / max(1, $limit));
-
 
         if ($lastPage > $this->vars['page']) {
             $this->append([

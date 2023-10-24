@@ -12,11 +12,11 @@ class LeaveCommentHandler extends Handler
 
     public function run()
     {
-        $this->sendMessage([
+        $this->replyWithMessage([
             'text' => 'Комментарий к заказу',
         ]);
         $this
-            ->getState()
+            ->getUser()->state
             ->setMessageHandler(OrderCommentHandler::class);
     }
 }

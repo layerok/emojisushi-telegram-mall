@@ -9,58 +9,41 @@ use Layerok\TgMall\Features\Checkout\Keyboards\IsRightPhoneKeyboard;
 
 class OrderNameHandler extends AbstractMessageHandler
 {
-    protected array $errors;
-
-    public function validate(): bool
-    {
-        $data = [
-            'firstname' => $this->text
-        ];
-
-        $rules = [
-            'firstname' => 'required|min:2',
-        ];
-
-        $messages = [
-            'firstname.required' => "Имя обязательно для заполнения",
-            'firstname.min' => "Имя должно содержать минимум :min символа"
-        ];
-
-        $validation = Validator::make($data, $rules, $messages);
-
-        if ($validation->fails()) {
-            $this->errors = $validation->errors()->get('firstname');
-            return false;
-        }
-        return true;
-    }
-
     public function handle()
     {
+        $validation = Validator::make([
+            'firstname' => $this->text
+        ], [
+            'firstname' => 'required|min:2',
+        ], [
+            'firstname.required' => "Имя обязательно для заполнения",
+            'firstname.min' => "Имя должно содержать минимум :min символа"
+        ]);
+
+        if ($validation->fails()) {
+            $errors = $validation->errors()->get('firstname');
+            foreach ($errors as $error) {
+                $this->replyWithMessage([
+                    'text' => $error . '. Попробуйте снова.',
+                ]);
+            }
+        }
+
         // todo: remember user name
-        if (isset($this->getTelegramUser()->phone)) {
+        if (isset($this->getUser()->phone)) {
 
             $k = new IsRightPhoneKeyboard();
-            $this->sendMessage([
-                'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.right_phone_number') . ' ' . $this->getTelegramUser()->phone . '?',
+            $this->replyWithMessage([
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.right_phone_number') . ' ' . $this->getUser()->phone . '?',
                 'reply_markup' => $k->getKeyboard(),
             ]);
 
             return;
         }
 
-        $handler = new EnterPhoneHandler();
-        $handler->setTelegramUser($this->getTelegramUser());
-        $handler->setTelegram($this->api);
-        $handler->make($this->api, $this->update, []);
+        $handler = new EnterPhoneHandler($this->getUser(), $this->api);
+        $handler->make($this->update, []);
     }
 
-    public function handleErrors(): void
-    {
-        foreach ($this->errors as $error) {
-            $this->sendMessage([
-                'text' => $error . '. Попробуйте снова.',
-            ]);
-        }
-    }
+
 }

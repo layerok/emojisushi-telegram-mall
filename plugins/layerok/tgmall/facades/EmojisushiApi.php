@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static array getSpot(array $params = [], array $guzzleOptions = [])
  * @method static array getSpots(array $params = [], array $guzzleOptions = [])
  * @method static array getCategories(array $params = [], array $guzzleOptions = [])
+ * @method static array getCategory(array $params = [], array $guzzleOptions = [])
  * @method static array getProducts(array $params = [], array $guzzleOptions = [])
  * @method static array getProduct(array $params = [], array $guzzleOptions = [])
  * @method static array getVariant(array $params = [], array $guzzleOptions = [])

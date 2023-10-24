@@ -11,9 +11,7 @@ class OrderCommentHandler extends AbstractMessageHandler
     {
         $this->state->setOrderInfoComment($this->text);
 
-        $handler = new PreConfirmOrderHandler();
-        $handler->setTelegramUser($this->getTelegramUser());
-        $handler->setTelegram($this->api);
-        $handler->make($this->api, $this->update, []);
+        $handler = new PreConfirmOrderHandler($this->getUser(), $this->api);
+        $handler->make($this->update, []);
     }
 }

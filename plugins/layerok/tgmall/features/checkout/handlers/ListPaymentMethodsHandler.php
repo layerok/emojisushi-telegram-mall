@@ -14,7 +14,8 @@ class ListPaymentMethodsHandler extends Handler
     {
         $k = new PaymentMethodsKeyboard();
 
-        $this->sendMessage([
+        $this->replyWithMessage([
+            'chat_id' => $this->user->chat_id,
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.chose_payment_method'),
             'reply_markup' => $k->getKeyboard()
         ]);

@@ -12,12 +12,12 @@ class CheckoutHandler extends Handler
     public function run()
     {
         // Очищаем инфу о заказе при начале оформления заказа
-        $this->getState()->setOrderInfo([]);
+        $this->getUser()->state->setOrderInfo([]);
 
         $this->replyWithMessage([
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.type_your_name')
         ]);
 
-        $this->getState()->setMessageHandler(OrderNameHandler::class);
+        $this->getUser()->state->setMessageHandler(OrderNameHandler::class);
     }
 }

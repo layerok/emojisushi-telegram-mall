@@ -8,60 +8,37 @@ use Layerok\TgMall\Features\Checkout\Handlers\ListPaymentMethodsHandler;
 
 class OrderPhoneMessageHandler extends AbstractMessageHandler
 {
-    protected array $errors;
-
-    public function validate(): bool
-    {
-        $data = [
-            'phone' => $this->text
-        ];
-
-        $rules = [
-            'phone' => 'required|phoneUa',
-        ];
-
-        $messages = [
-            'phone.required' => trans('layerok.posterpos::lang.validation.phone.required'),
-            'phone.phone_ua' => trans('layerok.posterpos::lang.validation.phone.ua')
-        ];
-
-        $validation = Validator::make($data, $rules, $messages);
-
-        if ($validation->fails()) {
-            $this->errors = $validation->errors()->get('phone');
-            return false;
-        }
-        return true;
-    }
-
     public function handle()
     {
-        $isValid = $this->validate();
+        $validation = Validator::make([
+            'phone' => $this->text
+        ], [
+            'phone' => 'required|phoneUa',
+        ], [
+            'phone.required' => trans('layerok.posterpos::lang.validation.phone.required'),
+            'phone.phone_ua' => trans('layerok.posterpos::lang.validation.phone.ua')
+        ]);
 
-        if (!$isValid) {
-            $this->handleErrors();
+        if ($validation->fails()) {
+            $errors = $validation->errors()->get('phone');
+            foreach ($errors as $error) {
+                $this->replyWithMessage([
+                    'text' => $error . '. ' . \Lang::get('layerok.tgmall::lang.telegram.texts.try_again')
+                ]);
+            }
             return;
         }
 
         $this->state->setOrderInfoPhone($this->text);
 
-        $this->getTelegramUser()->phone = $this->text;
-        $this->getTelegramUser()->save();
+        $this->getUser()->phone = $this->text;
+        $this->getUser()->save();
 
-        $handler = new ListPaymentMethodsHandler();
-        $handler->setTelegramUser($this->getTelegramUser());
-        $handler->setTelegram($this->api);
-        $handler->make($this->api, $this->update, []);
+        $handler = new ListPaymentMethodsHandler($this->getUser(), $this->api);
+        $handler->make($this->update, []);
 
         $this->state->setMessageHandler(null);
     }
 
-    public function handleErrors(): void
-    {
-        foreach ($this->errors as $error) {
-            $this->sendMessage([
-                'text' => $error . '. ' . \Lang::get('layerok.tgmall::lang.telegram.texts.try_again')
-            ]);
-        }
-    }
+
 }

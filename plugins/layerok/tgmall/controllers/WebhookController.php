@@ -1,6 +1,6 @@
 <?php namespace Layerok\TgMall\Controllers;
 
-use Layerok\TgMall\Classes\Callbacks\HandlerInterface;
+use http\Exception\RuntimeException;
 use Layerok\TgMall\Classes\Callbacks\NoopHandler;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Models\User;
@@ -73,10 +73,6 @@ class WebhookController
     public function __invoke()
     {
         try {
-            foreach ($this->handlers as $handler) {
-                $this->assertHandlerInterface(new $handler());
-            }
-
             $this->userStore = new UserStore();
             $this->stateStore = new StateStore();
 
@@ -87,13 +83,17 @@ class WebhookController
             ]);
 
             $this->api->on(UpdateWasReceived::class, function (UpdateWasReceived $event) {
-                if ($this->isMaintenance()) {
-                    $this->api->sendMessage([
-                        'text' => \Lang::get('layerok.tgmall::lang.telegram.maintenance_msg'),
-                        'chat_id' => $event->update->getChat()->id
-                    ]);
-                } else {
-                    $this->handleUpdate($event);
+                try {
+                    if ($this->isMaintenance()) {
+                        $this->api->sendMessage([
+                            'text' => \Lang::get('layerok.tgmall::lang.telegram.maintenance_msg'),
+                            'chat_id' => $event->update->getChat()->id
+                        ]);
+                    } else {
+                        $this->handleUpdate($event);
+                    }
+                }  catch (\Throwable $e) {
+                    Log::error($e->getMessage() . PHP_EOL . $e->getTraceAsString());
                 }
 
                 if ($event->update->isType('callback_query')) {
@@ -103,22 +103,10 @@ class WebhookController
                 }
             });
             $this->api->commandsHandler(true);
-        } catch (\Exception $exception) {
-            Log::error($exception->getMessage() . PHP_EOL . $exception->getTraceAsString());
-        } catch (\Error $error) {
-            Log::error($error->getMessage() . PHP_EOL . $error->getTraceAsString());
+        } catch (\Throwable $e) {
+            Log::error($e->getMessage() . PHP_EOL . $e->getTraceAsString());
         }
-    }
 
-    public function assertHandlerInterface($handler)
-    {
-        if (!($handler instanceof HandlerInterface)) {
-            throw new \RuntimeException(sprintf(
-                'Handler class "%s" should be an instance of "%s"',
-                get_class($handler),
-                HandlerInterface::class
-            ));
-        }
     }
 
     public function handleUpdate(UpdateWasReceived $event)
@@ -201,17 +189,15 @@ class WebhookController
         ]);
 
         if (!$spot && $handlerName !== 'change_spot') {
-            $handler = new ListSpotsHandler();
-            $handler->setTelegramUser($user);
-            $handler->setTelegram($this->api);
-            $handler->make($this->api, $update, []);
+            $handler = new ListSpotsHandler($user, $this->api);
+            $handler->make($update, []);
             return;
         }
 
         $user->state->setMessageHandler(null);
 
-        $handler = collect($this->handlers)->mapWithKeys(function ($handler) {
-            $inst = new $handler();
+        $handler = collect($this->handlers)->mapWithKeys(function ($handler) use($user) {
+            $inst = new $handler($user, $this->api);
             return [$inst->getName() => $inst];
         })->get($handlerName);
 
@@ -219,13 +205,11 @@ class WebhookController
             throw new \RuntimeException('Handler [' . $handlerName . '] is not found');
         }
 
-        $handler->setTelegramUser($user);
-        $handler->make($this->api, $update, $arguments);
+        $handler->make($update, $arguments);
     }
 
     public function isMaintenance(): bool
     {
         return Settings::get('is_maintenance_mode', env('TG_MALL_IS_MAINTENANCE_MODE', false));
     }
-
 }

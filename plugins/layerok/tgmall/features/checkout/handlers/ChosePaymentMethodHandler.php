@@ -13,24 +13,22 @@ class ChosePaymentMethodHandler extends Handler
     public function run()
     {
         $id = $this->arguments['id'];
-        $this->getState()->setOrderInfoPaymentMethodId($id);
+        $this->getUser()->state->setOrderInfoPaymentMethodId($id);
 
         $method = EmojisushiApi::getPaymentMethod(['id' => $id]);
 
         if ($method['code'] == 'cash') {
             // наличными
             $k = new PreparePaymentChangeKeyboard();
-            $this->sendMessage([
+            $this->replyWithMessage([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.prepare_change_question'),
                 'reply_markup' => $k->getKeyboard()
             ]);
-            $this->getState()->setMessageHandler(null);
+            $this->getUser()->state->setMessageHandler(null);
             return;
         }
 
-        $handler = new ListDeliveryMethodsHandler();
-        $handler->setTelegramUser($this->getTelegramUser());
-        $handler->setTelegram($this->getTelegram());
-        $handler->make($this->getTelegram(), $this->update, []);
+        $handler = new ListDeliveryMethodsHandler($this->getUser(), $this->getApi());
+        $handler->make($this->update, []);
     }
 }

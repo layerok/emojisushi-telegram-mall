@@ -5,38 +5,19 @@ namespace Layerok\Tgmall\Features\Category;
 use Illuminate\Support\Facades\Validator;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Facades\EmojisushiApi;
-use Layerok\TgMall\Classes\Traits\Warn;
 use Config;
 use Telegram\Bot\FileUpload\InputFile;
 
 class CategoryItemHandler extends Handler
 {
-    use Warn;
-
     protected string $name = "category_item";
-
-    public function validate():bool
-    {
-        $rules = [
-            'page' => 'required|integer|min:1'
-        ];
-
-        $validation = Validator::make($this->arguments, $rules);
-
-        if ($validation->fails()) {
-            $this->errors =
-                array_merge(
-                    $validation->errors()->get('id'),
-                    $validation->errors()->get('page')
-                );
-            return false;
-        }
-
-        return true;
-    }
 
     public function run()
     {
+        Validator::validate($this->arguments, [
+            'page' => 'required|integer|min:1'
+        ]);
+
         $this->ifDeleteMessage();
         $this->listProducts();
 
@@ -55,9 +36,9 @@ class CategoryItemHandler extends Handler
 
         $msg_id = $message->messageId;
 
-        $this->getState()->setDeleteMsgInCategory(['id' => $msg_id]);
+        $this->getUser()->state->setDeleteMsgInCategory(['id' => $msg_id]);
 
-        $this->getState()->setCartCountMsg([
+        $this->getUser()->state->setCartCountMsg([
             'id' => $msg_id,
             'category_id' => $this->arguments['id'],
             'page' => $this->arguments['page'],
@@ -68,15 +49,15 @@ class CategoryItemHandler extends Handler
     public function ifDeleteMessage()
     {
         if ($this->arguments['page'] > 1) {
-            $deleteMsg = $this->getState()->getDeleteMsgInCategory();
+            $deleteMsg = $this->getUser()->state->getDeleteMsgInCategory();
             if ($deleteMsg) {
 
-                $this->telegram->deleteMessage([
-                    'chat_id' => $this->getChatId(),
+                $this->api->deleteMessage([
+                    'chat_id' => $this->getUpdate()->getChat()->id,
                     'message_id' => $deleteMsg['id']
                 ]);
 
-                $this->getState()->setDeleteMsgInCategory(null);
+                $this->getUser()->state->setDeleteMsgInCategory(null);
             }
         }
     }
@@ -86,11 +67,7 @@ class CategoryItemHandler extends Handler
         $limit = Config::get('layerok.tgmall::settings.products.per_page', 10);
         $offset = ($this->arguments['page'] - 1) * $limit;
 
-        $categories = EmojisushiApi::getCategories()['data'];
-
-        $category = array_filter($categories, function($category) {
-            return $this->arguments['id'] === $category['id'];
-        })[0]; // todo: check if category exists first
+        $category = EmojisushiApi::getCategory(['id' => $this->arguments['id']]);
 
         $products = EmojisushiApi::getProducts([
             'category_slug' => $category['slug'],

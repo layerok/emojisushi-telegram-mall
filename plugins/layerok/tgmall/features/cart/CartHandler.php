@@ -4,46 +4,25 @@
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\Traits\Warn;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Telegram\Bot\FileUpload\InputFile;
 use Telegram\Bot\Keyboard\Keyboard;
 
 class CartHandler extends Handler
 {
-    use Warn;
-
     protected string $name = "cart";
 
     public array $types = ['remove', 'update', 'list'];
 
-    public function validate(): bool
+    public function run()
     {
-        $rules = [
+        Validator::validate($this->arguments, [
             'type' => [
                 'required',
                 Rule::in($this->types),
             ],
             'qty' => 'integer'
-        ];
-
-        $validation = Validator::make($this->arguments, $rules);
-
-        if ($validation->fails()) {
-            $this->errors =
-                array_merge(
-                    $validation->errors()->get('type'),
-                    $validation->errors()->get('id'),
-                    $validation->errors()->get('qty')
-                );
-            return false;
-        }
-
-        return true;
-    }
-
-    public function run()
-    {
+        ]);
 
         $type = $this->arguments['type'];
 
@@ -59,8 +38,6 @@ class CartHandler extends Handler
                 break;
         }
     }
-
-
 
     public function updateProduct()
     {
@@ -95,9 +72,10 @@ class CartHandler extends Handler
 
     public function removeProduct()
     {
-        $this->deleteMessage(
-            $this->getTriggerMessageId()
-        );
+        $this->api->deleteMessage([
+            'chat_id' => $this->getUpdate()->getChat()->id,
+            'message_id' => $this->getUpdate()->getMessage()->message_id
+        ]);
 
         $cart = EmojisushiApi::getCart();
 
@@ -140,7 +118,7 @@ class CartHandler extends Handler
 
         $msg_id = $response["message_id"];
 
-        $this->getState()->setCartTotalMsg(
+        $this->getUser()->state->setCartTotalMsg(
             [
                 'id' => $msg_id,
                 'total' => $cart['total']
@@ -197,19 +175,16 @@ class CartHandler extends Handler
             'cartProduct' => $cartProduct,
         ]);
 
-        $keyboard = $markup->getKeyboard();
-
-        $this->editMessageReplyMarkup(
-            $this->getTriggerMessageId(),
-            [
-                'reply_markup' => $keyboard
-            ]
-        );
+        $this->api->editMessageReplyMarkup([
+            'message_id' => $this->getUpdate()->getMessage()->message_id,
+            'chat_id' => $this->getUpdate()->getChat()->id,
+            'reply_markup' => $markup->getKeyboard()
+        ]);
     }
 
     public function editCartFooterMessage($cart)
     {
-        $cartTotalMsg = $this->getState()->getCartTotalMsg();
+        $cartTotalMsg = $this->getUser()->state->getCartTotalMsg();
 
         if (!isset($cartTotalMsg)) {
             return;
@@ -219,11 +194,12 @@ class CartHandler extends Handler
             // Общая стоимость товаров в корзине совпадает с тем что написано в сообщении
             return;
         }
-        $this->editMessageReplyMarkup(
-            $cartTotalMsg['id'],
-            $this->cartFooterMessage($cart)
-        );
-        $this->getState()->setCartTotalMsgTotal($cart['total']);
+        $this->api->editMessageReplyMarkup(array_merge([
+            'message_id' => $cartTotalMsg['id'],
+            'chat_id' => $this->getUpdate()->getChat()->id,
+        ], $this->cartFooterMessage($cart)));
+
+        $this->getUser()->state->setCartTotalMsgTotal($cart['total']);
     }
 
 

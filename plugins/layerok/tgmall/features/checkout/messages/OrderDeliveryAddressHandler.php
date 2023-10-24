@@ -13,7 +13,7 @@ class OrderDeliveryAddressHandler extends AbstractMessageHandler
 
         $k = new SticksKeyboard();
         // был выбран самовывоз
-        $this->sendMessage([
+        $this->replyWithMessage([
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.add_sticks_question'),
             'reply_markup' => $k->getKeyboard()
         ]);

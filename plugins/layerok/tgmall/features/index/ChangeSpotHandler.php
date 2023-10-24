@@ -13,7 +13,7 @@ class ChangeSpotHandler extends Handler
     public function run()
     {
         $id = $this->arguments[0];
-        $this->getState()->setSpotId($id);
+        $this->getUser()->state->setSpotId($id);
         $from = $this->getUpdate()->getMessage()
             ->getChat();
 
@@ -26,7 +26,7 @@ class ChangeSpotHandler extends Handler
             'text' => \Lang::get('layerok.tgmall::lang.telegram.spots.changed') . ': ' . $spot['name']
         ]);
 
-        $this->telegram->pinChatMessage([
+        $this->api->pinChatMessage([
             'chat_id' => $from->id,
             'message_id' => $response['message_id']
         ]);

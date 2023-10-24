@@ -12,10 +12,8 @@ class OrderPrepareChangeMessageHandler extends AbstractMessageHandler
     {
         $this->state->setOrderInfoChange($this->text);
 
-        $handler = new ListDeliveryMethodsHandler();
-        $handler->setTelegramUser($this->getTelegramUser());
-        $handler->setTelegram($this->api);
-        $handler->make($this->api, $this->update, []);
+        $handler = new ListDeliveryMethodsHandler($this->getUser(), $this->api);
+        $handler->make($this->update, []);
 
         $this->state->setMessageHandler(null);
     }

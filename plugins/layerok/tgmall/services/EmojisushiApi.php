@@ -105,6 +105,25 @@ class EmojisushiApi {
     }
 
     /**
+     * @param array{id: string|int} $params
+     * @param array $guzzleOptions
+     * @return mixed
+     * @throws GuzzleException
+     */
+    public function getCategory(array $params = [], array $guzzleOptions = []) {
+        $products = $this->getCategories(
+            ['limit' => 44543534],
+            $guzzleOptions
+        )['data'];
+        $found = array_filter(
+            $products,
+            function($category) use($params) { return $params['id'] == $category['id']; }
+        );
+
+        return array_values($found)[0] ?? null;
+    }
+
+    /**
      * @param array{offset?: string|int, limit?: string|int} $params
      * $param array $guzzleOptions
      * @return mixed
@@ -133,7 +152,7 @@ class EmojisushiApi {
         )['data'];
         $found = array_filter(
             $products,
-            function($p) use($params) { return $params['product_id'] == $p['id']; }
+            function($product) use($params) { return $params['product_id'] == $product['id']; }
         );
 
         return array_values($found)[0] ?? null;

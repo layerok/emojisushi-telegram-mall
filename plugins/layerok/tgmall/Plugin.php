@@ -3,13 +3,9 @@ namespace Layerok\TgMall;
 
 use Layerok\TgMall\Classes\Boot\Events;
 
-use Layerok\TgMall\Events\TgMallOrderHandler;
-use Layerok\TgMall\Models\File as TelegramFile;
 use Layerok\TgMall\Services\EmojisushiApi;
 use System\Classes\PluginBase;
-use System\Models\File as SystemFile;
-use Telegram\Bot\Objects\Message;
-use Event;
+
 
 class Plugin extends PluginBase
 {
@@ -17,44 +13,12 @@ class Plugin extends PluginBase
 
     public function boot() {
         Events::boot();
-        Event::subscribe(new TgMallOrderHandler());
     }
 
     public function register()
     {
         $this->registerConsoleCommand('create:tg.mall.handler', \Layerok\TgMall\Console\CreateCallbackHandler::class);
         $this->registerConsoleCommand('create:tg.mall.keyboard', \Layerok\TgMall\Console\CreateKeyboard::class);
-
-        SystemFile::extend(function($model) {
-            $model->hasOne['tg'] = [TelegramFile::class, 'key' => 'system_file_id'];
-
-            $model->addDynamicMethod('setTelegramFileId', function (Message $response) use ($model) {
-
-                $photoObject = $response->getPhoto();
-
-                if (!$photoObject) {
-                    return;
-                }
-
-                $last = $photoObject->last();
-
-                if (!isset($last)) {
-                    return;
-                }
-
-                $file_id = $last['file_id'];
-
-                if(optional($model->tg)->file_id){
-                    return;
-                }
-
-                $telegramFile = new TelegramFile();
-                $telegramFile->system_file_id = $model->id;
-                $telegramFile->file_id = $file_id;
-                $telegramFile->save();
-
-            });
-        });
 
         $this->app->singleton('emojisushi.api', function() {
             return new EmojisushiApi();

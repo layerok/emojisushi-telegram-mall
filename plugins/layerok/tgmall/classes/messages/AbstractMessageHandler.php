@@ -2,6 +2,7 @@
 
 use Layerok\TgMall\Models\State;
 use Telegram\Bot\Api;
+use Telegram\Bot\Objects\Message;
 use Telegram\Bot\Objects\Update;
 
 abstract class AbstractMessageHandler implements MessageHandlerInterface
@@ -10,19 +11,11 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
 
     protected Api $api;
 
-    /** @var State */
-    protected $state;
+    protected State $state;
 
     protected $chat;
 
-    protected $text;
-
-
-    public function validate(): bool {
-        return true;
-    }
-
-    public function handleErrors(): void { }
+    protected string $text;
 
     public function __construct(Api $api, Update $update, State $state) {
         $this->update = $update;
@@ -33,36 +26,20 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
         $this->text = $this->update->getMessage()->text;
     }
 
+    abstract public function handle();
 
     public function start()
     {
-        $isValid = $this->validate();
-
-        if (!$isValid) {
-            $this->handleErrors();
-            return;
-        }
-
         $this->handle();
-
     }
 
-    public function getChatId()
-    {
-        return $this->getTelegramUser()->chat_id;
-    }
-
-    public function getTelegramUser() {
+    public function getUser() {
         return $this->state->user;
     }
 
-
-    public function sendMessage($params) {
-        $this->api->sendMessage(
-            array_merge($params, ['chat_id' => $this->getChatId()])
+    public function replyWithMessage($params): Message {
+        return $this->api->sendMessage(
+            array_merge(['chat_id' => $this->getUser()->chat_id], $params)
         );
     }
-
-    abstract public function handle();
-
 }

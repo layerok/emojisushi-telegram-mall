@@ -11,10 +11,11 @@ class EnterPhoneHandler extends Handler
 
     public function run()
     {
-        $this->sendMessage([
+        $this->replyWithMessage([
+            'chat_id' => $this->user->chat_id,
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.type_your_phone'),
         ]);
 
-        $this->getState()->setMessageHandler(OrderPhoneMessageHandler::class);
+        $this->getUser()->state->setMessageHandler(OrderPhoneMessageHandler::class);
     }
 }

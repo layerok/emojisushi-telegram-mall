@@ -16,46 +16,56 @@ class PreConfirmOrderHandler extends Handler
 
     public function run()
     {
-        $user = $this->getTelegramUser();
-        $cart = EmojisushiApi::getCart();
+        $state = $this->getUser()->state;
+        $user = $this->getUser();
 
-        $phone = $user->phone;
+        $phone = $user['phone'];
         $firstName = $user->firstname;
         $lastName = $user->lastname;
+        $address =  $state->getOrderInfoAddress();;
+        $change = $state->getOrderInfoChange();
+        $comment = $state->getOrderInfoComment();
 
-        $payment_method = EmojisushiApi::getPaymentMethod([
-            'id' => $this->getState()->getOrderInfoPaymentMethodId()
-        ]);
-        $shipping_method = EmojisushiApi::getShippingMethod([
-            'id' => $this->getState()->getOrderInfoDeliveryMethodId()
-        ]);
+        $payment_method = EmojisushiApi::getPaymentMethod(['id' => $state->getOrderInfoPaymentMethodId()]);
+        $shipping_method = EmojisushiApi::getShippingMethod(['id' => $state->getOrderInfoDeliveryMethodId()]);
 
-        $receipt = $this->getReceipt();
+        $spot = EmojisushiApi::getSpot(['slug_or_id'=> $state->getSpotId()]);
+
+        $cart = EmojisushiApi::getCart();
         $posterProducts = new PosterProducts();
+
         $posterProducts
             ->addCartProducts($cart['data'])
             ->addProduct(
                 492,
                 \Lang::get('layerok.tgmall::lang.telegram.receipt.sticks_name'),
-                $this->getState()->getOrderInfoSticksCount()
+                $state->getOrderInfoSticksCount()
             );
 
+        $receipt = new Receipt();
         $receipt
             ->headline(\Lang::get('layerok.tgmall::lang.telegram.receipt.confirm_order_question'))
-            ->field('first_name', $firstName)
-            ->field('last_name', $lastName)
-            ->field('phone', $phone)
-            ->field('comment', $this->getState()->getOrderInfoComment())
-            ->field('delivery_method_name', $shipping_method['name'] ?? null)
-            ->field('payment_method_name', $payment_method['name'] ?? null)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.first_name'), $firstName)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.last_name'), $lastName)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.phone'), $phone)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.delivery_method_name'), $shipping_method['name'] ?? null)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.address'), $address)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.payment_method_name'), $payment_method['name'] ?? null)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.change'), $change)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.comment'), $comment)
             ->newLine()
-            ->products($posterProducts->all())
+            ->map($posterProducts->all(), function($item) {
+                $this->hyphen()
+                    ->space()
+                    ->p($item['name'])
+                    ->space()
+                    ->p("x")
+                    ->p( $item['count'])->newLine();
+            })
             ->newLine()
-            ->field('total', $cart['total']);
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.total'),  $cart['total'])
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.spot'), $spot['name']);
 
-        if($result = Event::fire('tgmall.order.preconfirm.receipt', [$this], true)) {
-            $receipt = $result;
-        }
 
         $k = new YesNoKeyboard([
             'yes' => [
@@ -66,29 +76,11 @@ class PreConfirmOrderHandler extends Handler
             ]
         ]);
 
-        $this->sendMessage([
+        $this->replyWithMessage([
             'text' => $receipt->getText(),
             'parse_mode' => 'html',
             'reply_markup' => $k->getKeyboard()
         ]);
-        $this->getState()->setMessageHandler(null);
-    }
-
-    public function getReceipt(): Receipt
-    {
-        $receipt = new Receipt();
-
-        $receipt->setProductNameResolver(function(array $cartProduct) {
-            return $cartProduct['name'];
-        });
-        $receipt->setProductCountResolver(function(array $cartProduct) {
-            return $cartProduct['count'];
-        });
-
-        $receipt->setTransResolver(function($key) {
-            return \Lang::get('layerok.tgmall::lang.telegram.receipt.' . $key);
-        });
-
-        return $receipt;
+        $this->getUser()->state->setMessageHandler(null);
     }
 }

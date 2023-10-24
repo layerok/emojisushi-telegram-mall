@@ -13,7 +13,8 @@ class ListDeliveryMethodsHandler extends Handler
     public function run()
     {
         $k = new DeliveryMethodsKeyboard();
-        $this->sendMessage([
+        $this->replyWithMessage([
+            'chat_id' => $this->user->chat_id,
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.chose_delivery_method'),
             'reply_markup' => $k->getKeyboard(),
         ]);

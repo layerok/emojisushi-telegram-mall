@@ -13,13 +13,13 @@ class YesSticksHandler extends Handler
     public function run() {
 
         $initialCount = 1;
-        $this->getState()->setOrderInfoSticksCount($initialCount);
+        $this->getUser()->state->setOrderInfoSticksCount($initialCount);
 
         $k = new SticksCounterKeyboard([
             'count' => $initialCount
         ]);
 
-        $this->sendMessage([
+        $this->replyWithMessage([
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.add_sticks'),
             'reply_markup' => $k->getKeyboard(),
         ]);
