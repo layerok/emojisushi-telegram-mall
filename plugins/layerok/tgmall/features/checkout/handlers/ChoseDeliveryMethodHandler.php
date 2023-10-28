@@ -19,7 +19,7 @@ class ChoseDeliveryMethodHandler extends Handler
         $this->getUser()->state->setStateValue(StateKeys::ORDER_DELIVERY_METHOD_ID, $id);
 
         $method = EmojisushiApi::getShippingMethod(['id' => $id]);
-        if ($method['code'] === 'courier') {
+        if ($method->code === 'courier') {
             // доставка курьером
             $this->replyWithMessage([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.type_delivery_address'),
@@ -27,7 +27,7 @@ class ChoseDeliveryMethodHandler extends Handler
             $this->getUser()->state->setStateValue(StateKeys::MESSAGE_HANDLER, OrderDeliveryAddressHandler::class);
 
             return;
-        } else if($method['code'] === 'takeaway') {
+        } else if($method->code === 'takeaway') {
             $k = new SticksKeyboard();
             // был выбран самовывоз
             $this->replyWithMessage([

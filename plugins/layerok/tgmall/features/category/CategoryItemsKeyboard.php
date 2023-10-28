@@ -1,19 +1,20 @@
 <?php namespace Layerok\Tgmall\Features\Category;
 
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
+use Layerok\TgMall\Objects\Category;
 
 class CategoryItemsKeyboard extends InlineKeyboard
 {
     public function build(): void
     {
-        collect($this->vars['categories'])->map(function ($row) {
+        collect($this->vars['categories'])->map(function (Category $category) {
             $this->append(
                 [
-                    'text' => $row['name'],
+                    'text' => $category->name,
                     'callback_data' => json_encode([
                         'category_item',
                         [
-                            'id' => $row['id'],
+                            'id' => $category->id,
                             'page' => 1
                         ]
                     ])

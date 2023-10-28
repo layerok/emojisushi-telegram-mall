@@ -24,12 +24,16 @@ class ChangeSpotHandler extends Handler
 
         $response = $this->replyWithMessage([
             'chat_id' => $from->id,
-            'text' => \Lang::get('layerok.tgmall::lang.telegram.spots.changed') . ': ' . $spot['name']
+            'text' => sprintf(
+                '%s:%s',
+                \Lang::get('layerok.tgmall::lang.telegram.spots.changed'),
+                $spot->name
+            )
         ]);
 
         $this->api->pinChatMessage([
             'chat_id' => $from->id,
-            'message_id' => $response['message_id']
+            'message_id' => $response->messageId
         ]);
 
 

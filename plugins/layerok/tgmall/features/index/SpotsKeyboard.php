@@ -4,22 +4,21 @@ namespace Layerok\TgMall\Features\Index;
 
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
 use Layerok\TgMall\Facades\EmojisushiApi;
+use Layerok\TgMall\Objects\Spot;
 
 class SpotsKeyboard extends InlineKeyboard
 {
     public function build(): void
     {
-        $spots = EmojisushiApi::getSpots()['data'];
-
-        array_map(function($spot) {
+        collect(EmojisushiApi::getSpots()->data)->each(function(Spot $spot) {
             $this->append([
-                'text' => $spot['name'],
+                'text' => $spot->name,
                 'callback_data' => json_encode([
                     'change_spot',
-                    [$spot['id']]
+                    [$spot->id]
                 ])
             ])->nextRow();
-        }, $spots);
+        });
 
     }
 }

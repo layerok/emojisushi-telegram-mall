@@ -8,15 +8,17 @@ use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\Tgmall\Features\Category\CategoryFooterKeyboard;
 use Layerok\Tgmall\Features\Category\CategoryProductKeyboard;
+use Layerok\TgMall\Objects\Product;
+use Layerok\TgMall\Objects\Variant;
 
 
 class AddProductHandler extends Handler
 {
     protected string $name = "product_add";
 
-    protected array $product;
+    protected Product $product;
 
-    protected ?array $variant;
+    protected ?Variant $variant;
 
 
     public function run()
@@ -43,10 +45,10 @@ class AddProductHandler extends Handler
 
         $cart = EmojisushiApi::addCartProduct(
             array_merge([
-                'product_id' => $this->product['id'],
+                'product_id' => $this->product->id,
                 'quantity' => $this->arguments['qty'],
             ], $this->variant ? [
-                'variant_id' => $this->variant['id']
+                'variant_id' => $this->variant->id
             ]: [])
         );
 
@@ -67,7 +69,7 @@ class AddProductHandler extends Handler
             'reply_markup' => $markup->getKeyboard()
         ]);
 
-        if ($cartCountMsg['count'] == $cart['totalQuantity']) {
+        if ($cartCountMsg['count'] == $cart->totalQuantity) {
             // Кол-во товаров в корзине совпадает с тем, что написано в сообщении
             return;
         }

@@ -10,7 +10,7 @@ class CategoryItemsHandler extends Handler
     public function run()
     {
         $keyboard = new CategoryItemsKeyboard([
-            'categories' => EmojisushiApi::getCategories()['data']
+            'categories' => EmojisushiApi::getCategories()->data
         ]);
 
         $keyboard->append([

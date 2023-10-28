@@ -4,14 +4,13 @@ namespace Layerok\TgMall\Features\Checkout\Keyboards;
 
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
 use Layerok\TgMall\Facades\EmojisushiApi;
+use Layerok\TgMall\Objects\PaymentMethod;
 
 class PaymentMethodsKeyboard extends InlineKeyboard
 {
     public function build(): void
     {
-        $paymentMethods = EmojisushiApi::getPaymentMethods()['data'];
-
-        array_map(function ($method) {
+        collect(EmojisushiApi::getPaymentMethods()->data)->each(function(PaymentMethod $method) {
             $this->append([
                 'text' => $method['name'],
                 'callback_data' => json_encode([
@@ -19,6 +18,7 @@ class PaymentMethodsKeyboard extends InlineKeyboard
                     ['id' => $method['id']]
                 ])
             ])->nextRow();
-        }, $paymentMethods);
+        });
+
     }
 }

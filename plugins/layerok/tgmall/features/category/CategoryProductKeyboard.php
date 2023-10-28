@@ -2,54 +2,46 @@
 
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
 use Layerok\TgMall\Facades\EmojisushiApi;
+use Layerok\TgMall\Objects\Product;
+use Layerok\TgMall\Objects\Variant;
 
 class CategoryProductKeyboard extends InlineKeyboard
 {
-    protected array $product;
-
     public function build(): void
     {
-        $this->product = $this->vars['product'];
+        /** @var Product $product */
+        $product = $this->vars['product'];
 
-        if($this->product['inventory_management_method'] === 'variant') {
-            $variants = array_filter($this->product['variants'], function($variant) {
-                return $variant['published'];
+        if($product->inventory_management_method === 'variant') {
+            $variants = array_filter($product->variants, function(Variant $variant) {
+                return $variant->published;
             });
 
-            array_map(function($variant) {
-                $this->makeButtonsRow($variant);
-            }, $variants);
+            collect($variants)->each(function(Variant $variant) {
+                $this->makeVariantRow($variant);
+            });
 
         } else {
-            $this->makeButtonsRow($this->product);
+            $this->makeProductRow($product);
         }
     }
 
-
-    public function makeButtonsRow($entry)
+    public function makeProductRow(Product $product)
     {
         $this->append([
-            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.price') . ": " . $entry['prices'][0]['price_formatted'],
+            'text' => sprintf(
+                "%s: %s",
+                \Lang::get('layerok.tgmall::lang.telegram.buttons.price'),
+                $product->prices[0]->price_formatted
+            ),
             'callback_data' => json_encode(['noop', []])
         ]);
 
-        if(isset($entry['product_id'])) {
-            $this->append([
-                'text' => $entry['description'],
-                'callback_data' => json_encode(['noop', []])
-            ]);
-        }
-        $variant = isset($entry['product_id']) ? $entry: null;
-        $product = isset($entry['product_id']) ? $entry['product']: $entry;
+        $cartProduct = EmojisushiApi::getCartProduct([
+            'product_id' => $product->id,
+        ]);
 
-        $inCart = EmojisushiApi::getCartProduct(array_merge([
-            'product_id' => $product['id'],
-        ], $variant ? [
-            'variant_id' => $variant['id']
-        ]: []));
-
-
-        if (!!$inCart) {
+        if (!!$cartProduct) {
             $this->append([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.added_to_cart'),
                 'callback_data' => json_encode(['noop', []])
@@ -59,12 +51,50 @@ class CategoryProductKeyboard extends InlineKeyboard
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.add_to_cart'),
                 'callback_data' => json_encode([
                     'product_add',
-                    array_merge(
-                        ['qty' =>  1],
-                        isset($entry['product_id']) ?
-                            ['variant_id' => $entry['id']] :
-                            ['product_id' => $entry['id']]
-                    )
+                    ['qty' =>  1, 'product_id' => $product->id]
+                ])
+            ]);
+        }
+
+
+        $this->nextRow();
+    }
+
+    public function makeVariantRow(Variant $variant)
+    {
+        $this->append([
+            'text' => sprintf(
+                "%s: %s",
+                \Lang::get('layerok.tgmall::lang.telegram.buttons.price'),
+                $variant->prices[0]->price_formatted
+            ),
+            'callback_data' => json_encode(['noop', []])
+        ]);
+
+        $this->append([
+            'text' => $variant->description,
+            'callback_data' => json_encode(['noop', []])
+        ]);
+
+        $cartProduct = EmojisushiApi::getCartProduct([
+            'product_id' => $variant->product->id,
+            'variant_id' => $variant->id
+        ]);
+
+        if (!!$cartProduct) {
+            $this->append([
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.added_to_cart'),
+                'callback_data' => json_encode(['noop', []])
+            ]);
+        } else {
+            $this->append([
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.add_to_cart'),
+                'callback_data' => json_encode([
+                    'product_add',
+                    [
+                        'qty' =>  1,
+                        'variant_id' => $variant->id
+                    ]
                 ])
             ]);
         }

@@ -1,17 +1,20 @@
 <?php namespace Layerok\Tgmall\Features\Cart;
 
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
+use Layerok\TgMall\Objects\Cart;
 
 class CartFooterKeyboard extends InlineKeyboard
 {
 
     public function build(): void
     {
+        /** @var Cart $cart */
         $cart = $this->vars['cart'];
 
-        if (count($cart['data']) !== 0) {
+        if (count($cart->data) !== 0) {
             $total = \Lang::get('layerok.tgmall::lang.telegram.texts.all_amount_order', [
-                'price' => $cart['total']]
+                    'price' => $cart->total
+                ]
             );
 
             $this->append([

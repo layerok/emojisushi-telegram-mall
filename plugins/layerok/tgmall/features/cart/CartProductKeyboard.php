@@ -3,13 +3,16 @@
 namespace Layerok\Tgmall\Features\Cart;
 
 use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
+use Layerok\TgMall\Objects\CartProduct;
 
 class CartProductKeyboard extends InlineKeyboard
 {
     public function build(): void
     {
+        /**
+         * @var CartProduct $cartProduct
+         */
         $cartProduct = $this->vars['cartProduct'];
-
 
         $this
             ->append([
@@ -18,13 +21,13 @@ class CartProductKeyboard extends InlineKeyboard
                     'cart',
                     [
                         'type' => 'update',
-                        'id' => $cartProduct['id'],
+                        'id' => $cartProduct->id,
                         'qty' => -1
                     ]
                 ]),
             ])
             ->append([
-                'text' => $cartProduct['quantity'],
+                'text' => $cartProduct->quantity,
                 'callback_data' => json_encode(['noop', []])
             ])
             ->append([
@@ -33,7 +36,7 @@ class CartProductKeyboard extends InlineKeyboard
                     'cart',
                     [
                         'type' => 'update',
-                        'id' => $cartProduct['id'],
+                        'id' => $cartProduct->id,
                         'qty' => 1
                     ]
                 ])
@@ -44,7 +47,7 @@ class CartProductKeyboard extends InlineKeyboard
                     'cart',
                     [
                         'type' => 'remove',
-                        'id' => $cartProduct['id'],
+                        'id' => $cartProduct->id,
                     ]
                 ]),
             ])
@@ -53,7 +56,7 @@ class CartProductKeyboard extends InlineKeyboard
                 'text' => sprintf(
                     '%s: %s ₴',
                     \Lang::get('layerok.tgmall::lang.telegram.buttons.price'),
-                    (number_format($cartProduct['price']['UAH'] * $cartProduct['quantity'] / 100, 0))
+                    (number_format($cartProduct->price['UAH'] * $cartProduct->quantity / 100, 0))
                 ),
                 'callback_data' => json_encode(['noop', []])
             ]);

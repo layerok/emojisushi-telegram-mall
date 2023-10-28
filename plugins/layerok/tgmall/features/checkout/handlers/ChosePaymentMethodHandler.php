@@ -18,7 +18,7 @@ class ChosePaymentMethodHandler extends Handler
 
         $method = EmojisushiApi::getPaymentMethod(['id' => $id]);
 
-        if ($method['code'] == 'cash') {
+        if ($method->code == 'cash') {
             // наличными
             $k = new PreparePaymentChangeKeyboard();
             $this->replyWithMessage([

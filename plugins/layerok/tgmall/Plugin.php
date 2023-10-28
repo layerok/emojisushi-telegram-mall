@@ -4,6 +4,7 @@ namespace Layerok\TgMall;
 use Layerok\TgMall\Classes\Boot\Events;
 
 use Layerok\TgMall\Services\EmojisushiApi;
+use Layerok\TgMall\Services\Hydrator;
 use System\Classes\PluginBase;
 
 
@@ -20,10 +21,12 @@ class Plugin extends PluginBase
         $this->registerConsoleCommand('create:tg.mall.handler', \Layerok\TgMall\Console\CreateCallbackHandler::class);
         $this->registerConsoleCommand('create:tg.mall.keyboard', \Layerok\TgMall\Console\CreateKeyboard::class);
 
+        $this->app->singleton('hydrator', function() {
+            return new Hydrator();
+        });
         $this->app->singleton('emojisushi.api', function() {
             return new EmojisushiApi();
         });
-
     }
 
     public function registerSettings()
