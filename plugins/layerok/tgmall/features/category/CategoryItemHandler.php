@@ -36,9 +36,9 @@ class CategoryItemHandler extends Handler
 
         $msg_id = $message->messageId;
 
-        $this->getUser()->state->setDeleteMsgInCategory(['id' => $msg_id]);
+        $this->getUser()->state->setStateValue('callback_handler', ['id' => $msg_id]);
 
-        $this->getUser()->state->setCartCountMsg([
+        $this->getUser()->state->setStateValue('cart_count_msg', [
             'id' => $msg_id,
             'category_id' => $this->arguments['id'],
             'page' => $this->arguments['page'],
@@ -49,7 +49,7 @@ class CategoryItemHandler extends Handler
     public function ifDeleteMessage()
     {
         if ($this->arguments['page'] > 1) {
-            $deleteMsg = $this->getUser()->state->getDeleteMsgInCategory();
+            $deleteMsg = $this->getUser()->state->getStateValue('delete_msg_in_category');
             if ($deleteMsg) {
 
                 $this->api->deleteMessage([
@@ -57,7 +57,7 @@ class CategoryItemHandler extends Handler
                     'message_id' => $deleteMsg['id']
                 ]);
 
-                $this->getUser()->state->setDeleteMsgInCategory(null);
+                $this->getUser()->state->setStateValue('callback_handler', null);
             }
         }
     }

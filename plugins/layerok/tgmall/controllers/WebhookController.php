@@ -1,5 +1,6 @@
 <?php namespace Layerok\TgMall\Controllers;
 
+use GuzzleHttp\Exception\ClientException;
 use Layerok\TgMall\Classes\Callbacks\NoopHandler;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Models\User;
@@ -129,14 +130,14 @@ class WebhookController
             }
         }
 
-        $sessionId = $user->state->hasSession() ?
-            $user->state->getSession() :
+        $sessionId = !!$user->state->getStateValue('session') ?
+            $user->state->getStateValue('session') :
             str_random(100);
 
         EmojisushiApi::init([
             'sessionId' => $sessionId,
         ]);
-        $user->state->setSession($sessionId);
+        $user->state->setStateValue('session', $sessionId);
         // it is required for the cart to function correctly
         Session::put('cart_session_id', $sessionId);
 
@@ -160,7 +161,7 @@ class WebhookController
             return;
         }
 
-        $message_handler = $user->state->getMessageHandler();
+        $message_handler = $user->state->getStateValue('message_handler');
 
         if (!isset($message_handler)) {
             return;
@@ -183,17 +184,19 @@ class WebhookController
     {
         [$handlerName, $arguments] = json_decode($update->getCallbackQuery()->getData(), true);
 
-        $spot = EmojisushiApi::getSpot([
-            'slug_or_id' => $user->state->getSpotId()
-        ]);
-
-        if (!$spot && $handlerName !== 'change_spot') {
-            $handler = new ListSpotsHandler($user, $this->api);
-            $handler->make($update, []);
-            return;
+        if ($handlerName !== 'change_spot') {
+            try {
+                EmojisushiApi::getSpot([
+                    'slug_or_id' => $user->state->getStateValue('spot_id')
+                ]);
+            } catch (ClientException) {
+                $handler = new ListSpotsHandler($user, $this->api);
+                $handler->make($update, []);
+                return;
+            }
         }
 
-        $user->state->setMessageHandler(null);
+        $user->state->setStateValue('message_handler',null);
 
         $handler = collect($this->handlers)->mapWithKeys(function ($handler) use($user) {
             $inst = new $handler($user, $this->api);

@@ -17,19 +17,17 @@ class PreConfirmOrderHandler extends Handler
     public function run()
     {
         $state = $this->getUser()->state;
-        $user = $this->getUser();
 
-        $phone = $user['phone'];
-        $firstName = $user->firstname;
-        $lastName = $user->lastname;
-        $address =  $state->getOrderInfoAddress();;
-        $change = $state->getOrderInfoChange();
-        $comment = $state->getOrderInfoComment();
+        $address =  $state->getStateValue('order_info.address') ?? null;
+        $phone =  $state->getStateValue('order_info.phone') ?? null;
+        $firstName =  $state->getStateValue('order_info.first_name') ?? null;
+        $change = $state->getStateValue('order_info.change') ?? null;
+        $comment = $state->getStateValue('order_info.comment') ?? null;
 
-        $payment_method = EmojisushiApi::getPaymentMethod(['id' => $state->getOrderInfoPaymentMethodId()]);
-        $shipping_method = EmojisushiApi::getShippingMethod(['id' => $state->getOrderInfoDeliveryMethodId()]);
+        $payment_method = EmojisushiApi::getPaymentMethod(['id' => $state->getStateValue('order_info.payment_method_id') ?? null]);
+        $shipping_method = EmojisushiApi::getShippingMethod(['id' => $state->getStateValue('order_info.delivery_method_id') ?? null]);
 
-        $spot = EmojisushiApi::getSpot(['slug_or_id'=> $state->getSpotId()]);
+        $spot = EmojisushiApi::getSpot(['slug_or_id'=> $state->getStateValue('spot_id')]);
 
         $cart = EmojisushiApi::getCart();
         $posterProducts = new PosterProducts();
@@ -39,14 +37,13 @@ class PreConfirmOrderHandler extends Handler
             ->addProduct(
                 492,
                 \Lang::get('layerok.tgmall::lang.telegram.receipt.sticks_name'),
-                $state->getOrderInfoSticksCount()
+                $state->getStateValue('order_info.sticks_count') ?? null
             );
 
         $receipt = new Receipt();
         $receipt
             ->headline(\Lang::get('layerok.tgmall::lang.telegram.receipt.confirm_order_question'))
             ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.first_name'), $firstName)
-            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.last_name'), $lastName)
             ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.phone'), $phone)
             ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.delivery_method_name'), $shipping_method['name'] ?? null)
             ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.address'), $address)
@@ -81,6 +78,6 @@ class PreConfirmOrderHandler extends Handler
             'parse_mode' => 'html',
             'reply_markup' => $k->getKeyboard()
         ]);
-        $this->getUser()->state->setMessageHandler(null);
+        $this->getUser()->state->setStateValue('message_handler',null);
     }
 }

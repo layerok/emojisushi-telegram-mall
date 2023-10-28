@@ -26,7 +26,7 @@ class StartCommand extends Command
         $telegramUser = TelegramUser::where('chat_id', '=', $chat->id)
             ->first();
 
-        $spot_id = $telegramUser->state->getSpotId();
+        $spot_id = $telegramUser->state->getStateValue('spot_id');
         $spot = Spot::where([
             'id' => $spot_id
         ])->first();

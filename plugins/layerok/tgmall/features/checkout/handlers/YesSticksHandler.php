@@ -13,7 +13,7 @@ class YesSticksHandler extends Handler
     public function run() {
 
         $initialCount = 1;
-        $this->getUser()->state->setOrderInfoSticksCount($initialCount);
+        $this->getUser()->state->setStateValue('order_info.sticks_count', $initialCount);
 
         $k = new SticksCounterKeyboard([
             'count' => $initialCount

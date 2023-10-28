@@ -13,7 +13,7 @@ class ChosePaymentMethodHandler extends Handler
     public function run()
     {
         $id = $this->arguments['id'];
-        $this->getUser()->state->setOrderInfoPaymentMethodId($id);
+        $this->getUser()->state->setStateValue('order_info.payment_method_id', $id);
 
         $method = EmojisushiApi::getPaymentMethod(['id' => $id]);
 
@@ -24,7 +24,7 @@ class ChosePaymentMethodHandler extends Handler
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.prepare_change_question'),
                 'reply_markup' => $k->getKeyboard()
             ]);
-            $this->getUser()->state->setMessageHandler(null);
+            $this->getUser()->state->setStateValue('message_handler', null);
             return;
         }
 

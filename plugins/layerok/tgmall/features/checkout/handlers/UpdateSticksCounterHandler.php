@@ -18,7 +18,7 @@ class UpdateSticksCounterHandler extends Handler
             return;
         }
 
-        $this->getUser()->state->setOrderInfoSticksCount($count);
+        $this->getUser()->state->setStateValue('order_info.sticks_count', $count);
 
         $k = new SticksCounterKeyboard([
             'count' => $count

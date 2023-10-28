@@ -10,12 +10,12 @@ class OrderPrepareChangeMessageHandler extends AbstractMessageHandler
 {
     public function handle()
     {
-        $this->state->setOrderInfoChange($this->text);
+        $this->state->setStateValue('order_info.change', $this->text);
 
         $handler = new ListDeliveryMethodsHandler($this->getUser(), $this->api);
         $handler->make($this->update, []);
 
-        $this->state->setMessageHandler(null);
+        $this->state->setStateValue('message_handler', null);
     }
 }
 

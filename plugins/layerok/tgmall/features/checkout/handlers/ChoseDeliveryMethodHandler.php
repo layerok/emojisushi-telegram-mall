@@ -15,7 +15,7 @@ class ChoseDeliveryMethodHandler extends Handler
     public function run()
     {
         $id = $this->arguments['id'];
-        $this->getUser()->state->setOrderInfoDeliveryMethodId($id);
+        $this->getUser()->state->setStateValue('order_info.delivery_method_id', $id);
 
         $method = EmojisushiApi::getShippingMethod(['id' => $id]);
         if ($method['code'] === 'courier') {
@@ -23,7 +23,7 @@ class ChoseDeliveryMethodHandler extends Handler
             $this->replyWithMessage([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.type_delivery_address'),
             ]);
-            $this->getUser()->state->setMessageHandler(OrderDeliveryAddressHandler::class);
+            $this->getUser()->state->setStateValue('message_handler', OrderDeliveryAddressHandler::class);
 
             return;
         } else if($method['code'] === 'takeaway') {
@@ -33,7 +33,7 @@ class ChoseDeliveryMethodHandler extends Handler
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.add_sticks_question'),
                 'reply_markup' => $k->getKeyboard()
             ]);
-            $this->getUser()->state->setMessageHandler(null);
+            $this->getUser()->state->setStateValue('message_handler',null);
 
             return;
         }

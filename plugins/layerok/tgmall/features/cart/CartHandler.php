@@ -118,7 +118,7 @@ class CartHandler extends Handler
 
         $msg_id = $response["message_id"];
 
-        $this->getUser()->state->setCartTotalMsg(
+        $this->getUser()->state->setStateValue('cart_total_msg',
             [
                 'id' => $msg_id,
                 'total' => $cart['total']
@@ -184,7 +184,7 @@ class CartHandler extends Handler
 
     public function editCartFooterMessage($cart)
     {
-        $cartTotalMsg = $this->getUser()->state->getCartTotalMsg();
+        $cartTotalMsg = $this->getUser()->state->getStateValue('cart_total_msg');
 
         if (!isset($cartTotalMsg)) {
             return;
@@ -199,7 +199,12 @@ class CartHandler extends Handler
             'chat_id' => $this->getUpdate()->getChat()->id,
         ], $this->cartFooterMessage($cart)));
 
-        $this->getUser()->state->setCartTotalMsgTotal($cart['total']);
+        $this->getUser()->state->setStateValue('cart_total_msg',
+            array_merge(
+                $this->state['cart_total_msg'] ?? [],
+                ['total' => $cart['total']]
+            )
+        );
     }
 
 

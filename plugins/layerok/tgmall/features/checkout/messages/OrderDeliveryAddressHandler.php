@@ -9,7 +9,7 @@ class OrderDeliveryAddressHandler extends AbstractMessageHandler
 {
     public function handle()
     {
-        $this->state->setOrderInfoAddress($this->text);
+        $this->state->setStateValue('order_info.address', $this->text);
 
         $k = new SticksKeyboard();
         // был выбран самовывоз
@@ -18,6 +18,6 @@ class OrderDeliveryAddressHandler extends AbstractMessageHandler
             'reply_markup' => $k->getKeyboard()
         ]);
 
-        $this->state->setMessageHandler(null);
+        $this->state->setStateValue('message_handler', null);
     }
 }

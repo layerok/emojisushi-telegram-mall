@@ -29,9 +29,12 @@ class OrderNameHandler extends AbstractMessageHandler
             }
         }
 
+        $this->getUser()->state->setStateValue('order_info.first_name', $this->text);
+
         // todo: remember user name
         if (isset($this->getUser()->phone)) {
 
+            $this->getUser()->state->setStateValue('order_info.phone', $this->getUser()->phone);
             $k = new IsRightPhoneKeyboard();
             $this->replyWithMessage([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.right_phone_number') . ' ' . $this->getUser()->phone . '?',

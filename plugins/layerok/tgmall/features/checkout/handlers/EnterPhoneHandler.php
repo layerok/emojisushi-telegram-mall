@@ -16,6 +16,6 @@ class EnterPhoneHandler extends Handler
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.type_your_phone'),
         ]);
 
-        $this->getUser()->state->setMessageHandler(OrderPhoneMessageHandler::class);
+        $this->getUser()->state->setStateValue('message_handler', OrderPhoneMessageHandler::class);
     }
 }

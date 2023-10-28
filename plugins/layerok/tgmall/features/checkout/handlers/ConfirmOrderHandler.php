@@ -19,22 +19,20 @@ class ConfirmOrderHandler extends Handler
     public function run()
     {
         $state = $this->getUser()->state;
-        $user = $this->getUser();
 
-        $phone = $user->phone;
-        $firstName = $user->firstname;
-        $lastName = $user->lastname;
-        $address = $state->getOrderInfoAddress();
-        $change = $state->getOrderInfoChange();
-        $comment = $state->getOrderInfoComment();
+        $firstName =  $state->getStateValue('order_info.first_name') ?? null;
+        $phone =  $state->getStateValue('order_info.phone') ?? null;
+        $address =  $state->getStateValue('order_info.address') ?? null;
+        $change = $state->getStateValue('order_info.change') ?? null;
+        $comment = $state->getStateValue('order_info.comment') ?? null;
 
-        $payment_method = EmojisushiApi::getPaymentMethod(['id' => $state->getOrderInfoPaymentMethodId()]);
-        $shipping_method = EmojisushiApi::getShippingMethod(['id' => $state->getOrderInfoDeliveryMethodId()]);
+        $payment_method = EmojisushiApi::getPaymentMethod(['id' => $state->getStateValue('order_info.payment_method_id') ?? null]);
+        $shipping_method = EmojisushiApi::getShippingMethod(['id' => $state->getStateValue('order_info.delivery_method_id') ?? null]);
 
 
-        $sticks = $state->getOrderInfoSticksCount();
-        $spot = EmojisushiApi::getSpot(['slug_or_id' => $state->getSpotId()]);
-
+        $sticks = $state->getStateValue('order_info.sticks_count') ?? null;
+        // todo: handle 404 not found error
+        $spot = EmojisushiApi::getSpot(['slug_or_id' => $state->getStateValue('spot_id')]);
 
         $cart = EmojisushiApi::getCart();
         if (!count($cart['data']) > 0) {
@@ -63,16 +61,13 @@ class ConfirmOrderHandler extends Handler
             return \Lang::get("layerok.tgmall::lang.telegram.receipt." . $key);
         });
 
-        $tablet_id = $spot->tablet->tablet_id ?? env('POSTER_FALLBACK_TABLET_ID');
-
         PosterApi::init(config('poster'));
         $result = (object)PosterApi::incomingOrders()
             ->createIncomingOrder([
-                'spot_id' => $tablet_id,
-                'phone' => $phone,
+                'spot_id' => $spot->tablet->tablet_id ?? env('POSTER_FALLBACK_TABLET_ID'),
+                'phone' =>  $phone,
                 'products' => $posterProducts->all(),
                 'first_name' => $firstName,
-                'last_name' => $lastName,
                 'comment' => $poster_comment,
                 'address' => $address
             ]);
@@ -96,8 +91,7 @@ class ConfirmOrderHandler extends Handler
         $receipt
             ->headline(\Lang::get('layerok.tgmall::lang.telegram.receipt.new_order'))
             ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.first_name'), $firstName)
-            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.last_name'), $lastName)
-            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.phone'), $phone)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.phone'),  $phone)
             ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.delivery_method_name'), $shipping_method['name'] ?? null)
             ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.address'), $address)
             ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.payment_method_name'), $payment_method['name'] ?? null)

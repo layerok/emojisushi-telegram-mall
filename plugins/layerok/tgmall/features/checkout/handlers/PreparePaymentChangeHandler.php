@@ -14,7 +14,7 @@ class PreparePaymentChangeHandler extends Handler
         $this->replyWithMessage([
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.payment_change'),
         ]);
-        $this->getUser()->state->setMessageHandler(OrderPrepareChangeMessageHandler::class);
+        $this->getUser()->state->setStateValue('message_handler', OrderPrepareChangeMessageHandler::class);
     }
 }
 

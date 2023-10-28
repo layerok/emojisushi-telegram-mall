@@ -50,7 +50,7 @@ class AddProductHandler extends Handler
         );
 
 
-        $cartCountMsg = $this->getUser()->state->getCartCountMsg();
+        $cartCountMsg = $this->getUser()->state->getStateValue('cart_count_msg');
 
         $markup = new CategoryProductKeyboard([
             'product' => $this->product,

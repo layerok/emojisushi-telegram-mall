@@ -17,6 +17,6 @@ class LeaveCommentHandler extends Handler
         ]);
         $this
             ->getUser()->state
-            ->setMessageHandler(OrderCommentHandler::class);
+            ->setStateValue('message_handler',OrderCommentHandler::class);
     }
 }

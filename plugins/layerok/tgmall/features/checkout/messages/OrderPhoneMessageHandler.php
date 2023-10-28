@@ -29,7 +29,7 @@ class OrderPhoneMessageHandler extends AbstractMessageHandler
             return;
         }
 
-        $this->state->setOrderInfoPhone($this->text);
+        $this->state->setStateValue('order_info.phone', $this->text);
 
         $this->getUser()->phone = $this->text;
         $this->getUser()->save();
@@ -37,7 +37,7 @@ class OrderPhoneMessageHandler extends AbstractMessageHandler
         $handler = new ListPaymentMethodsHandler($this->getUser(), $this->api);
         $handler->make($this->update, []);
 
-        $this->state->setMessageHandler(null);
+        $this->state->setStateValue('message_handler', null);
     }
 
 
