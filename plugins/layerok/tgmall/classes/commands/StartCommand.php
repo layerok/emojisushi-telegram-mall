@@ -1,6 +1,7 @@
 <?php namespace Layerok\TgMall\Classes\Commands;
 
 use Layerok\PosterPos\Models\Spot;
+use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Features\Index\MainMenuKeyboard;
 use Layerok\TgMall\Features\Index\SpotsKeyboard;
 use Layerok\TgMall\Models\User as TelegramUser;
@@ -26,7 +27,7 @@ class StartCommand extends Command
         $telegramUser = TelegramUser::where('chat_id', '=', $chat->id)
             ->first();
 
-        $spot_id = $telegramUser->state->getStateValue('spot_id');
+        $spot_id = $telegramUser->state->getStateValue(StateKeys::SPOT_ID);
         $spot = Spot::where([
             'id' => $spot_id
         ])->first();

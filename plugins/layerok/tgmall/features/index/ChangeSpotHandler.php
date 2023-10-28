@@ -3,6 +3,7 @@
 namespace Layerok\TgMall\Features\Index;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
+use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Facades\EmojisushiApi;
 
 
@@ -13,7 +14,7 @@ class ChangeSpotHandler extends Handler
     public function run()
     {
         $id = $this->arguments[0];
-        $this->getUser()->state->setStateValue('spot_id', $id);
+        $this->getUser()->state->setStateValue(StateKeys::SPOT_ID, $id);
         $from = $this->getUpdate()->getMessage()
             ->getChat();
 

@@ -2,6 +2,7 @@
 
 namespace Layerok\TgMall\Features\Checkout\Handlers;
 use Layerok\TgMall\Classes\Callbacks\Handler;
+use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Features\Checkout\Messages\OrderPrepareChangeMessageHandler;
 
 
@@ -14,7 +15,7 @@ class PreparePaymentChangeHandler extends Handler
         $this->replyWithMessage([
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.payment_change'),
         ]);
-        $this->getUser()->state->setStateValue('message_handler', OrderPrepareChangeMessageHandler::class);
+        $this->getUser()->state->setStateValue(StateKeys::MESSAGE_HANDLER, OrderPrepareChangeMessageHandler::class);
     }
 }
 

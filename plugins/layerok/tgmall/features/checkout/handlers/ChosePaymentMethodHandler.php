@@ -3,6 +3,7 @@
 namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
+use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Features\Checkout\Keyboards\PreparePaymentChangeKeyboard;
 
@@ -13,7 +14,7 @@ class ChosePaymentMethodHandler extends Handler
     public function run()
     {
         $id = $this->arguments['id'];
-        $this->getUser()->state->setStateValue('order_info.payment_method_id', $id);
+        $this->getUser()->state->setStateValue(StateKeys::ORDER_PAYMENT_METHOD_ID, $id);
 
         $method = EmojisushiApi::getPaymentMethod(['id' => $id]);
 
@@ -24,7 +25,7 @@ class ChosePaymentMethodHandler extends Handler
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.prepare_change_question'),
                 'reply_markup' => $k->getKeyboard()
             ]);
-            $this->getUser()->state->setStateValue('message_handler', null);
+            $this->getUser()->state->setStateValue(StateKeys::MESSAGE_HANDLER, null);
             return;
         }
 

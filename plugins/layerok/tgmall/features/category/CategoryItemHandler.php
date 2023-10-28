@@ -4,6 +4,7 @@ namespace Layerok\Tgmall\Features\Category;
 
 use Illuminate\Support\Facades\Validator;
 use Layerok\TgMall\Classes\Callbacks\Handler;
+use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Config;
 use Telegram\Bot\FileUpload\InputFile;
@@ -34,12 +35,10 @@ class CategoryItemHandler extends Handler
             'reply_markup' => $markup->getKeyboard()
         ]);
 
-        $msg_id = $message->messageId;
+        $this->getUser()->state->setStateValue(StateKeys::CALLBACK_HANDLER, ['id' => $message->messageId]);
 
-        $this->getUser()->state->setStateValue('callback_handler', ['id' => $msg_id]);
-
-        $this->getUser()->state->setStateValue('cart_count_msg', [
-            'id' => $msg_id,
+        $this->getUser()->state->setStateValue(StateKeys::CART_COUNT_MSG, [
+            'id' => $message->messageId,
             'category_id' => $this->arguments['id'],
             'page' => $this->arguments['page'],
             'count' => count($cart['data'])
@@ -49,7 +48,7 @@ class CategoryItemHandler extends Handler
     public function ifDeleteMessage()
     {
         if ($this->arguments['page'] > 1) {
-            $deleteMsg = $this->getUser()->state->getStateValue('delete_msg_in_category');
+            $deleteMsg = $this->getUser()->state->getStateValue(StateKeys::DELETE_MSG_IN_CATEGORY);
             if ($deleteMsg) {
 
                 $this->api->deleteMessage([
@@ -57,7 +56,7 @@ class CategoryItemHandler extends Handler
                     'message_id' => $deleteMsg['id']
                 ]);
 
-                $this->getUser()->state->setStateValue('callback_handler', null);
+                $this->getUser()->state->setStateValue(StateKeys::CALLBACK_HANDLER, null);
             }
         }
     }

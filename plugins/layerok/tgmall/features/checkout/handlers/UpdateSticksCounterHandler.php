@@ -3,6 +3,7 @@
 namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
+use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Features\Checkout\Keyboards\SticksCounterKeyboard;
 
 
@@ -18,7 +19,7 @@ class UpdateSticksCounterHandler extends Handler
             return;
         }
 
-        $this->getUser()->state->setStateValue('order_info.sticks_count', $count);
+        $this->getUser()->state->setStateValue(StateKeys::ORDER_STICKS_COUNT, $count);
 
         $k = new SticksCounterKeyboard([
             'count' => $count

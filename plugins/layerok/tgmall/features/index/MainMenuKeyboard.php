@@ -40,7 +40,7 @@ class MainMenuKeyboard extends InlineKeyboard
             ->append([
                 'text' => '🌐 Вебсайт',
                 'callback_data' => json_encode([
-                    'website'
+                    'website', []
                 ])
             ]);
     }

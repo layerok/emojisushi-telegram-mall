@@ -4,6 +4,7 @@ namespace Layerok\TgMall\Features\Checkout\Messages;
 
 use Illuminate\Support\Facades\Validator;
 use Layerok\TgMall\Classes\Messages\AbstractMessageHandler;
+use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Features\Checkout\Handlers\ListPaymentMethodsHandler;
 
 class OrderPhoneMessageHandler extends AbstractMessageHandler
@@ -29,7 +30,7 @@ class OrderPhoneMessageHandler extends AbstractMessageHandler
             return;
         }
 
-        $this->state->setStateValue('order_info.phone', $this->text);
+        $this->state->setStateValue(StateKeys::ORDER_PHONE, $this->text);
 
         $this->getUser()->phone = $this->text;
         $this->getUser()->save();
@@ -37,7 +38,7 @@ class OrderPhoneMessageHandler extends AbstractMessageHandler
         $handler = new ListPaymentMethodsHandler($this->getUser(), $this->api);
         $handler->make($this->update, []);
 
-        $this->state->setStateValue('message_handler', null);
+        $this->state->setStateValue(StateKeys::MESSAGE_HANDLER, null);
     }
 
 

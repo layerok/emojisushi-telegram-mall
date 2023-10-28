@@ -2,6 +2,7 @@
 
 use GuzzleHttp\Exception\ClientException;
 use Layerok\TgMall\Classes\Callbacks\NoopHandler;
+use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Models\User;
 use Layerok\TgMall\Stores\StateStore;
@@ -130,14 +131,14 @@ class WebhookController
             }
         }
 
-        $sessionId = !!$user->state->getStateValue('session') ?
-            $user->state->getStateValue('session') :
+        $sessionId = !!$user->state->getStateValue(StateKeys::SESSION) ?
+            $user->state->getStateValue(StateKeys::SESSION) :
             str_random(100);
 
         EmojisushiApi::init([
             'sessionId' => $sessionId,
         ]);
-        $user->state->setStateValue('session', $sessionId);
+        $user->state->setStateValue(StateKeys::SESSION, $sessionId);
         // it is required for the cart to function correctly
         Session::put('cart_session_id', $sessionId);
 
@@ -161,7 +162,7 @@ class WebhookController
             return;
         }
 
-        $message_handler = $user->state->getStateValue('message_handler');
+        $message_handler = $user->state->getStateValue(StateKeys::MESSAGE_HANDLER);
 
         if (!isset($message_handler)) {
             return;
@@ -182,12 +183,15 @@ class WebhookController
 
     public function handleCallbackQuery(Update $update, User $user)
     {
-        [$handlerName, $arguments] = json_decode($update->getCallbackQuery()->getData(), true);
+        $info = json_decode($update->getCallbackQuery()->getData(), true);
+
+        $handlerName = $info[0];
+        $arguments = $info[1] ?? [];
 
         if ($handlerName !== 'change_spot') {
             try {
                 EmojisushiApi::getSpot([
-                    'slug_or_id' => $user->state->getStateValue('spot_id')
+                    'slug_or_id' => $user->state->getStateValue(StateKeys::SPOT_ID)
                 ]);
             } catch (ClientException) {
                 $handler = new ListSpotsHandler($user, $this->api);
@@ -196,7 +200,7 @@ class WebhookController
             }
         }
 
-        $user->state->setStateValue('message_handler',null);
+        $user->state->setStateValue(StateKeys::MESSAGE_HANDLER, null);
 
         $handler = collect($this->handlers)->mapWithKeys(function ($handler) use($user) {
             $inst = new $handler($user, $this->api);
@@ -204,7 +208,7 @@ class WebhookController
         })->get($handlerName);
 
         if (!isset($handler)) {
-            throw new \RuntimeException('Handler [' . $handlerName . '] is not found');
+            throw new \RuntimeException(sprintf('callback query handler [%s] is not found', $handlerName));
         }
 
         $handler->make($update, $arguments);

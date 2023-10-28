@@ -3,6 +3,7 @@
 namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
+use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Features\Checkout\Messages\OrderCommentHandler;
 
 class LeaveCommentHandler extends Handler
@@ -17,6 +18,6 @@ class LeaveCommentHandler extends Handler
         ]);
         $this
             ->getUser()->state
-            ->setStateValue('message_handler',OrderCommentHandler::class);
+            ->setStateValue(StateKeys::MESSAGE_HANDLER, OrderCommentHandler::class);
     }
 }

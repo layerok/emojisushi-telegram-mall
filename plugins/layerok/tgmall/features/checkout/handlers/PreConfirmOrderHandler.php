@@ -7,6 +7,7 @@ use Layerok\Basecode\Classes\Receipt;
 use Layerok\PosterPos\Classes\PosterProducts;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Classes\Keyboards\YesNoKeyboard;
+use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Facades\EmojisushiApi;
 
 
@@ -18,16 +19,17 @@ class PreConfirmOrderHandler extends Handler
     {
         $state = $this->getUser()->state;
 
-        $address =  $state->getStateValue('order_info.address') ?? null;
-        $phone =  $state->getStateValue('order_info.phone') ?? null;
-        $firstName =  $state->getStateValue('order_info.first_name') ?? null;
-        $change = $state->getStateValue('order_info.change') ?? null;
-        $comment = $state->getStateValue('order_info.comment') ?? null;
+        $firstName =  $state->getStateValue(StateKeys::ORDER_FIRST_NAME) ?? null;
+        $phone =  $state->getStateValue(StateKeys::ORDER_PHONE) ?? null;
+        $address =  $state->getStateValue(StateKeys::ORDER_ADDRESS) ?? null;
+        $change = $state->getStateValue(StateKeys::ORDER_CHANGE) ?? null;
+        $comment = $state->getStateValue(StateKeys::ORDER_COMMENT) ?? null;
 
-        $payment_method = EmojisushiApi::getPaymentMethod(['id' => $state->getStateValue('order_info.payment_method_id') ?? null]);
-        $shipping_method = EmojisushiApi::getShippingMethod(['id' => $state->getStateValue('order_info.delivery_method_id') ?? null]);
+        $payment_method = EmojisushiApi::getPaymentMethod(['id' => $state->getStateValue(StateKeys::ORDER_PAYMENT_METHOD_ID) ?? null]);
+        $shipping_method = EmojisushiApi::getShippingMethod(['id' => $state->getStateValue(StateKeys::ORDER_DELIVERY_METHOD_ID) ?? null]);
 
-        $spot = EmojisushiApi::getSpot(['slug_or_id'=> $state->getStateValue('spot_id')]);
+        // todo: handle 404 not found error
+        $spot = EmojisushiApi::getSpot(['slug_or_id'=> $state->getStateValue(StateKeys::SPOT_ID)]);
 
         $cart = EmojisushiApi::getCart();
         $posterProducts = new PosterProducts();
@@ -37,7 +39,7 @@ class PreConfirmOrderHandler extends Handler
             ->addProduct(
                 492,
                 \Lang::get('layerok.tgmall::lang.telegram.receipt.sticks_name'),
-                $state->getStateValue('order_info.sticks_count') ?? null
+                $state->getStateValue(StateKeys::ORDER_STICKS_COUNT) ?? null
             );
 
         $receipt = new Receipt();
@@ -78,6 +80,6 @@ class PreConfirmOrderHandler extends Handler
             'parse_mode' => 'html',
             'reply_markup' => $k->getKeyboard()
         ]);
-        $this->getUser()->state->setStateValue('message_handler',null);
+        $this->getUser()->state->setStateValue(StateKeys::MESSAGE_HANDLER, null);
     }
 }

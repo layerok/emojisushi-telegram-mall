@@ -4,6 +4,7 @@ namespace Layerok\Tgmall\Features\Product;
 
 use Illuminate\Support\Facades\Validator;
 use Layerok\TgMall\Classes\Callbacks\Handler;
+use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\Tgmall\Features\Category\CategoryFooterKeyboard;
 use Layerok\Tgmall\Features\Category\CategoryProductKeyboard;
@@ -50,7 +51,7 @@ class AddProductHandler extends Handler
         );
 
 
-        $cartCountMsg = $this->getUser()->state->getStateValue('cart_count_msg');
+        $cartCountMsg = $this->getUser()->state->getStateValue(StateKeys::CART_COUNT_MSG);
 
         $markup = new CategoryProductKeyboard([
             'product' => $this->product,

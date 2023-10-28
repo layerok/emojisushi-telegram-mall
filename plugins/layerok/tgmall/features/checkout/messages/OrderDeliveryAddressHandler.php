@@ -3,13 +3,14 @@
 namespace Layerok\TgMall\Features\Checkout\Messages;
 
 use Layerok\TgMall\Classes\Messages\AbstractMessageHandler;
+use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Features\Checkout\Keyboards\SticksKeyboard;
 
 class OrderDeliveryAddressHandler extends AbstractMessageHandler
 {
     public function handle()
     {
-        $this->state->setStateValue('order_info.address', $this->text);
+        $this->state->setStateValue(StateKeys::ORDER_ADDRESS, $this->text);
 
         $k = new SticksKeyboard();
         // был выбран самовывоз
@@ -18,6 +19,6 @@ class OrderDeliveryAddressHandler extends AbstractMessageHandler
             'reply_markup' => $k->getKeyboard()
         ]);
 
-        $this->state->setStateValue('message_handler', null);
+        $this->state->setStateValue(StateKeys::MESSAGE_HANDLER, null);
     }
 }

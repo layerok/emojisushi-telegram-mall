@@ -4,6 +4,7 @@
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Layerok\TgMall\Classes\Callbacks\Handler;
+use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Telegram\Bot\FileUpload\InputFile;
 use Telegram\Bot\Keyboard\Keyboard;
@@ -118,7 +119,7 @@ class CartHandler extends Handler
 
         $msg_id = $response["message_id"];
 
-        $this->getUser()->state->setStateValue('cart_total_msg',
+        $this->getUser()->state->setStateValue(StateKeys::CART_TOTAL_MSG,
             [
                 'id' => $msg_id,
                 'total' => $cart['total']
@@ -184,7 +185,7 @@ class CartHandler extends Handler
 
     public function editCartFooterMessage($cart)
     {
-        $cartTotalMsg = $this->getUser()->state->getStateValue('cart_total_msg');
+        $cartTotalMsg = $this->getUser()->state->getStateValue(StateKeys::CART_TOTAL_MSG);
 
         if (!isset($cartTotalMsg)) {
             return;
@@ -199,9 +200,9 @@ class CartHandler extends Handler
             'chat_id' => $this->getUpdate()->getChat()->id,
         ], $this->cartFooterMessage($cart)));
 
-        $this->getUser()->state->setStateValue('cart_total_msg',
+        $this->getUser()->state->setStateValue(StateKeys::CART_TOTAL_MSG,
             array_merge(
-                $this->state['cart_total_msg'] ?? [],
+                $this->getUser()->state->getStateValue(StateKeys::CART_TOTAL_MSG) ?? [],
                 ['total' => $cart['total']]
             )
         );

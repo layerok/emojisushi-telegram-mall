@@ -6,6 +6,7 @@ use Layerok\Basecode\Classes\Receipt;
 use Layerok\PosterPos\Classes\PosterProducts;
 use Layerok\PosterPos\Classes\PosterUtils;
 use Layerok\TgMall\Classes\Callbacks\Handler;
+use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Features\Checkout\Keyboards\OrderConfirmedKeyboard;
 use poster\src\PosterApi;
@@ -20,19 +21,18 @@ class ConfirmOrderHandler extends Handler
     {
         $state = $this->getUser()->state;
 
-        $firstName =  $state->getStateValue('order_info.first_name') ?? null;
-        $phone =  $state->getStateValue('order_info.phone') ?? null;
-        $address =  $state->getStateValue('order_info.address') ?? null;
-        $change = $state->getStateValue('order_info.change') ?? null;
-        $comment = $state->getStateValue('order_info.comment') ?? null;
+        $firstName =  $state->getStateValue(StateKeys::ORDER_FIRST_NAME) ?? null;
+        $phone =  $state->getStateValue(StateKeys::ORDER_PHONE) ?? null;
+        $address =  $state->getStateValue(StateKeys::ORDER_ADDRESS) ?? null;
+        $change = $state->getStateValue(StateKeys::ORDER_CHANGE) ?? null;
+        $comment = $state->getStateValue(StateKeys::ORDER_COMMENT) ?? null;
 
-        $payment_method = EmojisushiApi::getPaymentMethod(['id' => $state->getStateValue('order_info.payment_method_id') ?? null]);
-        $shipping_method = EmojisushiApi::getShippingMethod(['id' => $state->getStateValue('order_info.delivery_method_id') ?? null]);
+        $payment_method = EmojisushiApi::getPaymentMethod(['id' => $state->getStateValue(StateKeys::ORDER_PAYMENT_METHOD_ID) ?? null]);
+        $shipping_method = EmojisushiApi::getShippingMethod(['id' => $state->getStateValue(StateKeys::ORDER_DELIVERY_METHOD_ID) ?? null]);
+        $sticks = $state->getStateValue(StateKeys::ORDER_STICKS_COUNT) ?? null;
 
-
-        $sticks = $state->getStateValue('order_info.sticks_count') ?? null;
         // todo: handle 404 not found error
-        $spot = EmojisushiApi::getSpot(['slug_or_id' => $state->getStateValue('spot_id')]);
+        $spot = EmojisushiApi::getSpot(['slug_or_id' => $state->getStateValue(StateKeys::SPOT_ID)]);
 
         $cart = EmojisushiApi::getCart();
         if (!count($cart['data']) > 0) {
