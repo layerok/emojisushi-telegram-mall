@@ -15,7 +15,7 @@ class PreConfirmOrderHandler extends Handler
 
     public function run()
     {
-        $appState = $this->user->state->state;
+        $appState = $this->user->state;
 
         $payment_method = EmojisushiApi::getPaymentMethod(['id' => $appState->order->payment_method_id]);
         $shipping_method = EmojisushiApi::getShippingMethod(['id' => $appState->order->delivery_method_id]);
@@ -85,10 +85,8 @@ class PreConfirmOrderHandler extends Handler
             'reply_markup' => $k->getKeyboard()
         ]);
 
-        $appState = $this->user->state->state;
-        $appState->message_handler = null;
-        $this->user->state->state = $appState;
-        $this->user->state->save();
+        $this->user->state->message_handler = null;
+        $this->user->save();
 
     }
 }

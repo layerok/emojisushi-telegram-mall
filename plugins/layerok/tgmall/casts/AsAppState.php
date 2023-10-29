@@ -15,8 +15,8 @@ class AsAppState implements CastsAttributes
     }
 
 
-    public function set($model, string $key, mixed $value, array $attributes): array
+    public function set($model, string $key, mixed $value, array $attributes): string
     {
-        return Hydrator::extract($value);
+        return json_encode(Hydrator::extract($value));
     }
 }

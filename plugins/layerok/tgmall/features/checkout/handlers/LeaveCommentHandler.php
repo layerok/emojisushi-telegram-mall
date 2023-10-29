@@ -16,10 +16,7 @@ class LeaveCommentHandler extends Handler
             'text' => 'Комментарий к заказу',
         ]);
 
-        $appState = $this->user->state->state;
-        $appState->message_handler = OrderCommentHandler::class;
-        $this->user->state->state = $appState;
-        $this->user->state->save();
-
+        $this->user->state->message_handler = OrderCommentHandler::class;
+        $this->user->save();
     }
 }

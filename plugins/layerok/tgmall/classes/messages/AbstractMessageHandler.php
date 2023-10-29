@@ -1,6 +1,5 @@
 <?php namespace Layerok\TgMall\Classes\Messages;
 
-use Layerok\TgMall\Models\State;
 use Layerok\TgMall\Models\User;
 use Telegram\Bot\Api;
 use Telegram\Bot\Objects\Message;
@@ -12,16 +11,16 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
 
     protected Api $api;
 
-    protected State $state;
+    protected User $user;
 
     protected $chat;
 
     protected string $text;
 
-    public function __construct(Api $api, Update $update, State $state) {
+    public function __construct(Api $api, Update $update, User $user) {
         $this->update = $update;
         $this->api = $api;
-        $this->state = $state;
+        $this->user = $user;
 
         $this->chat = $this->update->getChat();
         $this->text = $this->update->getMessage()->text;
@@ -35,7 +34,7 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
     }
 
     public function getUser(): User {
-        return $this->state->user;
+        return $this->user;
     }
 
     public function replyWithMessage($params): Message {

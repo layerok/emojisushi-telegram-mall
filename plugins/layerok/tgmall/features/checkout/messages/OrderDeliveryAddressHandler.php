@@ -9,10 +9,8 @@ class OrderDeliveryAddressHandler extends AbstractMessageHandler
 {
     public function handle()
     {
-        $appState = $this->state->state;
-        $appState->order->address = $this->text;
-        $this->state->state = $appState;
-        $this->state->save();
+        $this->user->state->order->address = $this->text;
+        $this->user->save();
 
         $k = new SticksKeyboard();
         // был выбран самовывоз
@@ -21,9 +19,7 @@ class OrderDeliveryAddressHandler extends AbstractMessageHandler
             'reply_markup' => $k->getKeyboard()
         ]);
 
-        $appState = $this->state->state;
-        $appState->message_handler = null;
-        $this->state->state = $appState;
-        $this->state->save();
+        $this->user->state->message_handler = null;
+        $this->user->save();
     }
 }

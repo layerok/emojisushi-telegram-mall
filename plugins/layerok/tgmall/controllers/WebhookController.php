@@ -4,7 +4,6 @@ use GuzzleHttp\Exception\ClientException;
 use Layerok\TgMall\Classes\Callbacks\NoopHandler;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Models\User;
-use Layerok\TgMall\Stores\StateStore;
 use Layerok\TgMall\Stores\UserStore;
 use Layerok\TgMall\Features\Checkout\Handlers\ConfirmOrderHandler;
 use Layerok\Tgmall\Features\Cart\CartHandler;
@@ -41,7 +40,6 @@ use Telegram\Bot\Objects\Update;
 class WebhookController
 {
     public UserStore $userStore;
-    public StateStore $stateStore;
 
     public ?Api $api;
 
@@ -74,7 +72,6 @@ class WebhookController
     {
         try {
             $this->userStore = new UserStore();
-            $this->stateStore = new StateStore();
 
             $this->api = new Api(\Config::get('layerok.tgmall::credentials.bot_token'));
             $this->api->addCommands([
@@ -130,17 +127,15 @@ class WebhookController
             }
         }
 
-        $state = $user->state;
-        $appState = $state->state;
 
-        $sessionId = $appState->session ?? str_random(100);
+        $sessionId = $user->state->session ?? str_random(100);
 
         EmojisushiApi::init([
             'sessionId' => $sessionId,
         ]);
 
-        $appState->session = $sessionId;
-        $state->state = $appState;
+        $user->state->session = $sessionId;
+        $user->save();
 
         // it is required for the cart to function correctly
         Session::put('cart_session_id', $sessionId);
@@ -165,7 +160,7 @@ class WebhookController
             return;
         }
 
-        $message_handler = $user->state->state->message_handler;
+        $message_handler = $user->state->message_handler;
 
         if (!isset($message_handler)) {
             return;
@@ -180,7 +175,7 @@ class WebhookController
             );
         }
 
-        $handler = new $message_handler($this->api, $update, $user->state);
+        $handler = new $message_handler($this->api, $update, $user);
         $handler->start();
     }
 
@@ -191,12 +186,10 @@ class WebhookController
         $handlerName = $info[0];
         $arguments = $info[1] ?? [];
 
-        $state = $user->state;
-
         if ($handlerName !== 'change_spot') {
             try {
                 EmojisushiApi::getSpot([
-                    'slug_or_id' => $state->state->spot_id
+                    'slug_or_id' => $user->state->spot_id
                 ]);
             } catch (ClientException) {
                 $handler = new ListSpotsHandler($user, $this->api);
@@ -205,9 +198,8 @@ class WebhookController
             }
         }
 
-        $appState = $state->state;
-        $appState->message_handler = null;
-        $state->state = $appState;
+        $user->state->message_handler = null;
+        $user->save();
 
         $handler = collect($this->handlers)->mapWithKeys(function ($handler) use($user) {
             $inst = new $handler($user, $this->api);

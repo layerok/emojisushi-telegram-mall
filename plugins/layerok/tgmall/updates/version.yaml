@@ -1,16 +1,6 @@
 1.0.0:
     - 'Init plugin'
 1.0.1:
-    - 'Create tables'
+    - 'Create users table'
     - create_layerok_tgmall_users.php
-    - create_layerok_tgmall_states.php
-    - create_layerok_tgmall_files.php
-1.0.2:
-    - 'Update users table'
-    - update_layerok_tgmall_users_table.php
-1.0.3:
-    - 'Update users table 2'
-    - update_layerok_tgmall_users_table2.php
-1.0.4:
-    - 'Remove customer_id field from users table'
-    - remove_customer_id_from_users_table.php
+

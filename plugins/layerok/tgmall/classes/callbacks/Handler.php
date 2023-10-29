@@ -2,7 +2,6 @@
 
 namespace Layerok\TgMall\Classes\Callbacks;
 
-use Layerok\TgMall\Models\State;
 use Telegram\Bot\Api;
 use Telegram\Bot\Objects\Message;
 use Telegram\Bot\Objects\Update;

@@ -29,19 +29,14 @@ class OrderNameHandler extends AbstractMessageHandler
             }
         }
 
-        $appState = $this->state->state;
-        $appState->order->first_name = $this->text;
-        $this->state->state = $appState;
-        $this->state->save();
-
+        $this->user->state->order->first_name = $this->text;
+        $this->user->save();
 
         // todo: remember user name
         if (isset($this->getUser()->phone)) {
 
-            $appState = $this->state->state;
-            $appState->order->phone = $this->getUser()->phone;
-            $this->state->state = $appState;
-            $this->state->save();
+            $this->user->state->order->phone = $this->getUser()->phone;
+            $this->user->save();
 
             $k = new IsRightPhoneKeyboard();
             $this->replyWithMessage([

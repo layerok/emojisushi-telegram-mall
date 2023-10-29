@@ -14,10 +14,8 @@ class ChosePaymentMethodHandler extends Handler
     {
         $id = $this->arguments['id'];
 
-        $appState = $this->user->state->state;
-        $appState->order->payment_method_id = $id;
-        $this->user->state->state = $appState;
-        $this->user->state->save();
+        $this->user->state->order->payment_method_id = $id;
+        $this->user->save();
 
         $method = EmojisushiApi::getPaymentMethod(['id' => $id]);
 
@@ -29,10 +27,9 @@ class ChosePaymentMethodHandler extends Handler
                 'reply_markup' => $k->getKeyboard()
             ]);
 
-            $appState = $this->user->state->state;
-            $appState->message_handler = null;
-            $this->user->state->state = $appState;
-            $this->user->state->save();
+
+            $this->user->state->message_handler = null;
+            $this->user->save();
 
             return;
         }

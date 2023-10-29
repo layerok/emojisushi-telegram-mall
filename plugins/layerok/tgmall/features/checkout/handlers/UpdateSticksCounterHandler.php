@@ -17,10 +17,8 @@ class UpdateSticksCounterHandler extends Handler
             return;
         }
 
-        $appState = $this->user->state->state;
-        $appState->order->sticks_count = $count;
-        $this->user->state->state = $appState;
-        $this->user->state->save();
+        $this->user->state->order->sticks_count = $count;
+        $this->user->save();
 
 
         $k = new SticksCounterKeyboard([

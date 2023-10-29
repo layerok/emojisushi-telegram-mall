@@ -18,7 +18,7 @@ class ConfirmOrderHandler extends Handler
 
     public function run()
     {
-        $appState = $this->user->state->state;
+        $appState = $this->user->state;
 
         $payment_method = EmojisushiApi::getPaymentMethod(['id' => $appState->order->payment_method_id]);
         $shipping_method = EmojisushiApi::getShippingMethod(['id' => $appState->order->delivery_method_id]);

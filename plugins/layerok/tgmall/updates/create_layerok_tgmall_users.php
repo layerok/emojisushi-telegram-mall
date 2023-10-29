@@ -15,10 +15,8 @@ class CreateLayerokTgMallUsers extends Migration
             $table->string('firstname')->nullable();
             $table->string('lastname')->nullable();
             $table->string('phone')->nullable();
-            $table->string('customer_id');
-            $table->integer('chat_id')
-                ->length(50)
-                ->nullable();
+            $table->string('chat_id')->nullable();
+            $table->json('state')->nullable();
             $table->timestamps();
         });
     }

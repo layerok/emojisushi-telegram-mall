@@ -1,12 +1,13 @@
 <?php namespace Layerok\Tgmall\Features\Cart;
 
-
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Facades\EmojisushiApi;
+use Layerok\TgMall\Facades\Hydrator;
 use Layerok\TgMall\Objects\Cart;
 use Layerok\TgMall\Objects\CartProduct;
+use Layerok\TgMall\Objects2\CartTotalMsg;
 use Telegram\Bot\FileUpload\InputFile;
 use Telegram\Bot\Keyboard\Keyboard;
 
@@ -130,11 +131,13 @@ class CartHandler extends Handler
             return;
         }
 
-        $appState = $this->user->state->state;
-        $appState->cart_total_msg->id = $response->messageId;
-        $appState->cart_total_msg->total = $cart->total;
-        $this->user->state->state = $appState;
-        $this->user->state->save();
+        $cartTotalMsg = Hydrator::hydrate(CartTotalMsg::class, [
+            'id' => $response->messageId,
+            'total' => $cart->total,
+        ]);
+
+        $this->user->state->cart_total_msg = $cartTotalMsg;
+        $this->user->save();
 
     }
 
@@ -182,7 +185,7 @@ class CartHandler extends Handler
 
     public function editCartFooterMessage(Cart $cart)
     {
-        $cartTotalMsg = $this->user->state->state->cart_total_msg;
+        $cartTotalMsg = $this->user->state->cart_total_msg;
 
         if (!isset($cartTotalMsg)) {
             return;
@@ -197,10 +200,9 @@ class CartHandler extends Handler
             'chat_id' => $this->getUpdate()->getChat()->id,
         ], $this->cartFooterMessage($cart)));
 
-        $appState = $this->user->state->state;
-        $appState->cart_total_msg->total = $cart->total;
-        $this->user->state->state = $appState;
-        $this->user->state->save();
+
+        $this->user->state->cart_total_msg->total = $cart->total;
+        $this->user->save();
     }
 
 

@@ -51,21 +51,21 @@ class AddProductHandler extends Handler
         );
 
 
-        $cartCountMsg = $this->user->state->state->cart_count_msg;
+        $cartCountMsg = $this->user->state->cart_count_msg;
 
         $markup = new CategoryProductKeyboard([
             'product' => $this->product,
         ]);
-
-        if (!$cartCountMsg) {
-            return;
-        }
 
         $this->api->editMessageReplyMarkup([
             'message_id' => $this->getUpdate()->getMessage()->message_id,
             'chat_id' => $this->getUpdate()->getChat()->id,
             'reply_markup' => $markup->getKeyboard()
         ]);
+
+        if (!$cartCountMsg) {
+            return;
+        }
 
         if ($cartCountMsg->count == $cart->totalQuantity) {
             // Кол-во товаров в корзине совпадает с тем, что написано в сообщении

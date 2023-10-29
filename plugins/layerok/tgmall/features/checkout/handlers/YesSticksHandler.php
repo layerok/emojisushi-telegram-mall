@@ -13,11 +13,8 @@ class YesSticksHandler extends Handler
     public function run() {
 
         $initialCount = 1;
-
-        $appState = $this->user->state->state;
-        $appState->order->sticks_count = $initialCount;
-        $this->user->state->state = $appState;
-        $this->user->state->save();
+        $this->user->state->order->sticks_count = $initialCount;
+        $this->user->save();
 
 
         $k = new SticksCounterKeyboard([

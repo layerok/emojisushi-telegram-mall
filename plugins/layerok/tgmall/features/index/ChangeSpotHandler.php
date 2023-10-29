@@ -14,10 +14,8 @@ class ChangeSpotHandler extends Handler
     {
         $id = $this->arguments[0];
 
-        $appState = $this->user->state->state;
-        $appState->spot_id = $id;
-        $this->user->state->state = $appState;
-        $this->user->state->save();
+        $this->user->state->spot_id = $id;
+        $this->user->save();
 
         $from = $this->getUpdate()->getMessage()
             ->getChat();
