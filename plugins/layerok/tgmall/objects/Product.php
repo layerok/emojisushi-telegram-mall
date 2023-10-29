@@ -3,7 +3,7 @@
 namespace Layerok\TgMall\Objects;
 
 class Product {
-    public string $id;
+    public int $id;
 
     public string $name;
 

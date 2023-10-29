@@ -3,7 +3,6 @@
 namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Features\Checkout\Messages\OrderPhoneMessageHandler;
 
 class EnterPhoneHandler extends Handler
@@ -17,6 +16,10 @@ class EnterPhoneHandler extends Handler
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.type_your_phone'),
         ]);
 
-        $this->getUser()->state->setStateValue(StateKeys::MESSAGE_HANDLER, OrderPhoneMessageHandler::class);
+        $appState = $this->user->state->state;
+        $appState->message_handler = OrderPhoneMessageHandler::class;
+        $this->user->state->state = $appState;
+        $this->user->state->save();
+
     }
 }

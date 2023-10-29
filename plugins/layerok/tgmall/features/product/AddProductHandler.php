@@ -4,7 +4,6 @@ namespace Layerok\Tgmall\Features\Product;
 
 use Illuminate\Support\Facades\Validator;
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\Tgmall\Features\Category\CategoryFooterKeyboard;
 use Layerok\Tgmall\Features\Category\CategoryProductKeyboard;
@@ -19,7 +18,6 @@ class AddProductHandler extends Handler
     protected Product $product;
 
     protected ?Variant $variant;
-
 
     public function run()
     {
@@ -53,7 +51,7 @@ class AddProductHandler extends Handler
         );
 
 
-        $cartCountMsg = $this->getUser()->state->getStateValue(StateKeys::CART_COUNT_MSG);
+        $cartCountMsg = $this->user->state->state->cart_count_msg;
 
         $markup = new CategoryProductKeyboard([
             'product' => $this->product,
@@ -69,19 +67,19 @@ class AddProductHandler extends Handler
             'reply_markup' => $markup->getKeyboard()
         ]);
 
-        if ($cartCountMsg['count'] == $cart->totalQuantity) {
+        if ($cartCountMsg->count == $cart->totalQuantity) {
             // Кол-во товаров в корзине совпадает с тем, что написано в сообщении
             return;
         }
 
         $markup = new CategoryFooterKeyboard([
             'cart' => $cart,
-            'category_id' => $cartCountMsg['category_id'],
-            'page' => $cartCountMsg['page']
+            'category_id' => $cartCountMsg->category_id,
+            'page' => $cartCountMsg->page
         ]);
 
         $this->api->editMessageReplyMarkup([
-            'message_id' => $cartCountMsg['id'],
+            'message_id' => $cartCountMsg->id,
             'chat_id' => $this->getUpdate()->getChat()->id,
             'reply_markup' => $markup->getKeyboard()
         ]);

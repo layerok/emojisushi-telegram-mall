@@ -5,7 +5,6 @@ namespace Layerok\TgMall\Features\Checkout\Handlers;
 use Layerok\Basecode\Classes\Receipt;
 use Layerok\PosterPos\Classes\PosterUtils;
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Features\Checkout\Keyboards\OrderConfirmedKeyboard;
 use Layerok\TgMall\Objects\CartProduct;
@@ -19,20 +18,13 @@ class ConfirmOrderHandler extends Handler
 
     public function run()
     {
-        $state = $this->getUser()->state;
+        $appState = $this->user->state->state;
 
-        $firstName = $state->getStateValue(StateKeys::ORDER_FIRST_NAME) ?? null;
-        $phone = $state->getStateValue(StateKeys::ORDER_PHONE) ?? null;
-        $address = $state->getStateValue(StateKeys::ORDER_ADDRESS) ?? null;
-        $change = $state->getStateValue(StateKeys::ORDER_CHANGE) ?? null;
-        $comment = $state->getStateValue(StateKeys::ORDER_COMMENT) ?? null;
-
-        $payment_method = EmojisushiApi::getPaymentMethod(['id' => $state->getStateValue(StateKeys::ORDER_PAYMENT_METHOD_ID) ?? null]);
-        $shipping_method = EmojisushiApi::getShippingMethod(['id' => $state->getStateValue(StateKeys::ORDER_DELIVERY_METHOD_ID) ?? null]);
-        $sticks = $state->getStateValue(StateKeys::ORDER_STICKS_COUNT) ?? null;
+        $payment_method = EmojisushiApi::getPaymentMethod(['id' => $appState->order->payment_method_id]);
+        $shipping_method = EmojisushiApi::getShippingMethod(['id' => $appState->order->delivery_method_id]);
 
         // todo: handle 404 not found error
-        $spot = EmojisushiApi::getSpot(['slug_or_id' => $state->getStateValue(StateKeys::SPOT_ID)]);
+        $spot = EmojisushiApi::getSpot(['slug_or_id' => $appState->spot_id]);
 
         $cart = EmojisushiApi::getCart();
 
@@ -43,10 +35,9 @@ class ConfirmOrderHandler extends Handler
             return false;
         }
 
-
         $posterProducts = collect($cart->data)->map(function (CartProduct $cartProduct) {
             $posterProduct = [
-                'name' => $cartProduct->name,
+                'name' => $cartProduct->product->name,
                 'product_id' => $cartProduct->product->poster_id,
                 'count' => $cartProduct->quantity,
                 'modificator_id' => $cartProduct->variant->poster_id
@@ -58,19 +49,19 @@ class ConfirmOrderHandler extends Handler
             return $posterProduct;
         })->values()->toArray();
 
-        if($sticks) {
+        if($appState->order->sticks_count) {
             $posterProducts[] = [
                 'name' => \Lang::get('layerok.tgmall::lang.telegram.receipt.sticks_name'),
-                'count' => $sticks,
+                'count' => $appState->order->sticks_count,
                 'product_id' => 492
             ];
         }
 
         $poster_comment = PosterUtils::getComment([
-            'comment' => $comment,
+            'comment' => $appState->order->comment,
             'payment_method_name' => $payment_method->name ?? null,
             'delivery_method_name' => $shipping_method->name ?? null,
-            'change' => $change
+            'change' => $appState->order->change
         ], function ($key) {
             return \Lang::get("layerok.tgmall::lang.telegram.receipt." . $key);
         });
@@ -79,11 +70,11 @@ class ConfirmOrderHandler extends Handler
         $result = (object)PosterApi::incomingOrders()
             ->createIncomingOrder([
                 'spot_id' => $spot->tablet->tablet_id ?? env('POSTER_FALLBACK_TABLET_ID'),
-                'phone' => $phone,
+                'phone' => $appState->order->phone,
                 'products' => $posterProducts,
-                'first_name' => $firstName,
+                'first_name' => $appState->order->first_name,
                 'comment' => $poster_comment,
-                'address' => $address
+                'address' => $appState->order->address
             ]);
 
         if (isset($result->error)) {
@@ -105,13 +96,13 @@ class ConfirmOrderHandler extends Handler
         $receipt = new Receipt();
         $receipt
             ->headline(\Lang::get('layerok.tgmall::lang.telegram.receipt.new_order'))
-            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.first_name'), $firstName)
-            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.phone'), $phone)
-            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.delivery_method_name'), $shipping_method->name ?? null)
-            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.address'), $address)
-            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.payment_method_name'), $payment_method->name ?? null)
-            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.change'), $change)
-            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.comment'), $comment)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.first_name'), $appState->order->first_name)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.phone'), $appState->order->phone)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.delivery_method_name'), $shipping_method->name)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.address'), $appState->order->address)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.payment_method_name'), $payment_method->name)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.change'), $appState->order->change)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.comment'), $appState->order->comment)
             ->newLine()
             ->map($posterProducts, function ($item) {
                 $this->hyphen()

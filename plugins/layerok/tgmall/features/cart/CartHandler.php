@@ -4,7 +4,6 @@
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Objects\Cart;
 use Layerok\TgMall\Objects\CartProduct;
@@ -131,12 +130,12 @@ class CartHandler extends Handler
             return;
         }
 
-        $this->getUser()->state->setStateValue(StateKeys::CART_TOTAL_MSG,
-            [
-                'id' => $response->messageId,
-                'total' => $cart->total
-            ]
-        );
+        $appState = $this->user->state->state;
+        $appState->cart_total_msg->id = $response->messageId;
+        $appState->cart_total_msg->total = $cart->total;
+        $this->user->state->state = $appState;
+        $this->user->state->save();
+
     }
 
     public function sendCartProduct(CartProduct $cartProduct)
@@ -183,27 +182,25 @@ class CartHandler extends Handler
 
     public function editCartFooterMessage(Cart $cart)
     {
-        $cartTotalMsg = $this->getUser()->state->getStateValue(StateKeys::CART_TOTAL_MSG);
+        $cartTotalMsg = $this->user->state->state->cart_total_msg;
 
         if (!isset($cartTotalMsg)) {
             return;
         }
 
-        if ($cartTotalMsg['total'] == $cart->total) {
+        if ($cartTotalMsg->total == $cart->total) {
             // Общая стоимость товаров в корзине совпадает с тем что написано в сообщении
             return;
         }
         $this->api->editMessageReplyMarkup(array_merge([
-            'message_id' => $cartTotalMsg['id'],
+            'message_id' => $cartTotalMsg->id,
             'chat_id' => $this->getUpdate()->getChat()->id,
         ], $this->cartFooterMessage($cart)));
 
-        $this->getUser()->state->setStateValue(StateKeys::CART_TOTAL_MSG,
-            array_merge(
-                $this->getUser()->state->getStateValue(StateKeys::CART_TOTAL_MSG) ?? [],
-                ['total' => $cart->total]
-            )
-        );
+        $appState = $this->user->state->state;
+        $appState->cart_total_msg->total = $cart->total;
+        $this->user->state->state = $appState;
+        $this->user->state->save();
     }
 
 

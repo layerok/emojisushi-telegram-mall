@@ -4,7 +4,6 @@ namespace Layerok\Tgmall\Features\Category;
 
 use Illuminate\Support\Facades\Validator;
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Config;
 use Layerok\TgMall\Objects\Product;
@@ -21,15 +20,18 @@ class CategoryItemHandler extends Handler
         ]);
 
         if ($this->arguments['page'] > 1) {
-            $deleteMsg = $this->getUser()->state->getStateValue(StateKeys::DELETE_MSG_IN_CATEGORY);
+            $deleteMsg = $this->user->state->state->delete_msg_in_category;
             if ($deleteMsg) {
 
                 $this->api->deleteMessage([
                     'chat_id' => $this->getUpdate()->getChat()->id,
-                    'message_id' => $deleteMsg['id']
+                    'message_id' => $deleteMsg->id
                 ]);
 
-                $this->getUser()->state->setStateValue(StateKeys::CALLBACK_HANDLER, null);
+                $appState = $this->user->state->state;
+                $appState->callback_handler = null;
+                $this->user->state->state = $appState;
+                $this->user->state->save();
             }
         }
 
@@ -48,14 +50,19 @@ class CategoryItemHandler extends Handler
             'reply_markup' => $markup->getKeyboard()
         ]);
 
-        $this->getUser()->state->setStateValue(StateKeys::CALLBACK_HANDLER, ['id' => $message->messageId]);
+        $appState = $this->user->state->state;
 
-        $this->getUser()->state->setStateValue(StateKeys::CART_COUNT_MSG, [
-            'id' => $message->messageId,
-            'category_id' => $this->arguments['id'],
-            'page' => $this->arguments['page'],
-            'count' => count($cart->data)
-        ]);
+        $appState->callback_handler->id = $message->messageId;
+
+        $appState->cart_count_msg->id = $message->messageId;
+        $appState->cart_count_msg->category_id = $this->arguments['id'];
+        $appState->cart_count_msg->page = $this->arguments['page'];
+        $appState->cart_count_msg->count = count($cart->data);
+
+        $this->user->state->state = $appState;
+        $this->user->state->save();
+
+
     }
 
 

@@ -4,7 +4,6 @@ namespace Layerok\TgMall\Objects;
 
 class CartProduct {
     public int $id;
-    public string $name;
     public int $product_id;
     public ?int $variant_id;
     /**

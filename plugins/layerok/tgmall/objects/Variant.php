@@ -3,7 +3,7 @@
 namespace Layerok\TgMall\Objects;
 
 class Variant {
-    public string $id;
+    public int $id;
 
     public string $description;
 

@@ -2,6 +2,9 @@
 
 use October\Rain\Database\Model;
 
+/**
+ * @property State $state
+ */
 class User extends Model
 {
     protected $table = 'layerok_tgmall_users';

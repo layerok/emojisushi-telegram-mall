@@ -4,7 +4,7 @@ namespace Layerok\TgMall\Objects;
 
 class ShipmentMethodsList {
     /**
-     * @var PaymentMethod[]
+     * @var ShipmentMethod[]
      */
     public array $data;
 

@@ -2,16 +2,17 @@
 
 namespace Layerok\TgMall\Classes\Callbacks;
 
+use Layerok\TgMall\Models\State;
 use Telegram\Bot\Api;
 use Telegram\Bot\Objects\Message;
 use Telegram\Bot\Objects\Update;
-use \Layerok\TgMall\Models\User as TelegramUser;
+use \Layerok\TgMall\Models\User;
 
 abstract class Handler implements HandlerInterface
 {
     protected Api $api;
 
-    protected TelegramUser $user;
+    protected User $user;
 
     protected Update $update;
 
@@ -19,7 +20,7 @@ abstract class Handler implements HandlerInterface
 
     abstract public function run();
 
-    public function __construct(TelegramUser $user, Api $telegram) {
+    public function __construct(User $user, Api $telegram) {
         $this->user = $user;
         $this->api = $telegram;
     }
@@ -49,8 +50,7 @@ abstract class Handler implements HandlerInterface
         call_user_func_array([$this, 'run'], array_values($this->getArguments()));
     }
 
-
-    public function getUser(): TelegramUser
+    public function getUser(): User
     {
         return $this->user;
     }
@@ -74,5 +74,9 @@ abstract class Handler implements HandlerInterface
         return $this->api->sendPhoto(array_merge([
             'chat_id' => $this->getUpdate()->getChat()->id
         ],$params));
+    }
+
+    public function getState(): State {
+        return $this->user->state;
     }
 }

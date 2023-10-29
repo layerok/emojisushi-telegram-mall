@@ -4,7 +4,6 @@ namespace Layerok\TgMall\Features\Checkout\Messages;
 
 use Illuminate\Support\Facades\Validator;
 use Layerok\TgMall\Classes\Messages\AbstractMessageHandler;
-use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Features\Checkout\Handlers\EnterPhoneHandler;
 use Layerok\TgMall\Features\Checkout\Keyboards\IsRightPhoneKeyboard;
 
@@ -30,12 +29,20 @@ class OrderNameHandler extends AbstractMessageHandler
             }
         }
 
-        $this->getUser()->state->setStateValue(StateKeys::ORDER_FIRST_NAME, $this->text);
+        $appState = $this->state->state;
+        $appState->order->first_name = $this->text;
+        $this->state->state = $appState;
+        $this->state->save();
+
 
         // todo: remember user name
         if (isset($this->getUser()->phone)) {
 
-            $this->getUser()->state->setStateValue(StateKeys::ORDER_PHONE, $this->getUser()->phone);
+            $appState = $this->state->state;
+            $appState->order->phone = $this->getUser()->phone;
+            $this->state->state = $appState;
+            $this->state->save();
+
             $k = new IsRightPhoneKeyboard();
             $this->replyWithMessage([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.right_phone_number') . ' ' . $this->getUser()->phone . '?',

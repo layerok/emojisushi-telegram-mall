@@ -12,10 +12,10 @@ class PaymentMethodsKeyboard extends InlineKeyboard
     {
         collect(EmojisushiApi::getPaymentMethods()->data)->each(function(PaymentMethod $method) {
             $this->append([
-                'text' => $method['name'],
+                'text' => $method->name,
                 'callback_data' => json_encode([
                     'chose_payment_method',
-                    ['id' => $method['id']]
+                    ['id' => $method->id]
                 ])
             ])->nextRow();
         });

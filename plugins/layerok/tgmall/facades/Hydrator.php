@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static hydrate(string $type, array $data = [])
  * @method static array extract($obj)
  *
- * @see  \Layerok\TgMall\Services\EmojisushiApi;
+ * @see  \Layerok\TgMall\Services\Hydrator;
  */
 
 class Hydrator extends Facade {

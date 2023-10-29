@@ -4,7 +4,6 @@ namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
 
-use Layerok\TgMall\Classes\StateKeys;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Features\Checkout\Keyboards\SticksKeyboard;
 use Layerok\TgMall\Features\Checkout\Messages\OrderDeliveryAddressHandler;
@@ -16,7 +15,10 @@ class ChoseDeliveryMethodHandler extends Handler
     public function run()
     {
         $id = $this->arguments['id'];
-        $this->getUser()->state->setStateValue(StateKeys::ORDER_DELIVERY_METHOD_ID, $id);
+        $appState = $this->user->state->state;
+        $appState->order->delivery_method_id = $id;
+        $this->user->state->state = $appState;
+        $this->user->state->save();
 
         $method = EmojisushiApi::getShippingMethod(['id' => $id]);
         if ($method->code === 'courier') {
@@ -24,7 +26,11 @@ class ChoseDeliveryMethodHandler extends Handler
             $this->replyWithMessage([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.type_delivery_address'),
             ]);
-            $this->getUser()->state->setStateValue(StateKeys::MESSAGE_HANDLER, OrderDeliveryAddressHandler::class);
+            $appState = $this->user->state->state;
+            $appState->message_handler = OrderDeliveryAddressHandler::class;
+            $this->user->state->state = $appState;
+            $this->user->state->save();
+
 
             return;
         } else if($method->code === 'takeaway') {
@@ -34,7 +40,11 @@ class ChoseDeliveryMethodHandler extends Handler
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.add_sticks_question'),
                 'reply_markup' => $k->getKeyboard()
             ]);
-            $this->getUser()->state->setStateValue(StateKeys::MESSAGE_HANDLER, null);
+
+            $appState = $this->user->state->state;
+            $appState->message_handler = null;
+            $this->user->state->state = $appState;
+            $this->user->state->save();
 
             return;
         }
