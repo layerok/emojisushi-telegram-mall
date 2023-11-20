@@ -22,8 +22,6 @@ class AddProductHandler extends Handler
     public function run()
     {
         Validator::validate($this->arguments, [
-            'product_id' => 'required_without:variant_id|exists:offline_mall_products,id',
-            'variant_id' => 'required_without:product_id|exists:offline_mall_product_variants,id',
             'qty' => 'required|integer|min:1'
         ]);
 

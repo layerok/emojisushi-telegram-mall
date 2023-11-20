@@ -10,7 +10,7 @@ use System\Classes\PluginBase;
 
 class Plugin extends PluginBase
 {
-    public $require = ['OFFLINE.Mall', 'Layerok.BaseCode'];
+    public $require = ['Layerok.BaseCode'];
 
     public function boot() {
         Events::boot();

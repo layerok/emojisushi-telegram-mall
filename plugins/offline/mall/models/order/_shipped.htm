@@ -1,7 +1,0 @@
-<?php
-$key = $record->is_shipped ? 'shipped' : 'not_shipped';
-$class = $record->is_shipped ? 'success' : 'mute';
-?>
-<span class="oc-icon-circle text-<?= $class ?>">
-    <?= e(trans('offline.mall::lang.order.' . $key)) ?>
-</span>

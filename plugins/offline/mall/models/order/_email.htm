@@ -1,5 +1,0 @@
-<?= 
-	e($record->hasRelation('customer')
-  		? optional(optional($record->getRelation('customer'))->user)->email
-  		: ''
-) ?>

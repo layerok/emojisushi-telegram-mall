@@ -1,9 +1,0 @@
-# ===================================
-#  Form Field Definitions
-# ===================================
-
-fields:
-    internal_id:
-        label: 'Chat ID'
-    name:
-        label: 'Name'
