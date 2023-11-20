@@ -6,11 +6,10 @@ use Telegram\Bot\Keyboard\Keyboard;
 
 class YesNoKeyboard
 {
-    public array $vars;
 
-    public function __construct($vars = [])
+    public function __construct(public array $yes, public array $no)
     {
-        $this->vars = $vars;
+
     }
 
     public function getKeyboard(): Keyboard
@@ -18,11 +17,11 @@ class YesNoKeyboard
         return (new Keyboard())->inline()->row([
             Keyboard::inlineButton([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.yes'),
-                'callback_data' => json_encode([$this->vars['yes']['handler'], []]),
+                'callback_data' => json_encode([$this->yes['handler'], []]),
             ]),
             Keyboard::inlineButton([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.no'),
-                'callback_data' => json_encode([$this->vars['no']['handler'], []])
+                'callback_data' => json_encode([$this->no['handler'], []])
             ])
         ]);
     }

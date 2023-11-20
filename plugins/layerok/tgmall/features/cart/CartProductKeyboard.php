@@ -7,20 +7,13 @@ use Telegram\Bot\Keyboard\Keyboard;
 
 class CartProductKeyboard
 {
-    public array $vars;
-
-    public function __construct($vars = [])
+    public function __construct(public CartProduct $cartProduct)
     {
-        $this->vars = $vars;
+
     }
 
     public function getKeyboard(): Keyboard
     {
-        /**
-         * @var CartProduct $cartProduct
-         */
-        $cartProduct = $this->vars['cartProduct'];
-
         return (new Keyboard())->inline()->row([
             Keyboard::inlineButton([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.minus'),
@@ -28,13 +21,13 @@ class CartProductKeyboard
                     'cart',
                     [
                         'type' => 'update',
-                        'id' => $cartProduct->id,
+                        'id' => $this->cartProduct->id,
                         'qty' => -1
                     ]
                 ]),
             ]),
             Keyboard::inlineButton([
-                'text' => $cartProduct->quantity,
+                'text' => $this->cartProduct->quantity,
                 'callback_data' => json_encode(['noop', []])
             ]),
             Keyboard::inlineButton([
@@ -43,7 +36,7 @@ class CartProductKeyboard
                     'cart',
                     [
                         'type' => 'update',
-                        'id' => $cartProduct->id,
+                        'id' => $this->cartProduct->id,
                         'qty' => 1
                     ]
                 ])
@@ -54,7 +47,7 @@ class CartProductKeyboard
                     'cart',
                     [
                         'type' => 'remove',
-                        'id' => $cartProduct->id,
+                        'id' => $this->cartProduct->id,
                     ]
                 ]),
             ])
@@ -63,7 +56,7 @@ class CartProductKeyboard
                 'text' => sprintf(
                     '%s: %s ₴',
                     \Lang::get('layerok.tgmall::lang.telegram.buttons.price'),
-                    (number_format($cartProduct->price['UAH'] * $cartProduct->quantity / 100, 0))
+                    (number_format($this->cartProduct->price['UAH'] * $this->cartProduct->quantity / 100, 0))
                 ),
                 'callback_data' => json_encode(['noop', []])
             ])

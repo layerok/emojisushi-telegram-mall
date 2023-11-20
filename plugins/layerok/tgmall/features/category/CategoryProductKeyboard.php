@@ -7,21 +7,17 @@ use Telegram\Bot\Keyboard\Keyboard;
 
 class CategoryProductKeyboard
 {
-    public array $vars;
-
-    public function __construct($vars = [])
+    public function __construct(public Product $product)
     {
-       $this->vars = $vars;
+
     }
 
     public function getKeyboard(): Keyboard
     {
-        /** @var Product $product */
-        $product = $this->vars['product'];
         $keyboard = (new Keyboard())->inline();
 
-        if($product->inventory_management_method === 'variant') {
-            $variants = array_filter($product->variants, function(Variant $variant) {
+        if($this->product->inventory_management_method === 'variant') {
+            $variants = array_filter($this->product->variants, function(Variant $variant) {
                 return $variant->published;
             });
 
@@ -62,7 +58,7 @@ class CategoryProductKeyboard
 
         } else {
             $cartProduct = EmojisushiApi::getCartProduct([
-                'product_id' => $product->id,
+                'product_id' => $this->product->id,
             ]);
 
             $keyboard->row([
@@ -70,7 +66,7 @@ class CategoryProductKeyboard
                     'text' => sprintf(
                         "%s: %s",
                         \Lang::get('layerok.tgmall::lang.telegram.buttons.price'),
-                        $product->prices[0]->price_formatted
+                        $this->product->prices[0]->price_formatted
                     ),
                     'callback_data' => json_encode(['noop', []])
                 ]),
@@ -81,7 +77,7 @@ class CategoryProductKeyboard
                     'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.add_to_cart'),
                     'callback_data' => json_encode([
                         'product_add',
-                        ['qty' =>  1, 'product_id' => $product->id]
+                        ['qty' =>  1, 'product_id' => $this->product->id]
                     ])
                 ])
             ])->row([]);

@@ -12,21 +12,13 @@ class WishToLeaveCommentHandler extends Handler
 
     public function run()
     {
-
-        $k = new YesNoKeyboard([
-            'yes' => [
-                'handler' => 'leave_comment',
-            ],
-            'no' => [
-                'handler' => 'pre_confirm_order'
-            ]
-        ]);
-
-
         $this->replyWithMessage([
             'chat_id' => $this->user->chat_id,
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.leave_comment_question'),
-            'reply_markup' => $k->getKeyboard()
+            'reply_markup' => (new YesNoKeyboard(
+                yes: ['handler' => 'leave_comment'],
+                no: ['handler' => 'pre_confirm_order']
+            ))->getKeyboard()
         ]);
     }
 }

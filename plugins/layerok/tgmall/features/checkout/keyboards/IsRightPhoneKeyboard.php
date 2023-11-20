@@ -6,13 +6,6 @@ use Telegram\Bot\Keyboard\Keyboard;
 
 class IsRightPhoneKeyboard
 {
-    public array $vars;
-
-    public function __construct($vars = [])
-    {
-        $this->vars = $vars;
-    }
-
     public function getKeyboard(): Keyboard
     {
         return (new Keyboard())->inline()->row([

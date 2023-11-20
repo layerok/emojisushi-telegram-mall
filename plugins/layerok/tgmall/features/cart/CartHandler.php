@@ -70,9 +70,7 @@ class CartHandler extends Handler
             return $cartProduct->id === $this->arguments['id'];
         });
 
-        $markup = new CartProductKeyboard([
-            'cartProduct' => $cartProduct,
-        ]);
+        $markup = new CartProductKeyboard($cartProduct);
 
         $this->api->editMessageReplyMarkup([
             'message_id' => $this->getUpdate()->getMessage()->message_id,
@@ -149,9 +147,7 @@ class CartHandler extends Handler
                 \Html::strip($cartProduct->product->description_short)
             );
 
-        $markup = new CartProductKeyboard([
-            'cartProduct' => $cartProduct,
-        ]);
+        $markup = new CartProductKeyboard($cartProduct);
 
         $keyboard = $markup->getKeyboard();
 
@@ -222,9 +218,7 @@ class CartHandler extends Handler
         if (count($cart->data) === 0) {
             $markup = new CartEmptyKeyboard();
         } else {
-            $markup = new CartFooterKeyboard([
-                'cart' => $cart
-            ]);
+            $markup = new CartFooterKeyboard($cart);
         }
 
         return $markup->getKeyboard();

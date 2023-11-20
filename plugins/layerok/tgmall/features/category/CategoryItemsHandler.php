@@ -9,14 +9,11 @@ class CategoryItemsHandler extends Handler
 
     public function run()
     {
-        $keyboard = new CategoryItemsKeyboard([
-            'categories' => EmojisushiApi::getCategories()->data
-        ]);
-
-
         $replyWith = [
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.category'),
-            'reply_markup' => $keyboard->getKeyboard()
+            'reply_markup' => (new CategoryItemsKeyboard(
+                EmojisushiApi::getCategories()->data)
+            )->getKeyboard()
         ];
 
         $this->replyWithMessage($replyWith);

@@ -3,16 +3,8 @@
 use Lang;
 use Telegram\Bot\Keyboard\Keyboard;
 
-
 class SticksKeyboard
 {
-    public array $vars;
-
-    public function __construct($vars = [])
-    {
-        $this->vars = $vars;
-    }
-
     public function getKeyboard(): Keyboard
     {
         return (new Keyboard())->inline()->row([

@@ -8,13 +8,6 @@ use Telegram\Bot\Keyboard\Keyboard;
 
 class DeliveryMethodsKeyboard
 {
-    public array $vars;
-
-    public function __construct($vars = [])
-    {
-        $this->vars = $vars;
-    }
-
     public function getKeyboard(): Keyboard
     {
         $keyboard = (new Keyboard())->inline();

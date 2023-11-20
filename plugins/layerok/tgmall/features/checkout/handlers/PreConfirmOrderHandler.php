@@ -69,20 +69,13 @@ class PreConfirmOrderHandler extends Handler
             ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.total'),  $cart->total)
             ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.spot'), $spot->name);
 
-
-        $k = new YesNoKeyboard([
-            'yes' => [
-                'handler' => 'confirm_order'
-            ],
-            'no' => [
-                'handler' => 'start'
-            ]
-        ]);
-
         $this->replyWithMessage([
             'text' => $receipt->getText(),
             'parse_mode' => 'html',
-            'reply_markup' => $k->getKeyboard()
+            'reply_markup' => (new YesNoKeyboard(
+                yes: ['handler' => 'confirm_order'],
+                no: ['handler' => 'start']
+            ))->getKeyboard()
         ]);
 
         $this->user->state->message_handler = null;

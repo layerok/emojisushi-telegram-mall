@@ -5,17 +5,16 @@ use Telegram\Bot\Keyboard\Keyboard;
 
 class CategoryItemsKeyboard
 {
-    public array $vars;
-
-    public function __construct($vars = [])
+    public function __construct(public array $categories)
     {
-        $this->vars = $vars;
+
     }
 
     public function getKeyboard(): Keyboard
     {
         $keyboard = (new Keyboard())->inline();
-        collect($this->vars['categories'])->map(function (Category $category) use ($keyboard) {
+
+        collect($this->categories)->map(function (Category $category) use ($keyboard) {
             $keyboard->row([
                 Keyboard::inlineButton([
                     'text' => $category->name,

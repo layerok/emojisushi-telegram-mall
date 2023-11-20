@@ -5,26 +5,20 @@ use Telegram\Bot\Keyboard\Keyboard;
 
 class CartFooterKeyboard
 {
-    public array $vars;
+    public function __construct(public Cart $cart) {
 
-    public function __construct($vars = [])
-    {
-        $this->vars = $vars;
     }
 
     public function getKeyboard(): Keyboard
     {
-        /** @var Cart $cart */
-        $cart = $this->vars['cart'];
-
         $keyboard = (new Keyboard())->inline();
 
-        if (count($cart->data) !== 0) {
+        if (count($this->cart->data) !== 0) {
 
             $keyboard->row([
                 Keyboard::inlineButton([
                     'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.all_amount_order', [
-                            'price' => $cart->total
+                            'price' => $this->cart->total
                         ]
                     ),
                     'callback_data' => json_encode(['noop', []])

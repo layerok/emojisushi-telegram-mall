@@ -53,14 +53,10 @@ class AddProductHandler extends Handler
 
         $cartCountMsg = $this->user->state->cart_count_msg;
 
-        $markup = new CategoryProductKeyboard([
-            'product' => $this->product,
-        ]);
-
         $this->api->editMessageReplyMarkup([
             'message_id' => $this->getUpdate()->getMessage()->message_id,
             'chat_id' => $this->getUpdate()->getChat()->id,
-            'reply_markup' => $markup->getKeyboard()
+            'reply_markup' => (new CategoryProductKeyboard($this->product))->getKeyboard()
         ]);
 
         if (!$cartCountMsg) {
@@ -72,16 +68,14 @@ class AddProductHandler extends Handler
             return;
         }
 
-        $markup = new CategoryFooterKeyboard([
-            'cart' => $cart,
-            'category_id' => $cartCountMsg->category_id,
-            'page' => $cartCountMsg->page
-        ]);
-
         $this->api->editMessageReplyMarkup([
             'message_id' => $cartCountMsg->id,
             'chat_id' => $this->getUpdate()->getChat()->id,
-            'reply_markup' => $markup->getKeyboard()
+            'reply_markup' => (new CategoryFooterKeyboard(
+                $cartCountMsg->category_id,
+                $cartCountMsg->page,
+                $cart)
+            )->getKeyboard()
         ]);
     }
 

@@ -53,15 +53,13 @@ class CategoryItemHandler extends Handler
 
         $cart = EmojisushiApi::getCart();
 
-        $markup = new CategoryFooterKeyboard([
-            'cart' => $cart,
-            'category_id' => $this->arguments['id'],
-            'page' => $this->arguments['page']
-        ]);
-
         $message = $this->replyWithMessage([
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.triple_dot'),
-            'reply_markup' => $markup->getKeyboard()
+            'reply_markup' => (new CategoryFooterKeyboard(
+                $this->arguments['id'],
+                $this->arguments['page'],
+                $cart
+            ))->getKeyboard()
         ]);
 
         $cartCountMsg = Hydrator::hydrate(CartCountMsg::class, [
@@ -84,10 +82,6 @@ class CategoryItemHandler extends Handler
 
     public function sendProduct(Product $product)
     {
-        $markup = new CategoryProductKeyboard([
-            'product' => $product
-        ]);
-
         $caption = sprintf(
             "<b>%s</b>\n\n%s",
             $product->name,
@@ -98,14 +92,14 @@ class CategoryItemHandler extends Handler
             $this->replyWithPhoto([
                 'photo' => \Cache::get("telegram.files." . $product->id),
                 'caption' => $caption,
-                'reply_markup' => $markup->getKeyboard(),
+                'reply_markup' => (new CategoryProductKeyboard($product))->getKeyboard(),
                 'parse_mode' => 'html',
             ]);
         } else if(isset($product->image_sets[0]->images[0]->path)) {
             $response = $this->replyWithPhoto([
                 'photo' => InputFile::create($product->image_sets[0]->images[0]->path),
                 'caption' => $caption,
-                'reply_markup' => $markup->getKeyboard(),
+                'reply_markup' => (new CategoryProductKeyboard($product))->getKeyboard(),
                 'parse_mode' => 'html',
             ]);
 
@@ -116,7 +110,7 @@ class CategoryItemHandler extends Handler
         } else {
             $this->replyWithMessage([
                 'text' => $caption,
-                'reply_markup' => $markup->getKeyboard(),
+                'reply_markup' => (new CategoryProductKeyboard($product))->getKeyboard(),
                 'parse_mode' => 'html',
             ]);
         }

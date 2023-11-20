@@ -7,11 +7,9 @@ use Telegram\Bot\Keyboard\Keyboard;
 
 class CategoryFooterKeyboard
 {
-    public array $vars;
-
-    public function __construct($vars = [])
+    public function __construct(public $category_id, public $page, public Cart $cart)
     {
-        $this->vars = $vars;
+
     }
 
     public function getKeyboard(): Keyboard
@@ -21,7 +19,7 @@ class CategoryFooterKeyboard
         $limit = Config::get('layerok.tgmall::settings.products.per_page', 10);
 
         // todo: handle 404 error
-        $category = EmojisushiApi::getCategory(['id' => $this->vars['category_id']]);
+        $category = EmojisushiApi::getCategory(['id' => $this->category_id]);
 
         $products = EmojisushiApi::getProducts([
             'category_slug' => $category->slug,
@@ -29,7 +27,7 @@ class CategoryFooterKeyboard
 
         $lastPage = ceil(count($products) / max(1, $limit));
 
-        if ($lastPage > $this->vars['page']) {
+        if ($lastPage > $this->page) {
             $keyboard->row([
                 Keyboard::inlineButton([
                     'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.load_more'),
@@ -37,23 +35,19 @@ class CategoryFooterKeyboard
                         'category_item',
                         [
                             'id' => $category->id,
-                            'page' => $this->vars['page'] + 1
+                            'page' => $this->page + 1
                         ]
                     ])
                 ])
             ])->row([]);
         }
 
-        /**
-         * @var Cart $cart;
-         */
-        $cart = $this->vars['cart'];
 
         return $keyboard
             ->row([
                 Keyboard::inlineButton([
                     'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.cart') .
-                        (count($cart->data) ? sprintf("(%s)", count($cart->data)) : ''),
+                        (count($this->cart->data) ? sprintf("(%s)", count($this->cart->data)) : ''),
                     'callback_data' => json_encode([
                         'cart', ['type' => 'list']
                     ])
