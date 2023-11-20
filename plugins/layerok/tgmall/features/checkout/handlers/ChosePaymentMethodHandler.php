@@ -4,7 +4,7 @@ namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Facades\EmojisushiApi;
-use Layerok\TgMall\Features\Checkout\Keyboards\PreparePaymentChangeKeyboard;
+use Telegram\Bot\Keyboard\Keyboard;
 
 class ChosePaymentMethodHandler extends Handler
 {
@@ -21,10 +21,25 @@ class ChosePaymentMethodHandler extends Handler
 
         if ($method->code == 'cash') {
             // наличными
-            $k = new PreparePaymentChangeKeyboard();
+
             $this->replyWithMessage([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.prepare_change_question'),
-                'reply_markup' => $k->getKeyboard()
+                'reply_markup' => (new Keyboard())->inline()->row([
+                    Keyboard::inlineButton([
+                        'text' => 'Так',
+                        'callback_data' => json_encode([
+                            'prepare_payment_change',
+                            []
+                        ])
+                    ]),
+                    Keyboard::inlineButton([
+                        'text' => 'Ні',
+                        'callback_data' => json_encode([
+                            'list_delivery_methods',
+                            []
+                        ])
+                    ])
+                ])
             ]);
 
 

@@ -1,12 +1,17 @@
 <?php
 
-namespace Layerok\TgMall\Features\Checkout\Keyboards;
+namespace Layerok\TgMall\Classes\Keyboards;
 
 use Telegram\Bot\Keyboard\Keyboard;
 
-class SticksCounterKeyboard
+class CounterKeyboard
 {
-    public function __construct(public $count)
+    public function __construct(
+        public $count,
+        public string $okHandler,
+        public float $min = 0,
+        public float $max = INF
+    )
     {
 
     }
@@ -17,8 +22,8 @@ class SticksCounterKeyboard
             Keyboard::inlineButton([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.minus'),
                 'callback_data' => json_encode([
-                    'update_sticks_counter',
-                    [$this->count - 1]
+                    $this->count - 1 < $this->min ? 'noop': 'counter_update',
+                    [max($this->count - 1, $this->min)]
                 ])
             ]),
             Keyboard::inlineButton([
@@ -27,13 +32,12 @@ class SticksCounterKeyboard
             ]),
             Keyboard::inlineButton([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.plus'),
-                'callback_data' => json_encode(['update_sticks_counter', [$this->count + 1]])
+                'callback_data' => json_encode(['counter_update', [min($this->count + 1, $this->max)]])
             ])
         ])->row([
             Keyboard::inlineButton([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.next'),
-                'callback_data' =>
-                    json_encode(['wish_to_leave_comment', []])
+                'callback_data' => json_encode([$this->okHandler, [$this->count]])
             ])
         ]);
     }

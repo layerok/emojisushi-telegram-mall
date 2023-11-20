@@ -3,10 +3,13 @@
 namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
-
 use Layerok\TgMall\Facades\EmojisushiApi;
-use Layerok\TgMall\Features\Checkout\Keyboards\SticksKeyboard;
 use Layerok\TgMall\Features\Checkout\Messages\OrderDeliveryAddressHandler;
+use Layerok\TgMall\Objects\City;
+use Layerok\TgMall\Objects\District;
+use Layerok\TgMall\Objects\ShipmentMethod;
+use Layerok\TgMall\Objects\Spot;
+use Telegram\Bot\Keyboard\Keyboard;
 
 class ChoseDeliveryMethodHandler extends Handler
 {
@@ -20,31 +23,95 @@ class ChoseDeliveryMethodHandler extends Handler
         $this->user->save();
 
         $method = EmojisushiApi::getShippingMethod(['id' => $id]);
-        if ($method->code === 'courier') {
-            // доставка курьером
-            $this->replyWithMessage([
-                'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.type_delivery_address'),
-            ]);
-            $this->user->state->message_handler = OrderDeliveryAddressHandler::class;
-            $this->user->save();
 
+        $city = EmojisushiApi::getCity([
+            'slug_or_id' => $this->user->state->city_id
+        ]);
 
-            return;
-        } else if($method->code === 'takeaway') {
-            $k = new SticksKeyboard();
-            // был выбран самовывоз
-            $this->replyWithMessage([
-                'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.add_sticks_question'),
-                'reply_markup' => $k->getKeyboard()
-            ]);
+        switch($city->slug) {
+            case "odesa": {
+                $this->handleOdesa($method, $city);
+                break;
+            }
+            case "chorno": {
+                $this->handleChernomorsk($method, $city);
+            }
+        }
+    }
 
-            $this->user->state->message_handler = null;
-            $this->user->save();
+    public function handleOdesa(ShipmentMethod $method, City $city) {
+        switch ($method->code) {
+            case "courier": {
+                $keyboard = (new Keyboard())->inline();
+                collect($city->districts)->each(function(District $district) use($keyboard) {
+                    $keyboard->row([
+                        [
+                            'text' => $district->name,
+                            'callback_data' => json_encode(['chose_odesa_district', [$district->id]])
+                        ]
+                    ]);
+                });
+                $this->replyWithMessage([
+                    'text' => 'Оберіть район доставки',
+                    'reply_markup' => $keyboard
+                ]);
+                break;
+            }
+            default: {
+                $keyboard = (new Keyboard())->inline();
+                collect($city->spots)->each(function(Spot $spot) use($keyboard) {
+                    $keyboard->row([
+                        [
+                            'text' => $spot->name,
+                            'callback_data' => json_encode(['chose_odesa_spot', [$spot->id]])
+                        ]
+                    ]);
+                });
+                $this->replyWithMessage([
+                    'text' => 'Оберіть заклад',
+                    'reply_markup' => $keyboard
+                ]);
+                break;
+            }
+        }
+    }
 
-            return;
+    public function handleChernomorsk(ShipmentMethod $method, City $city) {
+        switch ($method->code) {
+            case "courier": {
+                $this->replyWithMessage([
+                    'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.type_delivery_address'),
+                ]);
+                $this->user->state->message_handler = OrderDeliveryAddressHandler::class;
+                $this->user->state->spot_id = $city->spots[0]->id;
+                $this->user->save();
+                break;
+            }
+            default: {
+                $this->replyWithMessage([
+                    'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.add_sticks_question'),
+                    'reply_markup' => (new Keyboard())->inline()->row([
+                        Keyboard::inlineButton([
+                            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.yes'),
+                            'callback_data' => json_encode([
+                                'add_sticks', []
+                            ])
+                        ]),
+                        Keyboard::inlineButton([
+                            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.no'),
+                            'callback_data' => json_encode([
+                                'wish_to_leave_comment', []
+                            ])
+                        ])
+                    ])
+                ]);
+
+                $this->user->state->message_handler = null;
+                $this->user->state->spot_id = $city->spots[0]->id;
+                $this->user->save();
+                break;
+            }
         }
 
-        $handler = new WishToLeaveCommentHandler($this->getUser(), $this->getApi());
-        $handler->make($this->update, []);
     }
 }

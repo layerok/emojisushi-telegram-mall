@@ -5,7 +5,7 @@ namespace Layerok\TgMall\Features\Checkout\Messages;
 use Illuminate\Support\Facades\Validator;
 use Layerok\TgMall\Classes\Messages\AbstractMessageHandler;
 use Layerok\TgMall\Features\Checkout\Handlers\EnterPhoneHandler;
-use Layerok\TgMall\Features\Checkout\Keyboards\IsRightPhoneKeyboard;
+use Telegram\Bot\Keyboard\Keyboard;
 
 class OrderNameHandler extends AbstractMessageHandler
 {
@@ -38,10 +38,19 @@ class OrderNameHandler extends AbstractMessageHandler
             $this->user->state->order->phone = $this->getUser()->phone;
             $this->user->save();
 
-            $k = new IsRightPhoneKeyboard();
+
             $this->replyWithMessage([
                 'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.right_phone_number') . ' ' . $this->getUser()->phone . '?',
-                'reply_markup' => $k->getKeyboard(),
+                'reply_markup' => (new Keyboard())->inline()->row([
+                    Keyboard::inlineButton([
+                        'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.yes'),
+                        'callback_data' => json_encode(['list_payment_methods', []])
+                    ]),
+                    Keyboard::inlineButton([
+                        'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.no'),
+                        'callback_data' => json_encode(['enter_phone', []])
+                    ])
+                ]),
             ]);
 
             return;

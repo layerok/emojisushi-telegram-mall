@@ -3,12 +3,12 @@
 namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
-use Layerok\TgMall\Features\Checkout\Keyboards\SticksCounterKeyboard;
+use Layerok\TgMall\Classes\Keyboards\CounterKeyboard;
 
 
 class YesSticksHandler extends Handler
 {
-    protected string $name = "yes_sticks";
+    protected string $name = "add_sticks";
 
     public function run() {
 
@@ -18,7 +18,7 @@ class YesSticksHandler extends Handler
 
         $this->replyWithMessage([
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.add_sticks'),
-            'reply_markup' => (new SticksCounterKeyboard($initialCount))->getKeyboard(),
+            'reply_markup' => (new CounterKeyboard($initialCount, 'confirm_sticks_count'))->getKeyboard(),
         ]);
     }
 }

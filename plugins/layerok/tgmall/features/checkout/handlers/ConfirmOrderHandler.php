@@ -3,14 +3,12 @@
 namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Layerok\Basecode\Classes\Receipt;
-use Layerok\PosterPos\Classes\PosterUtils;
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Facades\EmojisushiApi;
-use Layerok\TgMall\Features\Checkout\Keyboards\OrderConfirmedKeyboard;
 use Layerok\TgMall\Objects\CartProduct;
 use poster\src\PosterApi;
 use Telegram\Bot\Api;
-
+use Telegram\Bot\Keyboard\Keyboard;
 
 class ConfirmOrderHandler extends Handler
 {
@@ -57,14 +55,14 @@ class ConfirmOrderHandler extends Handler
             ];
         }
 
-        $poster_comment = PosterUtils::getComment([
-            'comment' => $appState->order->comment,
-            'payment_method_name' => $payment_method->name ?? null,
-            'delivery_method_name' => $shipping_method->name ?? null,
-            'change' => $appState->order->change
-        ], function ($key) {
-            return \Lang::get("layerok.tgmall::lang.telegram.receipt." . $key);
-        });
+        $poster_comment = collect([
+            ['', $appState->order->comment],
+            [\Lang::get("layerok.tgmall::lang.telegram.receipt.change"), $appState->order->change],
+            [\Lang::get("layerok.tgmall::lang.telegram.receipt.payment_method_name"), $payment_method->name],
+            [\Lang::get("layerok.tgmall::lang.telegram.receipt.delivery_method_name"), $shipping_method->name],
+        ])->filter(fn($part) => !empty($part[1]))
+            ->map(fn($part) => ($part[0] ? $part[0] . ': ' : '') . $part[1])
+            ->join(' || ');
 
         PosterApi::init(config('poster'));
         $result = (object)PosterApi::incomingOrders()
@@ -123,13 +121,18 @@ class ConfirmOrderHandler extends Handler
             'chat_id' => $chat_id
         ]);
 
-        $k = new OrderConfirmedKeyboard();
-
         EmojisushiApi::clearCart();
 
         $this->replyWithMessage([
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.thank_you'),
-            'reply_markup' => $k->getKeyboard()
+            'reply_markup' => (new Keyboard())->inline()->row([
+                Keyboard::inlineButton([
+                    'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.in_menu_main'),
+                    'callback_data' => json_encode([
+                        'start'
+                    ])
+                ])
+            ])->row([])
         ]);
     }
 

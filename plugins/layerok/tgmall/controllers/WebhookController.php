@@ -3,6 +3,10 @@
 use GuzzleHttp\Exception\ClientException;
 use Layerok\TgMall\Classes\Callbacks\NoopHandler;
 use Layerok\TgMall\Facades\EmojisushiApi;
+use Layerok\TgMall\Features\Checkout\Handlers\ChoseOdesaDistrictHandler;
+use Layerok\TgMall\Features\Checkout\Handlers\ChoseOdesaSpotHandler;
+use Layerok\TgMall\Features\Checkout\Handlers\ConfirmSticksCountHandler;
+use Layerok\TgMall\Classes\Callbacks\CounterUpdateHandler;
 use Layerok\TgMall\Features\Index\ChangeCityHandler;
 use Layerok\TgMall\Features\Index\ListCitiesHandler;
 use Layerok\TgMall\Models\User;
@@ -20,7 +24,6 @@ use Layerok\TgMall\Features\Checkout\Handlers\ListDeliveryMethodsHandler;
 use Layerok\TgMall\Features\Checkout\Handlers\ListPaymentMethodsHandler;
 use Layerok\TgMall\Features\Checkout\Handlers\PreConfirmOrderHandler;
 use Layerok\TgMall\Features\Checkout\Handlers\PreparePaymentChangeHandler;
-use Layerok\TgMall\Features\Checkout\Handlers\UpdateSticksCounterHandler;
 use Layerok\TgMall\Features\Checkout\Handlers\WishToLeaveCommentHandler;
 use Layerok\TgMall\Features\Checkout\Handlers\YesSticksHandler;
 use Layerok\TgMall\Features\Index\WebsiteHandler;
@@ -62,10 +65,13 @@ class WebhookController
         ConfirmOrderHandler::class,
         PreparePaymentChangeHandler::class,
         YesSticksHandler::class,
-        UpdateSticksCounterHandler::class,
         WishToLeaveCommentHandler::class,
         ChangeCityHandler::class,
-        ListCitiesHandler::class
+        ListCitiesHandler::class,
+        ConfirmSticksCountHandler::class,
+        CounterUpdateHandler::class,
+        ChoseOdesaSpotHandler::class,
+        ChoseOdesaDistrictHandler::class
     ];
 
     public function __invoke()
