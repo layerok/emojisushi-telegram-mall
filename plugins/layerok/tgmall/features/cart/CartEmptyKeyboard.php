@@ -1,21 +1,22 @@
 <?php namespace Layerok\Tgmall\Features\Cart;
 
-use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
+use Telegram\Bot\Keyboard\Keyboard;
 
-class CartEmptyKeyboard extends InlineKeyboard
+class CartEmptyKeyboard
 {
-    public function build(): void
+    public function getKeyboard(): Keyboard
     {
-        $this
-            ->append([
-            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.to_categories'),
-            'callback_data' => json_encode(['category_items', []])
-        ])
-            ->nextRow()
-            ->append([
-            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.in_menu_main'),
-            'callback_data' => json_encode(['start', []])
-        ]);
+       return (new Keyboard())->inline()->row([
+           Keyboard::inlineButton([
+               'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.to_categories'),
+               'callback_data' => json_encode(['category_items', []])
+           ])
+       ])->row([])->row([
+           Keyboard::inlineButton([
+               'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.in_menu_main'),
+               'callback_data' => json_encode(['start', []])
+           ])
+       ]);
     }
 
 }

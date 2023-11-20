@@ -3,6 +3,8 @@
 use GuzzleHttp\Exception\ClientException;
 use Layerok\TgMall\Classes\Callbacks\NoopHandler;
 use Layerok\TgMall\Facades\EmojisushiApi;
+use Layerok\TgMall\Features\Index\ChangeCityHandler;
+use Layerok\TgMall\Features\Index\ListCitiesHandler;
 use Layerok\TgMall\Models\User;
 use Layerok\TgMall\Stores\UserStore;
 use Layerok\TgMall\Features\Checkout\Handlers\ConfirmOrderHandler;
@@ -21,8 +23,6 @@ use Layerok\TgMall\Features\Checkout\Handlers\PreparePaymentChangeHandler;
 use Layerok\TgMall\Features\Checkout\Handlers\UpdateSticksCounterHandler;
 use Layerok\TgMall\Features\Checkout\Handlers\WishToLeaveCommentHandler;
 use Layerok\TgMall\Features\Checkout\Handlers\YesSticksHandler;
-use Layerok\TgMall\Features\Index\ChangeSpotHandler;
-use Layerok\TgMall\Features\Index\ListSpotsHandler;
 use Layerok\TgMall\Features\Index\WebsiteHandler;
 use Layerok\Tgmall\Features\Product\AddProductHandler;
 use Layerok\TgMall\Features\Index\StartHandler;
@@ -64,8 +64,8 @@ class WebhookController
         YesSticksHandler::class,
         UpdateSticksCounterHandler::class,
         WishToLeaveCommentHandler::class,
-        ChangeSpotHandler::class,
-        ListSpotsHandler::class,
+        ChangeCityHandler::class,
+        ListCitiesHandler::class
     ];
 
     public function __invoke()
@@ -186,13 +186,13 @@ class WebhookController
         $handlerName = $info[0];
         $arguments = $info[1] ?? [];
 
-        if ($handlerName !== 'change_spot') {
+        if ($handlerName !== 'change_city') {
             try {
-                EmojisushiApi::getSpot([
-                    'slug_or_id' => $user->state->spot_id
+                EmojisushiApi::getCity([
+                    'slug_or_id' => $user->state->city_id
                 ]);
             } catch (ClientException) {
-                $handler = new ListSpotsHandler($user, $this->api);
+                $handler = new ListCitiesHandler($user, $this->api);
                 $handler->make($update, []);
                 return;
             }

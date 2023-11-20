@@ -13,10 +13,6 @@ class CategoryItemsHandler extends Handler
             'categories' => EmojisushiApi::getCategories()->data
         ]);
 
-        $keyboard->append([
-            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.in_menu_main'),
-            'callback_data' => json_encode(['start', []])
-        ]);
 
         $replyWith = [
             'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.category'),

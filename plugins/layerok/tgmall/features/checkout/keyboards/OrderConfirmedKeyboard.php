@@ -1,16 +1,25 @@
 <?php namespace Layerok\TgMall\Features\Checkout\Keyboards;
 
-use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
+use Telegram\Bot\Keyboard\Keyboard;
 
-class OrderConfirmedKeyboard extends InlineKeyboard
+class OrderConfirmedKeyboard
 {
-    public function build(): void
+    public array $vars;
+
+    public function __construct($vars = [])
     {
-        $this->append([
-            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.in_menu_main'),
-            'callback_data' => json_encode([
-                'start'
+        $this->vars = $vars;
+    }
+
+    public function getKeyboard(): Keyboard
+    {
+        return (new Keyboard())->inline()->row([
+            Keyboard::inlineButton([
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.in_menu_main'),
+                'callback_data' => json_encode([
+                    'start'
+                ])
             ])
-        ])->nextRow();
+        ])->row([]);
     }
 }

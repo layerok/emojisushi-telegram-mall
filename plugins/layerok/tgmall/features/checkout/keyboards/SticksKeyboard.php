@@ -1,21 +1,32 @@
 <?php namespace Layerok\TgMall\Features\Checkout\Keyboards;
 
-use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
+use Lang;
+use Telegram\Bot\Keyboard\Keyboard;
 
 
-class SticksKeyboard extends InlineKeyboard
+class SticksKeyboard
 {
-    public function build(): void
+    public array $vars;
+
+    public function __construct($vars = [])
     {
-        $this->append([
-            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.yes'),
-            'callback_data' => json_encode([
-                'yes_sticks', []
-            ])
-        ])->append([
-            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.no'),
-            'callback_data' => json_encode([
-                'wish_to_leave_comment', []
+        $this->vars = $vars;
+    }
+
+    public function getKeyboard(): Keyboard
+    {
+        return (new Keyboard())->inline()->row([
+            Keyboard::inlineButton([
+                'text' => Lang::get('layerok.tgmall::lang.telegram.buttons.yes'),
+                'callback_data' => json_encode([
+                    'yes_sticks', []
+                ])
+            ]),
+            Keyboard::inlineButton([
+                'text' => Lang::get('layerok.tgmall::lang.telegram.buttons.no'),
+                'callback_data' => json_encode([
+                    'wish_to_leave_comment', []
+                ])
             ])
         ]);
 

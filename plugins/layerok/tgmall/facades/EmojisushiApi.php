@@ -7,6 +7,8 @@ use Layerok\TgMall\Objects\Cart;
 use Layerok\TgMall\Objects\CartProduct;
 use Layerok\TgMall\Objects\CategoriesList;
 use Layerok\TgMall\Objects\Category;
+use Layerok\TgMall\Objects\CitiesList;
+use Layerok\TgMall\Objects\City;
 use Layerok\TgMall\Objects\PaymentMethod;
 use Layerok\TgMall\Objects\PaymentMethodsList;
 use Layerok\TgMall\Objects\Product;
@@ -21,7 +23,8 @@ use Layerok\TgMall\Objects\Variant;
  * Class EmojisushiApi
  *
  * @method static void init(array $conf)
- * @method static array getCity(array $params = [], array $guzzleOptions = [])
+ * @method static City getCity(array $params = [], array $guzzleOptions = [])
+ * @method static CitiesList getCities(array $params = [], array $guzzleOptions = [])
  * @method static Spot getSpot(array $params = [], array $guzzleOptions = [])
  * @method static SpotsList getSpots(array $params = [], array $guzzleOptions = [])
  * @method static CategoriesList getCategories(array $params = [], array $guzzleOptions = [])

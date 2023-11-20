@@ -2,17 +2,28 @@
 
 namespace Layerok\TgMall\Classes\Keyboards;
 
+use Telegram\Bot\Keyboard\Keyboard;
 
-class YesNoKeyboard extends InlineKeyboard
+class YesNoKeyboard
 {
-    public function build(): void
+    public array $vars;
+
+    public function __construct($vars = [])
     {
-        $this->append([
-            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.yes'),
-            'callback_data' => json_encode([$this->vars['yes']['handler'], []]),
-        ])->append([
-            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.no'),
-            'callback_data' => json_encode([$this->vars['no']['handler'], []])
+        $this->vars = $vars;
+    }
+
+    public function getKeyboard(): Keyboard
+    {
+        return (new Keyboard())->inline()->row([
+            Keyboard::inlineButton([
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.yes'),
+                'callback_data' => json_encode([$this->vars['yes']['handler'], []]),
+            ]),
+            Keyboard::inlineButton([
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.no'),
+                'callback_data' => json_encode([$this->vars['no']['handler'], []])
+            ])
         ]);
     }
 }

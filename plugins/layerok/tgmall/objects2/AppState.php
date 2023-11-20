@@ -12,6 +12,7 @@ class AppState {
     public $callback_handler = null;
 
     public ?string $spot_id = null;
+    public ?string $city_id = null;
 
     public ?string $session = null;
     /**

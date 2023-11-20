@@ -1,15 +1,23 @@
 <?php namespace Layerok\Tgmall\Features\Category;
 
-use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
 use Layerok\TgMall\Objects\Category;
+use Telegram\Bot\Keyboard\Keyboard;
 
-class CategoryItemsKeyboard extends InlineKeyboard
+class CategoryItemsKeyboard
 {
-    public function build(): void
+    public array $vars;
+
+    public function __construct($vars = [])
     {
-        collect($this->vars['categories'])->map(function (Category $category) {
-            $this->append(
-                [
+        $this->vars = $vars;
+    }
+
+    public function getKeyboard(): Keyboard
+    {
+        $keyboard = (new Keyboard())->inline();
+        collect($this->vars['categories'])->map(function (Category $category) use ($keyboard) {
+            $keyboard->row([
+                Keyboard::inlineButton([
                     'text' => $category->name,
                     'callback_data' => json_encode([
                         'category_item',
@@ -18,13 +26,15 @@ class CategoryItemsKeyboard extends InlineKeyboard
                             'page' => 1
                         ]
                     ])
-                ]
-            )->nextRow();
+                ])
+            ])->row([]);
         });
 
-        $this->append([
-            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.in_menu_main'),
-            'callback_data' => json_encode(['start', []])
+        return $keyboard->row([
+            Keyboard::inlineButton([
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.in_menu_main'),
+                'callback_data' => json_encode(['start', []])
+            ])
         ]);
     }
 }

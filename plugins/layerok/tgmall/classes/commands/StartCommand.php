@@ -1,8 +1,10 @@
 <?php namespace Layerok\TgMall\Classes\Commands;
 
+use GuzzleHttp\Exception\ClientException;
 use Layerok\PosterPos\Models\Spot;
+use Layerok\TgMall\Facades\EmojisushiApi;
+use Layerok\TgMall\Features\Index\CitiesKeyboard;
 use Layerok\TgMall\Features\Index\MainMenuKeyboard;
-use Layerok\TgMall\Features\Index\SpotsKeyboard;
 use Layerok\TgMall\Models\User as TelegramUser;
 use Telegram\Bot\Commands\Command;
 
@@ -29,14 +31,14 @@ class StartCommand extends Command
         $user = TelegramUser::where('chat_id', '=', $chat->id)
             ->first();
 
-        $spot = Spot::where([
-            'id' => $user->state->spot_id
-        ])->first();
-
-        if(!$spot) {
-            $k = new SpotsKeyboard();
+        try {
+            EmojisushiApi::getCity([
+                'slug_or_id' => $user->state->city_id
+            ]);
+        } catch (ClientException $exception) {
+            $k = new CitiesKeyboard();
             $this->replyWithMessage([
-                'text' => \Lang::get('layerok.tgmall::lang.telegram.spots.choose'),
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.cities.choose'),
                 'reply_markup' => $k->getKeyboard()
             ]);
             return;

@@ -2,22 +2,34 @@
 
 namespace Layerok\TgMall\Features\Checkout\Keyboards;
 
-use Layerok\TgMall\Classes\Keyboards\InlineKeyboard;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Objects\ShipmentMethod;
+use Telegram\Bot\Keyboard\Keyboard;
 
-class DeliveryMethodsKeyboard extends InlineKeyboard
+class DeliveryMethodsKeyboard
 {
-    public function build(): void
+    public array $vars;
+
+    public function __construct($vars = [])
     {
-        collect(EmojisushiApi::getShippingMethods()->data)->each(function (ShipmentMethod $method) {
-            $this->append([
-                'text' => $method->name,
-                'callback_data' => json_encode([
-                    'chose_delivery_method',
-                    ['id' => $method->id]
+        $this->vars = $vars;
+    }
+
+    public function getKeyboard(): Keyboard
+    {
+        $keyboard = (new Keyboard())->inline();
+        collect(EmojisushiApi::getShippingMethods()->data)->each(function (ShipmentMethod $method) use ($keyboard) {
+            $keyboard->row([
+                Keyboard::inlineButton([
+                    'text' => $method->name,
+                    'callback_data' => json_encode([
+                        'chose_delivery_method',
+                        ['id' => $method->id]
+                    ])
                 ])
-            ])->nextRow();
+            ]);
         });
+
+        return $keyboard;
     }
 }

@@ -6,21 +6,21 @@ use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Facades\EmojisushiApi;
 
 
-class ChangeSpotHandler extends Handler
+class ChangeCityHandler extends Handler
 {
-    protected string $name = "change_spot";
+    protected string $name = "change_city";
 
     public function run()
     {
         $id = $this->arguments[0];
 
-        $this->user->state->spot_id = $id;
+        $this->user->state->city_id = $id;
         $this->user->save();
 
         $from = $this->getUpdate()->getMessage()
             ->getChat();
 
-        $spot = EmojisushiApi::getSpot([
+        $city = EmojisushiApi::getCity([
             'slug_or_id' => $id
         ]);
 
@@ -28,8 +28,8 @@ class ChangeSpotHandler extends Handler
             'chat_id' => $from->id,
             'text' => sprintf(
                 '%s:%s',
-                \Lang::get('layerok.tgmall::lang.telegram.spots.changed'),
-                $spot->name
+                \Lang::get('layerok.tgmall::lang.telegram.cities.changed'),
+                $city->name
             )
         ]);
 

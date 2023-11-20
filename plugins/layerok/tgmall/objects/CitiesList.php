@@ -2,9 +2,9 @@
 
 namespace Layerok\TgMall\Objects;
 
-class ProductsList {
+class CitiesList {
     /**
-     * @var Product[]
+     * @var City[]
      */
     public array $data;
 

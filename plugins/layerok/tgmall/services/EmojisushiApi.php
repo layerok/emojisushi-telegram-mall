@@ -11,6 +11,8 @@ use Layerok\TgMall\Objects\Cart;
 use Layerok\TgMall\Objects\CartProduct;
 use Layerok\TgMall\Objects\Category;
 use Layerok\TgMall\Objects\CategoriesList;
+use Layerok\TgMall\Objects\CitiesList;
+use Layerok\TgMall\Objects\City;
 use Layerok\TgMall\Objects\PaymentMethod;
 use Layerok\TgMall\Objects\PaymentMethodsList;
 use Layerok\TgMall\Objects\Product;
@@ -69,17 +71,33 @@ class EmojisushiApi {
     /**
      * @param array{slug_or_id: string|int} $params
      * @param array $guzzleOptions
-     * @return mixed
+     * @return City
      * @throws GuzzleException
      */
-    public function getCity( array $params = [], array $guzzleOptions = []) {
+    public function getCity( array $params = [], array $guzzleOptions = []): City {
         $res = $this->guzzleClient->get(
             'city',
             array_merge_recursive($guzzleOptions, [
                 'query' => $params,
             ]),
         );
-        return json_decode($res->getBody(), true);
+        return Hydrator::hydrate(City::class, json_decode($res->getBody(), true));
+    }
+
+    /**
+     * @param array{includeSpots?: bool,includeDistricts?:bool} $params
+     * @param array $guzzleOptions
+     * @return CitiesList
+     * @throws GuzzleException
+     */
+    public function getCities( array $params = [], array $guzzleOptions = []): CitiesList {
+        $res = $this->guzzleClient->get(
+            'cities',
+            array_merge_recursive($guzzleOptions, [
+                'query' => $params,
+            ]),
+        );
+        return Hydrator::hydrate(CitiesList::class, json_decode($res->getBody(), true));
     }
 
     /**
@@ -206,22 +224,6 @@ class EmojisushiApi {
         return collect($product->variants)->first(
             fn(Variant $v) => $v->id === $params['variant_id']
         );
-    }
-
-    /**
-     * @param array{includeSpots?: bool,includeDistricts?:bool} $params
-     * @param array $guzzleOptions
-     * @return mixed
-     * @throws GuzzleException
-     */
-    public function getCities( array $params = [], array $guzzleOptions = []) {
-        $res = $this->guzzleClient->get(
-            'city',
-            array_merge_recursive($guzzleOptions, [
-                'query' => $params,
-            ]),
-        );
-        return json_decode($res->getBody(), true);
     }
 
     public function getCart(array $params = [], array $guzzleOptions = []): Cart {
