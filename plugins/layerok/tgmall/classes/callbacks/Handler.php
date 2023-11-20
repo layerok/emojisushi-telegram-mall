@@ -74,8 +74,4 @@ abstract class Handler implements HandlerInterface
             'chat_id' => $this->getUpdate()->getChat()->id
         ],$params));
     }
-
-    public function getState(): State {
-        return $this->user->state;
-    }
 }
