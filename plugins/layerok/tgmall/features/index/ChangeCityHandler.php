@@ -15,10 +15,13 @@ class ChangeCityHandler extends Handler
         $id = $this->arguments[0];
 
         $this->user->state->city_id = $id;
+        $this->user->state->session = str_random(100);
         $this->user->save();
 
         $from = $this->getUpdate()->getMessage()
             ->getChat();
+
+
 
         $city = EmojisushiApi::getCity([
             'slug_or_id' => $id

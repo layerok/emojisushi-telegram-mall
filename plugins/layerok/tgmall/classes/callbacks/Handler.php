@@ -49,11 +49,6 @@ abstract class Handler implements HandlerInterface
         call_user_func_array([$this, 'run'], array_values($this->getArguments()));
     }
 
-    public function getUser(): User
-    {
-        return $this->user;
-    }
-
     public function getApi(): Api
     {
         return $this->api;

@@ -11,12 +11,12 @@ class ListPaymentMethodsHandler extends Handler
 {
     protected string $name = "list_payment_methods";
 
-
     public function run()
     {
         $keyboard = (new Keyboard())->inline();
-        collect(EmojisushiApi::getPaymentMethods()->data)->each(function(PaymentMethod $method) use($keyboard) {
-            $keyboard->row([
+        collect(EmojisushiApi::getPaymentMethods()->data)
+            ->filter(fn(PaymentMethod $method) => $method->code !== 'wayforpay')
+            ->each(fn(PaymentMethod $method) => $keyboard->row([
                 Keyboard::inlineButton([
                     'text' => $method->name,
                     'callback_data' => json_encode([
@@ -24,8 +24,7 @@ class ListPaymentMethodsHandler extends Handler
                         ['id' => $method->id]
                     ])
                 ])
-            ])->row([]);
-        });
+            ])->row([]));
 
 
         $this->replyWithMessage([

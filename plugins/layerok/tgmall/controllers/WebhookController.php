@@ -1,8 +1,10 @@
 <?php namespace Layerok\TgMall\Controllers;
 
 use GuzzleHttp\Exception\ClientException;
+use Layerok\TgMall\Casts\AsAppState;
 use Layerok\TgMall\Classes\Callbacks\NoopHandler;
 use Layerok\TgMall\Facades\EmojisushiApi;
+use Layerok\TgMall\Facades\Hydrator;
 use Layerok\TgMall\Features\Checkout\Handlers\ChoseOdesaDistrictHandler;
 use Layerok\TgMall\Features\Checkout\Handlers\ChoseOdesaSpotHandler;
 use Layerok\TgMall\Features\Checkout\Handlers\ConfirmSticksCountHandler;
@@ -10,6 +12,8 @@ use Layerok\TgMall\Classes\Callbacks\CounterUpdateHandler;
 use Layerok\TgMall\Features\Index\ChangeCityHandler;
 use Layerok\TgMall\Features\Index\ListCitiesHandler;
 use Layerok\TgMall\Models\User;
+use Layerok\TgMall\Objects2\AppState;
+use Layerok\TgMall\Objects2\Order;
 use Layerok\TgMall\Stores\UserStore;
 use Layerok\TgMall\Features\Checkout\Handlers\ConfirmOrderHandler;
 use Layerok\Tgmall\Features\Cart\CartHandler;
@@ -133,11 +137,17 @@ class WebhookController
             }
         }
 
+        // todo: user spatie/laravel-data package
+        if(is_null($user->state)) {
+            $user->state = Hydrator::hydrate(AppState::class, []);
+        }
+
 
         $sessionId = $user->state->session ?? str_random(100);
 
         EmojisushiApi::init([
             'sessionId' => $sessionId,
+            'baseUrl' => (\Config::get('layerok.tgmall::api_url'))
         ]);
 
         $user->state->session = $sessionId;

@@ -49,7 +49,7 @@ class ChosePaymentMethodHandler extends Handler
             return;
         }
 
-        $handler = new ListDeliveryMethodsHandler($this->getUser(), $this->getApi());
+        $handler = new ListDeliveryMethodsHandler($this->user, $this->getApi());
         $handler->make($this->update, []);
     }
 }

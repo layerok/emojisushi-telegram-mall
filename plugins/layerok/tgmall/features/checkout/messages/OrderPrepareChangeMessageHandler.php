@@ -13,7 +13,7 @@ class OrderPrepareChangeMessageHandler extends AbstractMessageHandler
         $this->user->state->order->change = $this->text;
         $this->user->save();
 
-        $handler = new ListDeliveryMethodsHandler($this->getUser(), $this->api);
+        $handler = new ListDeliveryMethodsHandler($this->user, $this->api);
         $handler->make($this->update, []);
 
         $this->user->state->message_handler = null;

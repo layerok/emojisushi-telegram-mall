@@ -33,14 +33,13 @@ class OrderNameHandler extends AbstractMessageHandler
         $this->user->save();
 
         // todo: remember user name
-        if (isset($this->getUser()->phone)) {
+        if (isset($this->user->phone)) {
 
-            $this->user->state->order->phone = $this->getUser()->phone;
+            $this->user->state->order->phone = $this->user->phone;
             $this->user->save();
 
-
             $this->replyWithMessage([
-                'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.right_phone_number') . ' ' . $this->getUser()->phone . '?',
+                'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.right_phone_number') . ' ' . $this->user->phone . '?',
                 'reply_markup' => (new Keyboard())->inline()->row([
                     Keyboard::inlineButton([
                         'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.yes'),
@@ -56,9 +55,7 @@ class OrderNameHandler extends AbstractMessageHandler
             return;
         }
 
-        $handler = new EnterPhoneHandler($this->getUser(), $this->api);
+        $handler = new EnterPhoneHandler($this->user, $this->api);
         $handler->make($this->update, []);
     }
-
-
 }

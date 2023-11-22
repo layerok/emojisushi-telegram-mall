@@ -22,6 +22,7 @@ use Layerok\TgMall\Objects\ShipmentMethodsList;
 use Layerok\TgMall\Objects\Spot;
 use Layerok\TgMall\Objects\SpotsList;
 use Layerok\TgMall\Objects\Variant;
+use Layerok\TgMall\Objects2\PlaceOrderResponse;
 use Psr\Http\Message\RequestInterface;
 use \GuzzleHttp\Client;
 
@@ -40,7 +41,7 @@ class EmojisushiApi {
     public function init($conf) {
         $this->sessionId = $conf['sessionId'];
         $this->lang = $conf['lang'] ?? 'uk';
-        $this->baseUrl = $config['baseUrl'] ?? 'https://api.emojisushi.com.ua/api/';
+        $this->baseUrl = $conf['baseUrl'];
 
         $this->handler = HandlerStack::create();
 
@@ -364,5 +365,21 @@ class EmojisushiApi {
             ]),
         );
         return Hydrator::hydrate(Cart::class, json_decode($res->getBody(), true));
+    }
+
+    /**
+     * @param array{phone: string, firstname?: string, lastname?: string, email?: string, shipping_method_id: int, payment_method_id: int, spot_id: int, address?: string, comment?: string, sticks?: int, change?: string} $params
+     * @param array $guzzleOptions
+     * @return Cart
+     * @throws GuzzleException
+     */
+    public function placeOrder(array $params = [], array $guzzleOptions = []): PlaceOrderResponse {
+        $res = $this->guzzleClient->post(
+            'order/place',
+            array_merge_recursive($guzzleOptions, [
+                'json' => $params
+            ]),
+        );
+        return Hydrator::hydrate(PlaceOrderResponse::class, json_decode($res->getBody(), true));
     }
 }

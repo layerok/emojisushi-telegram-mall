@@ -4,6 +4,7 @@ namespace Layerok\TgMall\Features\Checkout\Handlers;
 
 use Layerok\TgMall\Classes\Callbacks\Handler;
 use Layerok\TgMall\Facades\EmojisushiApi;
+use Layerok\TgMall\Features\Checkout\Keyboard\WishToAddSticksKeyboard;
 use Layerok\TgMall\Features\Checkout\Messages\OrderDeliveryAddressHandler;
 use Layerok\TgMall\Objects\City;
 use Layerok\TgMall\Objects\District;
@@ -52,7 +53,7 @@ class ChoseDeliveryMethodHandler extends Handler
                     ]);
                 });
                 $this->replyWithMessage([
-                    'text' => 'Оберіть район доставки',
+                    'text' => \Lang::get('layerok.tgmall::lang.telegram.districts.choose'),
                     'reply_markup' => $keyboard
                 ]);
                 break;
@@ -68,7 +69,7 @@ class ChoseDeliveryMethodHandler extends Handler
                     ]);
                 });
                 $this->replyWithMessage([
-                    'text' => 'Оберіть заклад',
+                    'text' => \Lang::get('layerok.tgmall::lang.telegram.spots.choose'),
                     'reply_markup' => $keyboard
                 ]);
                 break;
@@ -90,20 +91,7 @@ class ChoseDeliveryMethodHandler extends Handler
             default: {
                 $this->replyWithMessage([
                     'text' => \Lang::get('layerok.tgmall::lang.telegram.texts.add_sticks_question'),
-                    'reply_markup' => (new Keyboard())->inline()->row([
-                        Keyboard::inlineButton([
-                            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.yes'),
-                            'callback_data' => json_encode([
-                                'add_sticks', []
-                            ])
-                        ]),
-                        Keyboard::inlineButton([
-                            'text' => \Lang::get('layerok.tgmall::lang.telegram.buttons.no'),
-                            'callback_data' => json_encode([
-                                'wish_to_leave_comment', []
-                            ])
-                        ])
-                    ])
+                    'reply_markup' => (new WishToAddSticksKeyboard())->getKeyboard()
                 ]);
 
                 $this->user->state->message_handler = null;

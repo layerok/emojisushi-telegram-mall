@@ -12,7 +12,7 @@ class OrderCommentHandler extends AbstractMessageHandler
         $this->user->state->order->comment = $this->text;
         $this->user->save();
 
-        $handler = new PreConfirmOrderHandler($this->getUser(), $this->api);
+        $handler = new PreConfirmOrderHandler($this->user, $this->api);
         $handler->make($this->update, []);
     }
 }

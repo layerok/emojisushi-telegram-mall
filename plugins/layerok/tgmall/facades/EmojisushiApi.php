@@ -18,6 +18,7 @@ use Layerok\TgMall\Objects\ShipmentMethodsList;
 use Layerok\TgMall\Objects\Spot;
 use Layerok\TgMall\Objects\SpotsList;
 use Layerok\TgMall\Objects\Variant;
+use Layerok\TgMall\Objects2\PlaceOrderResponse;
 
 /**
  * Class EmojisushiApi
@@ -41,6 +42,7 @@ use Layerok\TgMall\Objects\Variant;
  * @method static ShipmentMethodsList getShippingMethods(array $params = [], array $guzzleOptions = [])
  * @method static ShipmentMethod getShippingMethod(array $params = [], array $guzzleOptions = [])
  * @method static Cart clearCart(array $params = [], array $guzzleOptions = [])
+ * @method static PlaceOrderResponse placeOrder(array $params = [], array $guzzleOptions = [])
  *
  *
  * @see  \Layerok\TgMall\Services\EmojisushiApi;

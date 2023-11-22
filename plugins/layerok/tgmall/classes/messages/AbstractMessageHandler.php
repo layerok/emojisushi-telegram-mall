@@ -33,13 +33,9 @@ abstract class AbstractMessageHandler implements MessageHandlerInterface
         $this->handle();
     }
 
-    public function getUser(): User {
-        return $this->user;
-    }
-
     public function replyWithMessage($params): Message {
         return $this->api->sendMessage(
-            array_merge(['chat_id' => $this->getUser()->chat_id], $params)
+            array_merge(['chat_id' => $this->user->chat_id], $params)
         );
     }
 }

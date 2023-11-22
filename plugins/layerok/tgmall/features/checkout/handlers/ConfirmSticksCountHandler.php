@@ -15,7 +15,7 @@ class ConfirmSticksCountHandler extends Handler
         $this->user->state->order->sticks_count = $count;
         $this->user->save();
 
-        $handler = new WishToLeaveCommentHandler($this->getUser(), $this->api);
+        $handler = new WishToLeaveCommentHandler($this->user, $this->api);
         $handler->make($this->update, []);
     }
 }
