@@ -53,6 +53,8 @@ class CartHandler extends Handler
             return $cartProduct->id === $this->arguments['id'];
         });
 
+        // todo: check if cart product exists
+
         if (isset($cartProduct) && ($cartProduct->quantity + $this->arguments['qty']) < 1) {
             return;
         }
