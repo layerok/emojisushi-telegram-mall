@@ -39,7 +39,7 @@ class ConfirmOrderHandler extends Handler
             'payment_method_id' => $payment_method->id,
             'shipping_method_id' => $shipping_method->id,
             'change' => $appState->order->change,
-            'sticks' => $appState->order->sticks_count,
+            'sticks' => $appState->order->sticks_count, // todo: rename sticks to persons_amount
             'comment' => $appState->order->comment
         ]);
 

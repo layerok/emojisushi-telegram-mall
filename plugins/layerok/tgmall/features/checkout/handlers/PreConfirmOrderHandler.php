@@ -38,14 +38,6 @@ class PreConfirmOrderHandler extends Handler
             return $posterProduct;
         })->values()->toArray();
 
-        if($appState->order->sticks_count) {
-            $posterProducts[] = [
-                'name' => \Lang::get('layerok.tgmall::lang.telegram.receipt.sticks_name'),
-                'count' => $appState->order->sticks_count,
-                'product_id' => 492
-            ];
-        }
-
         $receipt = new Receipt();
         $receipt
             ->headline(\Lang::get('layerok.tgmall::lang.telegram.receipt.confirm_order_question'))
@@ -55,6 +47,7 @@ class PreConfirmOrderHandler extends Handler
             ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.address'), $appState->order->address)
             ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.payment_method_name'), $payment_method->name)
             ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.change'), $appState->order->change)
+            ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.persons_amount'), $appState->order->sticks_count)
             ->field(\Lang::get('layerok.tgmall::lang.telegram.receipt.comment'), $appState->order->comment)
             ->newLine()
             ->map($posterProducts, function($item) {
