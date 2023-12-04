@@ -73,7 +73,9 @@ trait HasEditSite
          *     });
          *
          */
-        Event::fire('system.site.setEditSite', compact('id'));
+        Event::fire('system.site.setEditSite', [$id]);
+
+        $this->broadcastSiteChange($id);
     }
 
     /**

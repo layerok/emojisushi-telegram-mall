@@ -11,6 +11,12 @@ oc.Modules.register('backend.component.toolbar.button', function () {
                 }
             },
 
+            command: function computeCommand() {
+                if (this.settings.command) {
+                    return this.settings.command;
+                }
+            },
+
             label: function computeLabel() {
                 var label = '';
 

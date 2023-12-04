@@ -100,7 +100,7 @@ class Callout extends UiElement
      */
     protected function hasHeader(): bool
     {
-        return $this->label || $this->comment;
+        return $this->label || $this->comment || $this->commentHtml;
     }
 
     /**

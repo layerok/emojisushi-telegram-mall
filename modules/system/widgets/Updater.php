@@ -84,9 +84,12 @@ class Updater extends WidgetBase
      */
     public function onCheckDependencies()
     {
-        $pluginRequire = PluginManager::instance()->findMissingDependencies();
-        $themeRequire = ThemeManager::instance()->findMissingDependencies();
-        $deps = array_unique(array_merge($pluginRequire, $themeRequire));
+        $deps = PluginManager::instance()->findMissingDependencies();
+
+        if (System::hasModule('Cms')) {
+            $themeDeps = ThemeManager::instance()->findMissingDependencies();
+            $deps = array_unique(array_merge($deps, $themeDeps));
+        }
 
         return $this->makePartial('require_form', ['deps' => $deps]);
     }

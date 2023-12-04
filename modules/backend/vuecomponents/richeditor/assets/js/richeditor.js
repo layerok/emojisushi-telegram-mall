@@ -8,6 +8,10 @@ oc.Modules.register('backend.component.richeditor', function () {
             toolbarSticky: false
         };
 
+        if (component.useLineBreaks) {
+            froalaOptions.enter = $.FroalaEditor.ENTER_BR;
+        }
+
         if (Array.isArray(component.toolbarButtons) && component.toolbarButtons.length > 0) {
             froalaOptions.toolbarButtons = component.toolbarButtons;
         }
@@ -158,6 +162,7 @@ oc.Modules.register('backend.component.richeditor', function () {
                 default: true
             },
             readOnly: Boolean,
+            useLineBreaks: Boolean,
             toolbarButtons: Array,
             fullPage: {
                 type: Boolean,

@@ -92,4 +92,15 @@ class Component
     {
         return __($component->componentDetails()['description'] ?? "No description provided");
     }
+
+    /**
+     * getComponentSnippetAjax returns if a component should be rendered with an AJAX partial
+     * only applies when a component is used as a snippet
+     * @param mixed $component The component object
+     * @return bool
+     */
+    public static function getComponentSnippetAjax($component)
+    {
+        return (bool) array_get($component->componentDetails(), 'snippetAjax', false);
+    }
 }

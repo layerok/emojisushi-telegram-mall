@@ -392,10 +392,12 @@ class Filter extends WidgetBase implements FilterElement
         // Condition
         $sqlCondition = $scope->conditions;
         if (is_string($sqlCondition)) {
-            $query->whereRaw(DbDongle::parse(strtr($sqlCondition, [
-                ':filtered' => $scopeValue,
-                ':value' => $scopeValue,
-            ])));
+            // @deprecated adapt legacy format
+            $sqlCondition = str_replace(["':value'", "':filtered'", ':filtered'], ':value', $sqlCondition);
+
+            $query->whereRaw(DbDongle::parse($sqlCondition, [
+                'value' => $scopeValue
+            ]));
             return;
         }
 

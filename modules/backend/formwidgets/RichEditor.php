@@ -20,17 +20,17 @@ class RichEditor extends FormWidgetBase
     //
 
     /**
-     * @var boolean Determines whether content has HEAD and HTML tags.
+     * @var bool Determines whether content has HEAD and HTML tags.
      */
     public $fullPage = false;
 
     /**
-     * @var boolean Determines whether content has HEAD and HTML tags.
+     * @var bool Determines whether content has HEAD and HTML tags.
      */
     public $toolbarButtons;
 
     /**
-     * @var boolean If true, the editor is set to read-only mode
+     * @var bool If true, the editor is set to read-only mode
      */
     public $readOnly = false;
 
@@ -46,20 +46,17 @@ class RichEditor extends FormWidgetBase
     public $showMargins = false;
 
     /**
+     * @var bool useLineBreaks uses line breaks instead of paragraph wrappers for each new line.
+     */
+    public $useLineBreaks = false;
+
+    /**
      * @var string Defines a mount point for the editor toolbar.
      * Must include a module name that exports the Vue application and a state element name.
-     * Format: module.name::stateElementName
+     * Format: stateElementName
      * Only works in Vue applications and form document layouts.
      */
     public $externalToolbarAppState = null;
-
-    /**
-     * @var string Defines an event bus for an external toolbar.
-     * Must include a module name that exports the Vue application and a state element name.
-     * Format: module.name::eventBus
-     * Only works in Vue applications and form document layouts.
-     */
-    public $externalToolbarEventBus = null;
 
     //
     // Object Properties
@@ -85,6 +82,7 @@ class RichEditor extends FormWidgetBase
             'toolbarButtons',
             'legacyMode',
             'showMargins',
+            'useLineBreaks',
             'externalToolbarAppState',
             'externalToolbarEventBus'
         ]);
@@ -111,12 +109,12 @@ class RichEditor extends FormWidgetBase
         $this->vars['field'] = $this->formField;
         $this->vars['editorLang'] = $this->getValidEditorLang();
         $this->vars['fullPage'] = $this->fullPage;
+        $this->vars['useLineBreaks'] = $this->useLineBreaks;
         $this->vars['stretch'] = $this->formField->stretch;
         $this->vars['size'] = $this->formField->size;
         $this->vars['readOnly'] = $this->readOnly;
         $this->vars['showMargins'] = $this->showMargins;
         $this->vars['externalToolbarAppState'] = $this->externalToolbarAppState;
-        $this->vars['externalToolbarEventBus'] = $this->externalToolbarEventBus;
         $this->vars['name'] = $this->getFieldName();
         $this->vars['value'] = $this->getLoadValue();
         $this->vars['toolbarButtons'] = $this->evalToolbarButtons();

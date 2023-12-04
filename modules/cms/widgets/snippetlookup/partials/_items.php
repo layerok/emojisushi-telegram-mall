@@ -11,6 +11,7 @@
                 data-type="snippet"
                 data-description="<?= e($item->getDescription()) ?>"
                 data-component-class="<?= e($item->getComponentClass()) ?>"
+                data-use-ajax="<?= $item->useAjaxPartial() ? 'true' : 'false' ?>"
             >
                 <a href="javascript:;">
                     <span class="title"><?= e($item->getName()) ?></span>

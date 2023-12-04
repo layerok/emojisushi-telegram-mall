@@ -120,7 +120,9 @@ abstract class ComponentBase extends Extendable implements CallsAnyMethod
      */
     public function getPath()
     {
-        return plugins_path() . $this->dirName;
+        return strpos(static::class, 'App\\') === 0
+            ? base_path($this->dirName)
+            : plugins_path($this->dirName);
     }
 
     /**
@@ -155,6 +157,24 @@ abstract class ComponentBase extends Extendable implements CallsAnyMethod
         $result = call_user_func_array([$this->controller, 'renderPartial'], func_get_args());
         $this->controller->setComponentContext(null);
         return $result;
+    }
+
+    /**
+     * runLifeCycle executes the life cycle for the component.
+     */
+    public function runLifeCycle()
+    {
+        if ($event = $this->fireEvent('component.beforeRun', [], true)) {
+            return $event;
+        }
+
+        if ($result = $this->onRun()) {
+            return $result;
+        }
+
+        if ($event = $this->fireEvent('component.run', [], true)) {
+            return $event;
+        }
     }
 
     /**

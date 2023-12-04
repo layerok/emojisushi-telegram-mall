@@ -68,15 +68,15 @@ trait HasAjaxRequests
             $this->getAjaxHandlerPartialList()
         );
 
-        // Run page without AJAX
-        $result = $this->runPage($page, false);
+        // Run page in capture mode
+        if ($result = $this->runPage($page, ['capture' => true])) {
+            return $result;
+        }
 
         // Execute AJAX event
         if ($ajaxResponse = $this->execAjaxHandlers()) {
             return $ajaxResponse;
         }
-
-        return $result;
     }
 
     /**
@@ -156,6 +156,11 @@ trait HasAjaxRequests
                     $responseContents['X_OCTOBER_FLASH_MESSAGES'] = Flash::all();
                 }
 
+                // Look for browser events
+                if ($browserEvents = $this->getBrowserEvents()) {
+                    $responseContents['X_OCTOBER_DISPATCHES'] = $browserEvents;
+                }
+
                 // If the handler returned an array, we should add it to output for rendering.
                 // If it is a string, add it to the array with the key "result".
                 // If an object, pass it to Laravel as a response object.
@@ -175,7 +180,16 @@ trait HasAjaxRequests
                 // Handle validation errors
                 $responseContents['X_OCTOBER_ERROR_FIELDS'] = $ex->getFields();
                 $responseContents['X_OCTOBER_ERROR_MESSAGE'] = $ex->getMessage();
+                if ($browserEvents = $this->getBrowserEvents()) {
+                    $responseContents['X_OCTOBER_DISPATCHES'] = $browserEvents;
+                }
                 throw new AjaxException($responseContents);
+            }
+            catch (AjaxException $ex) {
+                if ($browserEvents = $this->getBrowserEvents()) {
+                    $ex->addContent('X_OCTOBER_DISPATCHES', $browserEvents);
+                }
+                throw $ex;
             }
             catch (Exception $ex) {
                 throw $ex;

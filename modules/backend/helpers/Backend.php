@@ -195,4 +195,31 @@ class Backend
 
         return '<time'.Html::attributes($attributes).'>'.e($defaultValue).'</time>'.PHP_EOL;
     }
+
+    /**
+     * sizeToPixels converts a size name, e.g. large, small to a pixel size
+     */
+    public function sizeToPixels($size)
+    {
+        if (is_numeric($size)) {
+            return $size;
+        }
+
+        switch ($size) {
+            case 'tiny':
+                return 400;
+            case 'small':
+                return 500;
+            case 'medium':
+                return 600;
+            case 'large':
+                return 750;
+            case 'huge':
+                return 950;
+            case 'giant':
+                return 1200;
+        }
+
+        return '';
+    }
 }

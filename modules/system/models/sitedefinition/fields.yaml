@@ -28,6 +28,11 @@ tabs:
         _ruler1:
             type: ruler
 
+        group:
+            label: Site Group
+            type: relation
+            required: true
+
         name:
             label: Name
             span: left

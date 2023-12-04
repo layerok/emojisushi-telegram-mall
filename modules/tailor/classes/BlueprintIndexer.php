@@ -6,11 +6,10 @@ use System;
 use Tailor\Classes\Blueprint;
 use Tailor\Classes\Blueprint\EntryBlueprint;
 use System\Helpers\Cache as CacheHelper;
+use Exception;
 
 /**
  * BlueprintIndexer super class responsible for indexing blueprints
- *
- * @method static BlueprintIndexer instance()
  *
  * @package october\tailor
  * @author Alexey Bobkov, Samuel Georges
@@ -18,7 +17,6 @@ use System\Helpers\Cache as CacheHelper;
 class BlueprintIndexer
 {
     use \System\Traits\NoteMaker;
-    use \October\Rain\Support\Traits\Singleton;
     use \Tailor\Classes\BlueprintIndexer\MixinIndex;
     use \Tailor\Classes\BlueprintIndexer\GlobalIndex;
     use \Tailor\Classes\BlueprintIndexer\SectionIndex;
@@ -41,6 +39,14 @@ class BlueprintIndexer
      * @var bool debugChecked for the debug cache buster
      */
     protected $debugChecked = false;
+
+    /**
+     * instance creates a new instance of this singleton
+     */
+    public static function instance(): static
+    {
+        return App::make('tailor.blueprint.indexer');
+    }
 
     /**
      * find
@@ -162,8 +168,13 @@ class BlueprintIndexer
             return [];
         }
 
-        $result = File::getRequire($fileName);
-        if (!is_array($result)) {
+        try {
+            $result = File::getRequire($fileName);
+            if (!is_array($result)) {
+                return [];
+            }
+        }
+        catch (Exception $ex) {
             return [];
         }
 
@@ -187,8 +198,13 @@ class BlueprintIndexer
         $mtime = File::lastModifiedRecursive(app_path('blueprints'));
         $debugFile = $this->makeCacheFile('debug');
 
-        if (file_exists($debugFile)) {
-            $currentMtime = File::getRequire($debugFile)['mtime'] ?? 0;
+        try {
+            if (file_exists($debugFile)) {
+                $currentMtime = File::getRequire($debugFile)['mtime'] ?? 0;
+            }
+        }
+        catch (Exception $ex) {
+            $currentMtime = 0;
         }
 
         if ($mtime > $currentMtime) {

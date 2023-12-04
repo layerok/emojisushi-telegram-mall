@@ -1311,7 +1311,10 @@ class MediaManager extends WidgetBase
      */
     protected function getThumbnailDirectory()
     {
-        return MediaLibrary::validatePath(Config::get('media.thumb_folder', 'public'), true) . '/';
+        return MediaLibrary::validatePath(
+            Config::get('media.thumb_folder', 'public'),
+            true
+        ) . '/';
     }
 
     /**
@@ -1540,7 +1543,7 @@ class MediaManager extends WidgetBase
         }
 
         try {
-            $uploadedFile = Input::file('file_data');
+            $uploadedFile = files('file_data');
 
             /**
              * @event media.file.beforeUpload
@@ -1562,13 +1565,11 @@ class MediaManager extends WidgetBase
             $this->fireSystemEvent('media.file.beforeUpload', [$uploadedFile]);
 
             // Convert uppercase file extensions to lowercase
-            //
             $fileName = $uploadedFile->getClientOriginalName();
             $extension = strtolower($uploadedFile->getClientOriginalExtension());
             $fileName = File::name($fileName).'.'.$extension;
 
             // File name contains non-latin characters, attempt to slug the value
-            //
             $autoRename = Config::get('media.auto_rename') === 'slug';
             if (!$this->validateFileName($fileName) || $autoRename) {
                 $fileNameClean = $this->slugFileName(File::name($fileName));
@@ -1576,13 +1577,11 @@ class MediaManager extends WidgetBase
             }
 
             // Check for unsafe file extensions
-            //
             if (!$this->validateFileType($fileName)) {
                 throw new ApplicationException(Lang::get('backend::lang.media.type_blocked'));
             }
 
             // See mime type handling in the asset manager
-            //
             if (!$uploadedFile->isValid()) {
                 throw new ApplicationException($uploadedFile->getErrorMessage());
             }
@@ -1592,22 +1591,28 @@ class MediaManager extends WidgetBase
             $filePath = $path.'/'.$fileName;
 
             // getRealPath() can be empty for some environments (IIS)
-            //
             $realPath = empty(trim($uploadedFile->getRealPath()))
                 ? $uploadedFile->getPath() . DIRECTORY_SEPARATOR . $uploadedFile->getFileName()
                 : $uploadedFile->getRealPath();
 
             // Cannot overwrite files
-            //
             if (!$this->checkHasPermission('mediaDelete') && MediaLibrary::instance()->has($filePath)) {
                 throw new ApplicationException(__('A media file already exists at this location, please upload using a different filename.'));
             }
 
+            // Check and clean vector files
+            // @todo use streaming like file objects
+            $contents = File::get($realPath);
+            // @deprecated media.clean_vectors set default to true in v4
+            if ($extension === 'svg' && Config::get('media.clean_vectors', false)) {
+                // @todo File::cleanVector() helper might be helpful here to clean temporary file in place
+                $contents = \Html::cleanVector($contents);
+            }
+
             // Write file to disk
-            //
             MediaLibrary::instance()->put(
                 $filePath,
-                File::get($realPath)
+                $contents
             );
 
             /**

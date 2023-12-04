@@ -183,6 +183,16 @@ class User extends UserBase
     }
 
     /**
+     * afterFetch event
+     */
+    public function afterFetch()
+    {
+        if (is_array($this->permissions)) {
+            $this->permissions = UserRole::applyPermissionPatches($this->permissions);
+        }
+    }
+
+    /**
      * afterLogin event
      */
     public function afterLogin()
@@ -249,7 +259,7 @@ class User extends UserBase
     }
 
     /**
-     * createDefaultAdmin inserts a new administrator with the default featureset
+     * createDefaultAdmin inserts a new administrator with the default feature set
      */
     public static function createDefaultAdmin(array $data)
     {

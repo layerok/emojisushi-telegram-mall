@@ -17,6 +17,7 @@ class ServiceProvider extends ModuleServiceProvider
     {
         parent::register('tailor');
 
+        $this->registerSingletons();
         $this->registerEditorEvents();
         $this->registerConsole();
         $this->registerRenamedClasses();
@@ -81,12 +82,35 @@ class ServiceProvider extends ModuleServiceProvider
     }
 
     /**
+     * registerSingletons
+     */
+    protected function registerSingletons()
+    {
+        $this->app->singleton('tailor.fields', \Tailor\Classes\FieldManager::class);
+        $this->app->singleton('tailor.record.indexer', \Tailor\Classes\RecordIndexer::class);
+        $this->app->singleton('tailor.blueprint.indexer', \Tailor\Classes\BlueprintIndexer::class);
+        $this->app->singleton('tailor.blueprint.verifier', \Tailor\Classes\BlueprintVerifier::class);
+    }
+
+    /**
+     * registerEditorEvents handles Editor events
+     */
+    protected function registerEditorEvents()
+    {
+        Event::listen('editor.extension.register', function () {
+            return \Tailor\Classes\EditorExtension::class;
+        });
+    }
+
+    /**
      * registerConsole
      */
     protected function registerConsole()
     {
         $this->registerConsoleCommand('tailor.refresh', \Tailor\Console\TailorRefresh::class);
         $this->registerConsoleCommand('tailor.migrate', \Tailor\Console\TailorMigrate::class);
+        $this->registerConsoleCommand('tailor.prune', \Tailor\Console\TailorPrune::class);
+        $this->registerConsoleCommand('tailor.propagate', \Tailor\Console\TailorPropagate::class);
     }
 
     /**
@@ -107,16 +131,6 @@ class ServiceProvider extends ModuleServiceProvider
             \Tailor\ContentFields\DatePickerField::class => 'datepicker',
             \Tailor\ContentFields\NumberField::class => 'number',
         ];
-    }
-
-    /**
-     * registerEditorEvents handles Editor events
-     */
-    protected function registerEditorEvents()
-    {
-        Event::listen('editor.extension.register', function () {
-            return \Tailor\Classes\EditorExtension::class;
-        });
     }
 
     /**

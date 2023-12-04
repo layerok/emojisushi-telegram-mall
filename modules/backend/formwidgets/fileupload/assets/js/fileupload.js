@@ -65,18 +65,20 @@
         this.$el.on('click', 'input[data-record-selector]', this.proxy(this.onClickCheckbox));
         this.$el.on('change', 'input[data-record-selector]', this.proxy(this.onSelectionChanged));
 
-        this.initToolbarExtensionPoint();
-        this.initExternalToolbarEventBus();
-        this.mountExternalToolbarEventBusEvents();
-
         this.bindUploader();
 
         if (this.options.isSortable) {
             this.bindSortable();
         }
 
-        this.extendExternalToolbar();
         this.isLoaded = true;
+
+        // External toolbar
+        setTimeout(() => {
+            this.initToolbarExtensionPoint();
+            this.mountExternalToolbarEventBusEvents();
+            this.extendExternalToolbar();
+        }, 0);
     }
 
     FileUpload.prototype.dispose = function() {
@@ -119,29 +121,16 @@
             return;
         }
 
-        // Expected format: tailor.app::toolbarExtensionPoint
-        const parts = this.options.externalToolbarAppState.split('::');
-        if (parts.length !== 2) {
-            throw new Error('Invalid externalToolbarAppState format. Expected format: module.name::stateElementName');
+        const point = $.oc.vueUtils.getToolbarExtensionPoint(
+            this.options.externalToolbarAppState,
+            this.$el.get(0),
+            'both'
+        );
+
+        if (point) {
+            this.toolbarExtensionPoint = point.state;
+            this.externalToolbarEventBusObj = point.bus;
         }
-
-        const app = oc.Modules.import(parts[0]);
-        this.toolbarExtensionPoint = app.state[parts[1]];
-    }
-
-    FileUpload.prototype.initExternalToolbarEventBus = function() {
-        if (!this.options.externalToolbarEventBus) {
-            return;
-        }
-
-        // Expected format: tailor.app::eventBus
-        const parts = this.options.externalToolbarEventBus.split('::');
-        if (parts.length !== 2) {
-            throw new Error('Invalid externalToolbarEventBus format. Expected format: module.name::stateElementName');
-        }
-
-        const module = oc.Modules.import(parts[0]);
-        this.externalToolbarEventBusObj = module.state[parts[1]];
     }
 
     FileUpload.prototype.mountExternalToolbarEventBusEvents = function() {
@@ -461,7 +450,12 @@
             draggable: 'div.upload-object.is-success',
             handle: '.drag-handle',
             onStart: this.proxy(this.onDragStart),
-            onEnd: this.proxy(this.onDragStop)
+            onEnd: this.proxy(this.onDragStop),
+
+            // Auto scroll plugin
+            forceAutoScrollFallback: true,
+            scrollSensitivity: 60,
+            scrollSpeed: 20
         });
     }
 

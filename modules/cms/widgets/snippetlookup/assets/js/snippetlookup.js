@@ -25,16 +25,27 @@ oc.Modules.register('cms.widget.snippetlookup', function () {
 
         static generateSnippetHtml(snippet) {
             let snippetCode = snippet.snippet,
-                componentClass = snippet.componentClass;
+                componentClass = snippet.componentClass,
+                useAjax = snippet.useAjax === 'true';
 
-            let str = '<figure data-snippet="'+snippetCode+'">&nbsp;</figure>';
+            var template = [];
 
             if (componentClass) {
                 snippetCode = this._generateUniqueComponentSnippetCode(snippetCode);
-                str = '<figure data-snippet="'+snippetCode+'" data-component="'+componentClass+'">&nbsp;</figure>';
+                template.push('<figure data-snippet="'+snippetCode+'"');
+                template.push(' data-component="'+componentClass+'"');
+            }
+            else {
+                template.push('<figure data-snippet="'+snippetCode+'"');
             }
 
-            return str;
+            if (useAjax) {
+                template.push(' data-ajax="true"');
+            }
+
+            template.push('>&nbsp;</figure>');
+
+            return template.join('');
         }
 
         // If a component-based snippet was added, make sure that its code is unique,

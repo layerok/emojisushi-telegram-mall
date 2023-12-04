@@ -26,6 +26,11 @@ class Relation extends FormWidgetBase
     public $useController;
 
     /**
+     * @var array useControllerConfig manually configures the `RelationController` behavior.
+     */
+    public $useControllerConfig;
+
+    /**
      * @var string nameFrom is the model column to use for the name reference
      */
     public $nameFrom = 'name';
@@ -86,7 +91,18 @@ class Relation extends FormWidgetBase
             $this->sqlSelect = $this->config->select;
         }
 
+        $this->useControllerConfig = (array) ($this->config->controller ?? []);
+
         $this->useController = $this->evalUseController($this->config->useController ?? true);
+    }
+
+    /**
+     * bindToController ensures manual relation controller configuration is applied.
+     */
+    public function bindToController()
+    {
+        $this->defineRelationControllerConfig();
+        parent::bindToController();
     }
 
     /**
@@ -104,32 +120,7 @@ class Relation extends FormWidgetBase
      */
     public function prepareVars()
     {
-        if ($this->useController) {
-            return;
-        }
-
         $this->vars['field'] = $this->makeRenderFormField();
-    }
-
-    /**
-     * evalUseController determines if the relation controller is usable and returns the default
-     * preference if it can be used.
-     */
-    protected function evalUseController(bool $defaultPref): bool
-    {
-        if (!$this->controller->isClassExtendedWith(\Backend\Behaviors\RelationController::class)) {
-            return false;
-        }
-
-        if (!is_string($this->valueFrom)) {
-            return false;
-        }
-
-        if (!$this->controller->relationHasField($this->valueFrom)) {
-            return false;
-        }
-
-        return $defaultPref;
     }
 
     /**
@@ -137,6 +128,10 @@ class Relation extends FormWidgetBase
      */
     protected function makeRenderFormField()
     {
+        if ($this->useController) {
+            return null;
+        }
+
         $field = clone $this->formField;
         [$model, $attribute] = $this->resolveModelAttribute($this->valueFrom);
 
@@ -241,6 +236,48 @@ class Relation extends FormWidgetBase
         elseif (is_array($this->defaultSort) && isset($this->defaultSort['column'])) {
             $query->orderBy($this->defaultSort['column'], $this->defaultSort['direction'] ?? 'desc');
         }
+    }
+
+    /**
+     * evalUseController determines if the relation controller is usable and returns the default
+     * preference if it can be used.
+     */
+    protected function evalUseController(bool $defaultPref): bool
+    {
+        if ($this->useControllerConfig) {
+            return true;
+        }
+
+        if (!$this->controller->isClassExtendedWith(\Backend\Behaviors\RelationController::class)) {
+            return false;
+        }
+
+        if (!is_string($this->valueFrom)) {
+            return false;
+        }
+
+        if (!$this->controller->relationHasField($this->valueFrom)) {
+            return false;
+        }
+
+        return $defaultPref;
+    }
+
+    /**
+     * defineRelationControllerConfig
+     */
+    protected function defineRelationControllerConfig()
+    {
+        if (!$this->useController || !$this->useControllerConfig) {
+            return;
+        }
+
+        if (!$this->controller->isClassExtendedWith(\Backend\Behaviors\RelationController::class)) {
+            $this->controller->extendClassWith(\Backend\Behaviors\RelationController::class);
+            $this->controller->asExtension('RelationController')->beforeDisplay();
+        }
+
+        $this->controller->relationRegisterField($this->valueFrom, $this->useControllerConfig);
     }
 
     /**

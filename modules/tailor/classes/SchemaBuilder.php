@@ -65,9 +65,13 @@ class SchemaBuilder
     protected $actionCount = 0;
 
     /**
-     * @var array reservedFieldNames are field names that cannot be used.
+     * @var array reservedFieldNames are field names that cannot be used as database columns.
+     * @see Tailor\Classes\FieldManager
      */
     protected $reservedFieldNames = [
+        // Properties
+        'attributes',
+
         // Columns
         'id',
         'site_id',
@@ -85,7 +89,6 @@ class SchemaBuilder
         'relation_id',
         'relation_type',
         'field_name',
-        'parent_id',
         'nest_left',
         'nest_right',
         'nest_depth',
@@ -93,12 +96,8 @@ class SchemaBuilder
         'is_version',
         'primary_id',
         'primary_attrs',
-        'blueprint_uuid',
         'content_group',
-        'is_version',
         'draft_mode',
-        'primary_id',
-        'primary_attrs',
         'published_at',
         'expired_at',
 

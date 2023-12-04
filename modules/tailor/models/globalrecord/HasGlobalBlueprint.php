@@ -88,7 +88,10 @@ trait HasGlobalBlueprint
         // Save attributes to content, purge from model
         $toSave = array_only($this->attributes, $contentColumns);
         foreach ($toSave as $key => $value) {
-            if ($value instanceof DateTimeInterface) {
+            if ($this->isJsonable($key)) {
+                $content[$key] = $this->getAttribute($key);
+            }
+            elseif ($value instanceof DateTimeInterface) {
                 $content[$key] = $value->format($this->getDateFormat());
             }
             elseif (is_bool($value)) {

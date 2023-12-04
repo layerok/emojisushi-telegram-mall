@@ -1,7 +1,7 @@
 /*
  * Main menu
  *
- * Dependences:
+ * Dependencies:
  * - ResponsiveMenu (october.responsivemenu.js)
  */
 
@@ -50,7 +50,7 @@
                 $submenu = $('.mainmenu-submenu-dropdown[data-submenu-index=' + submenuIndex + ']', $menuContainer),
                 isLeftSideMenu = $li.closest('#layout-mainmenu-left').length > 0;
 
-            $li.addClass('active active-dropdown');
+            $li.addClass('active-dropdown');
 
             getOverlay().addClass('oc-show');
 
@@ -207,7 +207,7 @@
         }
 
         function hideSubmenu() {
-            $('li.active-dropdown', $mainMenuElement).removeClass('active active-dropdown');
+            $('li.active-dropdown', $mainMenuElement).removeClass('active-dropdown');
             $('.mainmenu-submenu-dropdown.oc-show', $menuContainer).removeClass('oc-show');
             $(document.body).removeClass('left-menu-submenu-displayed');
         }

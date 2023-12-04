@@ -163,4 +163,37 @@ class Cms
 
         return $carbon;
     }
+
+    /**
+     * urlHasException checks if the url pattern has an exception for the specified type
+     */
+    public function urlHasException(string $url, string $type): bool
+    {
+        $exceptions = (array) Config::get('cms.url_exceptions', []);
+        if (!$exceptions) {
+            return false;
+        }
+
+        // Normalize URL
+        $haystack = '/' . trim($url, '/ ');
+
+        foreach ($exceptions as $urlPattern => $exceptionStr) {
+            $exceptionTypes = explode('|', $exceptionStr);
+            if (!in_array($type, $exceptionTypes)) {
+                continue;
+            }
+
+            // Normalize slash prefix, remove wildcard end
+            $needle = '/' . ltrim(rtrim($urlPattern, '*'), '/ ');
+            if (str_ends_with($urlPattern, '*') && str_starts_with($haystack, $needle)) {
+                return true;
+            }
+
+            if ($haystack === $needle) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

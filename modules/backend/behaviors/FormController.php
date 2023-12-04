@@ -84,10 +84,10 @@ class FormController extends ControllerBehavior
      * @var array customMessages contains default messages that you can override
      */
     protected $customMessages = [
-        'notFound' => 'backend::lang.form.not_found',
-        'flashCreate' => 'backend::lang.form.create_success',
-        'flashUpdate' => 'backend::lang.form.update_success',
-        'flashDelete' => 'backend::lang.form.delete_success',
+        'notFound' => "Form record with an ID of :id could not be found.",
+        'flashCreate' => ":name Created",
+        'flashUpdate' => ":name Updated",
+        'flashDelete' => ":name Deleted",
     ];
 
     /**
@@ -784,7 +784,7 @@ class FormController extends ControllerBehavior
      */
     public function formGetConfig()
     {
-        $config = $this->makeConfig($this->controller->formConfig, $this->requiredConfig);
+        $config = $this->config;
 
         $config->modelClass = Str::normalizeClassName($config->modelClass);
 

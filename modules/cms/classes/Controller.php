@@ -156,7 +156,7 @@ class Controller
         }
 
         // Maintenance mode
-        if (MaintenanceSetting::isEnabled()) {
+        if (MaintenanceSetting::isEnabled() && !Cms::urlHasException($url, 'maintenance')) {
             if (!Request::ajax()) {
                 $this->setStatusCode(503);
             }
@@ -276,17 +276,25 @@ class Controller
             throw new CmsException(Lang::get('cms::lang.page.not_found_name', ['name'=>$pageFile]));
         }
 
-        return $controller->runPage($page, false);
+        return $controller->runPage($page, ['render' => true]);
     }
 
     /**
      * runPage runs a page directly from its object and supplied parameters.
      * @param \Cms\Classes\Page $page
-     * @param bool $useAjax
+     * @param array $options
      * @return string
      */
-    public function runPage($page, $useAjax = true)
+    public function runPage($page, $options = [])
     {
+        // Process options
+        extract(array_merge([
+            'capture' => false,
+            'render' => false
+        ], (array) $options));
+
+        $useAjax = !($capture || $render);
+
         // If the page doesn't refer any layout, create the fallback layout.
         // Otherwise load the layout specified in the page.
         if (!$page->layout) {
@@ -409,7 +417,9 @@ class Controller
         // Render the layout
         $result = $this->renderLayoutContents();
 
-        return $result;
+        if (!$capture) {
+            return $result;
+        }
     }
 
     /**
@@ -717,7 +727,20 @@ class Controller
             return $this->combineAssets($url);
         }
 
-        return Url::asset($this->getThemeAssetPath($url));
+        $themeUrl = $this->getThemeAssetPath($url);
+
+        // @deprecated uncomment this in v4
+        // if (Config::get('system.themes_asset_url')) {
+        //     return $themeUrl;
+        // }
+
+        if (Config::get('system.relative_links') === true) {
+            return Url::toRelative($themeUrl);
+        }
+
+        // @deprecated v4 this should be toRelative since this is controlled by
+        // config system.themes_asset_url
+        return Url::asset($themeUrl);
     }
 
     /**

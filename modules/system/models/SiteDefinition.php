@@ -8,7 +8,6 @@ use Cms\Classes\Theme;
 use Backend\Models\User;
 use Backend\Models\UserRole;
 use System\Helpers\Preset as PresetHelper;
-use System\Helpers\DateTime as DateTimeHelper;
 use ValidationException;
 
 /**
@@ -38,6 +37,13 @@ class SiteDefinition extends Model
     public $rules = [
         'code' => 'required',
         'name' => 'required',
+    ];
+
+    /**
+     * @var array belongsTo
+     */
+    public $belongsTo = [
+        'group' => SiteGroup::class
     ];
 
     /**
@@ -76,7 +82,9 @@ class SiteDefinition extends Model
             'code' => 'english',
             'is_primary' => true,
             'is_enabled' => true,
-            'is_enabled_edit' => true
+            'is_enabled_edit' => true,
+            'group_id' => null,
+            'group' => null,
         ];
         $site->syncOriginal();
         return $site;
@@ -196,7 +204,7 @@ class SiteDefinition extends Model
             return '';
         }
 
-        return PresetHelper::localeIcons()[$this->locale][1] ?? '';
+        return PresetHelper::flags()[$this->locale][1] ?? '';
     }
 
     /**
@@ -366,7 +374,7 @@ class SiteDefinition extends Model
     {
         return [
             '' => '— '.__('Use Default').' —',
-        ] + PresetHelper::localeIcons() + [
+        ] + PresetHelper::flags() + [
             'custom' => '— '.__('Use Custom').' —'
         ];
     }
@@ -380,7 +388,7 @@ class SiteDefinition extends Model
             return false;
         }
 
-        return !isset(PresetHelper::localeIcons()[$locale]);
+        return !isset(PresetHelper::flags()[$locale]);
     }
 
     /**
@@ -391,7 +399,7 @@ class SiteDefinition extends Model
     {
         return [
             '' => '— '.__('Use Default').' —',
-        ] + DateTimeHelper::listTimezones();
+        ] + PresetHelper::timezones();
     }
 
     /**

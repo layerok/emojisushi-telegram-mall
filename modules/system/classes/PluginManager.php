@@ -767,7 +767,7 @@ class PluginManager
             }
 
             foreach ($required as $require) {
-                if ($this->hasPlugin($require)) {
+                if (!$require || $this->hasPlugin($require)) {
                     continue;
                 }
 
@@ -915,7 +915,7 @@ class PluginManager
     {
         $manager = UpdateManager::instance();
         $manager->rollbackPlugin($id);
-        $manager->updatePlugin($id);
+        $manager->migratePlugin($id);
     }
 
     /**

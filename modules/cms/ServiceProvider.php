@@ -127,11 +127,7 @@ class ServiceProvider extends ModuleServiceProvider
      */
     protected function registerThemeSiteEvents()
     {
-        Event::listen('system.site.setEditSite', function() {
-            Theme::resetCache();
-        });
-
-        Event::listen('system.site.setActiveSite', function() {
+        Event::listen('site.changed', function() {
             Theme::resetCache();
         });
     }

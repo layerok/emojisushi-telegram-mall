@@ -61,8 +61,8 @@ class MediaLibrary
     protected function init()
     {
         $this->storageUrl = rtrim(Config::get('filesystems.disks.media.url', '/storage/app/media'), '/');
-        $this->ignoreNames = Config::get('media.ignore_files', FileDefinitions::get('ignore_files'));
-        $this->ignorePatterns = Config::get('media.ignore_patterns', FileDefinitions::get('ignore_patterns'));
+        $this->ignoreNames = FileDefinitions::get('ignore_files');
+        $this->ignorePatterns = FileDefinitions::get('ignore_patterns');
     }
 
     /**

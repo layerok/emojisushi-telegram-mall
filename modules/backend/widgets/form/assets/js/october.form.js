@@ -1,7 +1,7 @@
 /*
  * Form Widget
  *
- * Dependences:
+ * Dependencies:
  * - Nil
  */
 +function ($) { "use strict";
@@ -32,9 +32,9 @@
         $('.nav-tabs', this.$el).on('shown.bs.tab shownLinkable.oc.tab', 'li.tab-lazy > a', this.proxy(this.showLazyTab));
         this.$el.on('oc.triggerOn.afterUpdate', '.field-checkboxlist', this.proxy(this.toggleCheckboxlist));
         this.$el.on('click', '.field-checkboxlist input[type=checkbox]', this.proxy(this.onClickCheckboxListCheckbox));
-        this.$el.on('oc.triggerOn.afterUpdate', this.proxy(this.toggleEmptyTabs));
         this.$el.one('dispose-control', this.proxy(this.dispose));
 
+        addEventListener('trigger:complete', this.proxy(this.toggleEmptyTabs));
         oc.Events.on(this.$el.get(0), 'trigger:empty', '.field-checkboxlist', this.proxy(this.clearCheckboxlist));
 
         this.bindDependents();
@@ -48,7 +48,7 @@
         $('.nav-tabs', this.$el).off('shown.bs.tab shownLinkable.oc.tab', 'li.tab-lazy > a', this.proxy(this.showLazyTab));
         this.$el.off('oc.triggerOn.afterUpdate', '.field-checkboxlist', this.proxy(this.toggleCheckboxlist));
         this.$el.off('click', '.field-checkboxlist input[type=checkbox]', this.proxy(this.onClickCheckboxListCheckbox));
-        this.$el.off('oc.triggerOn.afterUpdate', this.proxy(this.toggleEmptyTabs));
+        removeEventListener('trigger:complete', this.proxy(this.toggleEmptyTabs));
 
         this.$el.off('click', '[data-field-checkboxlist-all]');
         this.$el.off('click', '[data-field-checkboxlist-none]');
@@ -208,13 +208,32 @@
      * Calls an AJAX handler when the field updates.
      */
     FormWidget.prototype.onRefreshChangeField = function(ev) {
+        // @todo same approach in onRefreshDependents instead of debounce? -sg
+        if (!this.isCurrentFormContext(ev.target)) {
+            return;
+        }
+
         var $group = $(ev.target).closest('[data-change-handler]'),
             handler = $group.data('change-handler'),
             self = this;
 
-        $group.request(handler).done(function() {
-            self.toggleEmptyTabs();
-        });
+        // Debounce needed because select2 triggers change twice (vanilla + jquery) -sg
+        if (this.dependantUpdateTimers[handler] !== undefined) {
+            window.clearTimeout(this.dependantUpdateTimers[handler]);
+        }
+
+        this.dependantUpdateTimers[handler] = window.setTimeout(function() {
+            var refreshData = paramToObj('data-refresh-data', self.options.refreshData);
+            $group.request(handler, {
+                data: refreshData
+            }).done(function() {
+                self.toggleEmptyTabs();
+            });
+        }, this.dependantUpdateInterval);
+    }
+
+    FormWidget.prototype.isCurrentFormContext = function(el) {
+        return el.closest('[data-control="formwidget"]') === this.$el.get(0);
     }
 
     /*
@@ -237,13 +256,12 @@
                 return;
             }
 
-            // Check each tab pane for form field groups
+            // Check each tab pane for form field groups, locate first level form groups only
             $('.tab-pane:not(.is-lazy):not(.nohide)', tabControl).each(function() {
-                var hasControls = $('.form-group:not(:empty):not(.oc-hide)', $(this)).length;
-
+                var hasControlsSelector = '> .form-group:not(:empty):not(.oc-hide), > .row > .form-group:not(:empty):not(.oc-hide)';
                 $('[data-bs-target="#' + $(this).attr('id') + '"]', tabControl)
                     .closest('li')
-                    .toggle(!!hasControls);
+                    .toggle(!!$(hasControlsSelector, $(this)).length);
             });
 
             // If a hidden tab was selected, select the first visible tab

@@ -22,7 +22,11 @@ class PresetManager
     {
         $this->registerPreset('icons', [\System\Classes\PresetManager\Icons::class, 'icons']);
         $this->registerPreset('locales', [\System\Classes\PresetManager\Locales::class, 'locales']);
-        $this->registerPreset('localeIcons', [\System\Classes\PresetManager\Locales::class, 'localeIcons']);
+        $this->registerPreset('flags', [\System\Classes\PresetManager\Locales::class, 'flags']);
+        $this->registerPreset('timezones', [\System\Classes\PresetManager\Dates::class, 'timezones']);
+
+        // @deprecated
+        $this->registerPreset('localeIcons', [\System\Classes\PresetManager\Locales::class, 'flags']);
     }
 
     /**

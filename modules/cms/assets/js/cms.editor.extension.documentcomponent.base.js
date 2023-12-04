@@ -186,7 +186,7 @@ oc.Modules.register('cms.editor.extension.documentcomponent.base', function() {
                         return component.alias == alias;
                     })
                 ) {
-                    alias = originalAlias + ++counter;
+                    alias = originalAlias + (++counter);
                 }
 
                 componentData.alias = alias;

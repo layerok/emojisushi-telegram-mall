@@ -14,11 +14,11 @@ class LocaleHelper
     }
 
     /**
-     * @deprecated use `\System\Helpers\Preset::localeIcons()`
+     * @deprecated use `\System\Helpers\Preset::flags()`
      */
     public static function listLocalesWithFlags()
     {
-        return \System\Helpers\Preset::localeIcons();
+        return \System\Helpers\Preset::flags();
     }
 
     /**

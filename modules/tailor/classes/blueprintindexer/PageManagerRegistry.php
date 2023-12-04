@@ -45,18 +45,18 @@ trait PageManagerRegistry
      */
     public function getPageManagerTypeInfo($type): array
     {
-        $record = $this->pageManagerTypeToModel($type);
-        if (!$record) {
+        [$model, $query] = $this->pageManagerTypeToModel($type);
+        if (!$model) {
             return [];
         }
 
         $result = [];
 
         if (!starts_with($type, 'list-')) {
-            $result['references'] = $this->listRecordOptionsForPageInfo($record);
+            $result['references'] = $this->listRecordOptionsForPageInfo($model, $query);
         }
 
-        $result['cmsPages'] = $this->listBlueprintCmsPagesForPageInfo($record);
+        $result['cmsPages'] = $this->listBlueprintCmsPagesForPageInfo($model);
 
         return $result;
     }
@@ -64,20 +64,20 @@ trait PageManagerRegistry
     /**
      * listBlueprintCmsPagesForPageInfo
      */
-    protected function listBlueprintCmsPagesForPageInfo($record)
+    protected function listBlueprintCmsPagesForPageInfo($model)
     {
-        $handle = $record->blueprint->handle ?? $record->blueprint_uuid;
+        $handle = $model->blueprint->handle ?? $model->blueprint_uuid;
         return Page::whereComponent('section', 'handle', $handle)->all();
     }
 
     /**
      * listRecordOptionsForPageInfo
      */
-    protected function listRecordOptionsForPageInfo($record)
+    protected function listRecordOptionsForPageInfo($model, $query)
     {
-        $records = $record->isClassInstanceOf(\October\Contracts\Database\TreeInterface::class)
-            ? $record->getNested()
-            : $record->get();
+        $records = $model->isClassInstanceOf(\October\Contracts\Database\TreeInterface::class)
+            ? $query->getNested()
+            : $query->get();
 
         $iterator = function($records) use (&$iterator) {
             $result = [];
@@ -116,18 +116,18 @@ trait PageManagerRegistry
      */
     protected function resolvePageManagerItemAsList($type, $item, $url, $theme): array
     {
-        $record = $this->pageManagerTypeToModel($type);
-        if (!$record) {
+        [$model, $query] = $this->pageManagerTypeToModel($type);
+        if (!$model) {
             return [];
         }
 
         $result = [];
 
-        $records = $record->isClassInstanceOf(\October\Contracts\Database\TreeInterface::class)
-            ? $record->getNested()
-            : $record->get();
+        $records = $model->isClassInstanceOf(\October\Contracts\Database\TreeInterface::class)
+            ? $query->getNested()
+            : $query->get();
 
-        $recurse = $record->isEntryStructure() && $item->nesting;
+        $recurse = $model->isEntryStructure() && $item->nesting;
 
         $result['items'] = $this->resolvePageManagerItemAsChildren($records, $item, $theme, $url, $recurse);
 
@@ -139,33 +139,39 @@ trait PageManagerRegistry
      */
     protected function resolvePageManagerItemAsReference($type, $item, $url, $theme): array
     {
-        $record = $this->pageManagerTypeToModel($type);
-        if (!$record) {
-            return [];
-        }
-
-        $model = $record->find($item->reference);
+        [$model, $query] = $this->pageManagerTypeToModel($type);
         if (!$model) {
             return [];
         }
 
-        $pageUrl = $this->getPageManagerPageUrl($item->cmsPage, $model, $theme);
+        if ($model->isClassInstanceOf(\October\Contracts\Database\MultisiteInterface::class)) {
+            $record = $query->applyOtherSiteRoot($item->reference)->first();
+        }
+        else {
+            $record = $query->find($item->reference);
+        }
+
+        if (!$record) {
+            return [];
+        }
+
+        $pageUrl = $this->getPageManagerPageUrl($item->cmsPage, $record, $theme);
 
         $result = [
             'url' => $pageUrl,
             'isActive' => $pageUrl == $url,
-            'mtime' => $model->updated_at,
+            'mtime' => $record->updated_at,
         ];
 
         if ($item->sites) {
-            $result['sites'] = $this->getPageManagerSites($item->cmsPage, $model, $theme);
+            $result['sites'] = $this->getPageManagerSites($item->cmsPage, $record, $theme);
         }
 
         if (!$model->isEntryStructure() || !$item->nesting) {
             return $result;
         }
 
-        $result['items'] = $this->resolvePageManagerItemAsChildren($model->children, $item, $theme, $url);
+        $result['items'] = $this->resolvePageManagerItemAsChildren($record->children, $item, $theme, $url);
 
         return $result;
     }
@@ -226,7 +232,12 @@ trait PageManagerRegistry
      */
     protected static function getPageManagerSites($pageCode, $record, $theme): array
     {
-        if (!Site::hasMultiSite()) {
+        if (
+            !Site::hasMultiSite() ||
+            !$record ||
+            !$record->isClassInstanceOf(\October\Contracts\Database\MultisiteInterface::class) ||
+            !$record->isMultisiteEnabled()
+        ) {
             return [];
         }
 
@@ -236,11 +247,21 @@ trait PageManagerRegistry
         }
 
         $result = [];
+        $otherRecords = $record->newOtherSiteQuery()->get();
+        if (!$otherRecords || !$otherRecords->count()) {
+            return [];
+        }
+
         foreach (Site::listEnabled() as $site) {
+            $otherRecord = $otherRecords->where('site_id', $site->id)->first();
+            if (!$otherRecord) {
+                continue;
+            }
+
             $url = Cms::siteUrl($page, $site, [
-                'id' => $record->id,
-                'slug' => $record->slug,
-                'fullslug' => $record->fullslug
+                'id' => $otherRecord->id,
+                'slug' => $otherRecord->slug,
+                'fullslug' => $otherRecord->fullslug
             ]);
 
             $result[] = [
@@ -255,26 +276,22 @@ trait PageManagerRegistry
     }
 
     /**
-     * pageManagerTypeToModel
+     * pageManagerTypeToModel returns the resolved model and its scoped query for a given type
      */
     protected function pageManagerTypeToModel(string $typeName)
     {
-        $typesToModel = [
-            'entry' => [EntryRecord::class, 'inSectionUuid']
-        ];
+        $model = $query = null;
 
-        if (starts_with($typeName, 'list-')) {
+        if (str_starts_with($typeName, 'list-')) {
             $typeName = substr($typeName, 5);
         }
 
-        foreach ($typesToModel as $code => $callable) {
-            if (starts_with($typeName, $code . '-')) {
-                $uuid = substr($typeName, strlen($code) + 1);
-                return $callable($uuid);
-            }
+        if (str_starts_with($typeName, 'entry-')) {
+            $model = EntryRecord::inSectionUuid(substr($typeName, 6));
+            $query = $model->applyVisibleFrontend();
         }
 
-        return null;
+        return [$model, $query];
     }
 
     /**
@@ -282,14 +299,8 @@ trait PageManagerRegistry
      */
     protected function pageManagerBlueprintToType($blueprint): string
     {
-        $modelsToType = [
-            'entry' => EntryBlueprint::class
-        ];
-
-        foreach ($modelsToType as $code => $class) {
-            if (is_a($blueprint, $class)) {
-                return $code . '-' . $blueprint->uuid;
-            }
+        if ($blueprint instanceof EntryBlueprint) {
+            return 'entry-' . $blueprint->uuid;
         }
 
         return '';

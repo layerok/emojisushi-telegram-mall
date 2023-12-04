@@ -284,7 +284,7 @@ class Controller extends Extendable
      *
      * @param string $name Specifies the action name.
      * @param bool $internal Allow protected actions.
-     * @return boolean
+     * @return bool
      */
     public function actionExists($name, $internal = false)
     {
@@ -470,6 +470,11 @@ class Controller extends Extendable
                     $responseContents['#layout-flash-messages'] = $this->makeLayoutPartial('flash_messages');
                 }
 
+                // Look for browser events
+                if ($browserEvents = $this->getBrowserEvents()) {
+                    $responseContents['X_OCTOBER_DISPATCHES'] = $browserEvents;
+                }
+
                 // Detect assets
                 if ($this->hasAssetsDefined()) {
                     $responseContents['X_OCTOBER_ASSETS'] = $this->getAssetPaths();
@@ -496,7 +501,16 @@ class Controller extends Extendable
                 $responseContents = [];
                 $responseContents['#layout-flash-messages'] = $this->makeLayoutPartial('flash_messages');
                 $responseContents['X_OCTOBER_ERROR_FIELDS'] = $ex->getFields();
+                if ($browserEvents = $this->getBrowserEvents()) {
+                    $responseContents['X_OCTOBER_DISPATCHES'] = $browserEvents;
+                }
                 throw new AjaxException($responseContents);
+            }
+            catch (AjaxException $ex) {
+                if ($browserEvents = $this->getBrowserEvents()) {
+                    $ex->addContent('X_OCTOBER_DISPATCHES', $browserEvents);
+                }
+                throw $ex;
             }
             catch (MassAssignmentException $ex) {
                 throw new ApplicationException(Lang::get('backend::lang.model.mass_assignment_failed', ['attribute' => $ex->getMessage()]));
@@ -552,8 +566,9 @@ class Controller extends Extendable
 
     /**
      * runAjaxHandler tries to find and run an AJAX handler in the page action.
-     * The method stops as soon as the handler is found.
-     * @return boolean Returns true if the handler was found. Returns false otherwise.
+     * The method stops as soon as the handler is found. Returns true if the
+     * handler was found. Returns false otherwise.
+     * @return bool
      */
     protected function runAjaxHandler($handler)
     {
@@ -769,7 +784,7 @@ class Controller extends Extendable
     /**
      * isBackendHintHidden checks if a hint has been hidden by the user.
      * @param  string $name Unique key name
-     * @return boolean
+     * @return bool
      */
     public function isBackendHintHidden($name)
     {

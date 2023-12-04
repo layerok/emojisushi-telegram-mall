@@ -25,7 +25,7 @@ class Fields
             [
                 'button' => "Snippet",
                 'icon' => 'octo-icon-code-snippet',
-                'popupTitle' => "Define Snippet",
+                'popupTitle' => "Define a Snippet Partial",
                 'useViewBag' => true,
                 'properties' => $this->defineSnippetFields()
             ]
@@ -56,23 +56,33 @@ class Fields
                     'required' => [
                         'message' => "Please enter the snippet name"
                     ]
-                ]
+                ],
+                'tab' => "Details"
             ],
             'snippetDescription' => [
                 'title' => "Description",
                 'description' => "The description is displayed in the snippet list in the editor when a snippet is added.",
-                'type' => 'string'
+                'type' => 'string',
+                'tab' => "Details"
             ],
             // 'snippetIcon' => [
             //     'title' => "Icon",
             //     'description' => "xxx",
             //     'type' => 'dropdown',
             //     'optionsPreset' => 'icons'
+            //     'tab' => "Details"
             // ],
+            'snippetAjax' => [
+                'title' => "AJAX Enabled",
+                'description' => "Check this box to enable an AJAX requests for this snippet.",
+                'type' => 'checkbox',
+                'default' => false,
+                'tab' => "Details"
+            ],
             'snippetProperties' => [
                 'title' => '',
                 'type' => 'table',
-                'tab' => "Snippet Properties",
+                'tab' => "Properties",
                 'columns' => [
                     'title' => [
                         'type' => 'string',

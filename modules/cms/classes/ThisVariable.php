@@ -1,6 +1,7 @@
 <?php namespace Cms\Classes;
 
 use October\Rain\Extension\Extendable;
+use October\Contracts\Twig\CallsAnyMethod;
 use ArrayAccess;
 
 /**
@@ -9,7 +10,7 @@ use ArrayAccess;
  * @package october\cms
  * @author Alexey Bobkov, Samuel Georges
  */
-class ThisVariable extends Extendable implements ArrayAccess
+class ThisVariable extends Extendable implements CallsAnyMethod, ArrayAccess
 {
     /**
      * @var array config values for this instance

@@ -45,6 +45,12 @@ class DatePicker extends FormWidgetBase
     public $yearRange;
 
     /**
+     * @var string|array disableDays are days that cannot be selected. Value can be a number
+     * to represent Sunday (0) to Saturday (6), or an explicit date (2024-10-01).
+     */
+    public $disableDays;
+
+    /**
      * @var int firstDay of the week
      * eg: 0 (Sunday), 1 (Monday), 2 (Tuesday), etc.
      */
@@ -91,6 +97,7 @@ class DatePicker extends FormWidgetBase
             'minDate',
             'maxDate',
             'yearRange',
+            'disableDays',
             'firstDay',
             'twelveHour',
             'showWeekNumber',
@@ -148,6 +155,7 @@ class DatePicker extends FormWidgetBase
         $this->vars['minDate'] = $this->minDate;
         $this->vars['maxDate'] = $this->maxDate;
         $this->vars['yearRange'] = $this->yearRange;
+        $this->vars['disableDays'] = $this->disableDays;
         $this->vars['firstDay'] = $this->firstDay;
         $this->vars['twelveHour'] = $this->twelveHour;
         $this->vars['showWeekNumber'] = $this->showWeekNumber;

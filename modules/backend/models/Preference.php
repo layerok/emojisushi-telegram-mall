@@ -184,7 +184,7 @@ class Preference extends UserPreferenceModel
      */
     public function getLocaleOptions()
     {
-        return PresetHelper::localeIcons();
+        return PresetHelper::flags();
     }
 
     /**
@@ -193,7 +193,7 @@ class Preference extends UserPreferenceModel
      */
     public function getTimezoneOptions()
     {
-        return DateTimeHelper::listTimezones();
+        return PresetHelper::timezones();
     }
 
     /**

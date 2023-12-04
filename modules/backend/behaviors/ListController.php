@@ -111,7 +111,7 @@ class ListController extends ControllerBehavior
     }
 
     /**
-     * Prepare the widgets used by this action
+     * makeList prepares the widgets used by this action
      * @return \Backend\Classes\WidgetBase
      */
     public function makeList($definition = null)
@@ -123,18 +123,15 @@ class ListController extends ControllerBehavior
         $listConfig = $this->config = $this->controller->listGetConfig($definition);
 
         // Create the model
-        //
         $model = $this->createModel();
         $model = $this->controller->listExtendModel($model, $definition);
 
         // Prepare the list widget
-        //
         $widgetConfig = $this->makeConfig($listConfig->list);
         $widgetConfig->model = $model;
         $widgetConfig->alias = $listConfig->widgetAlias ?? $definition;
 
         // Prepare the columns configuration
-        //
         $configFieldsToTransfer = [
             'recordUrl',
             'recordOnClick',
@@ -158,7 +155,6 @@ class ListController extends ControllerBehavior
         }
 
         // List Widget with extensibility
-        //
         $structureConfig = $this->makeListStructureConfig($widgetConfig, $listConfig);
         if ($structureConfig) {
             $widget = $this->makeWidget(\Backend\Widgets\ListStructure::class, $structureConfig);
@@ -210,7 +206,6 @@ class ListController extends ControllerBehavior
         $widget->bindToController();
 
         // Prepare the toolbar widget (optional)
-        //
         if (isset($listConfig->toolbar)) {
             $toolbarConfig = $this->makeConfig($listConfig->toolbar);
             $toolbarConfig->alias = $widget->alias . 'Toolbar';
@@ -242,7 +237,6 @@ class ListController extends ControllerBehavior
         }
 
         // Prepare the filter widget (optional)
-        //
         if (isset($listConfig->filter)) {
             $widget->cssClasses[] = 'list-flush';
 
@@ -330,7 +324,6 @@ class ListController extends ControllerBehavior
         }
 
         // Establish the list definition
-        //
         $definition = post('definition', $this->primaryDefinition);
 
         if (!isset($this->listDefinitions[$definition])) {
@@ -340,13 +333,11 @@ class ListController extends ControllerBehavior
         $this->config = $this->controller->listGetConfig($definition);
 
         // Check conditions for deletion
-        //
         if (!$this->listCanDeleteRecords()) {
             throw new ForbiddenException;
         }
 
         // Validate checked identifiers
-        //
         $checkedIds = post('checked');
 
         if (!$checkedIds || !is_array($checkedIds) || !count($checkedIds)) {
@@ -355,12 +346,10 @@ class ListController extends ControllerBehavior
         }
 
         // Create the model
-        //
         $model = $this->createModel();
         $model = $this->controller->listExtendModel($model, $definition);
 
         // Create the query
-        //
         $query = $model->newQuery();
         $this->controller->listExtendQueryBefore($query, $definition);
 
@@ -368,7 +357,6 @@ class ListController extends ControllerBehavior
         $this->controller->listExtendQuery($query, $definition);
 
         // Delete records
-        //
         $records = $query->get();
 
         if ($records->count()) {
@@ -540,7 +528,7 @@ class ListController extends ControllerBehavior
     /**
      * listGetConfig returns the configuration used by this behavior. You may override this
      * method in your controller as an alternative to defining a listConfig property.
-     * @return object
+     * @return object|null
      */
     public function listGetConfig($definition = null)
     {

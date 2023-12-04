@@ -10,6 +10,7 @@ module.exports = [
     "dropdown/dropdown.js",
     "popover/popover.js",
     "popup/popup.js",
+    "popup/popup.stacker.js",
     "tab/tab.js",
     "searchinput/searchinput.js",
     "toolbar/toolbar.js",

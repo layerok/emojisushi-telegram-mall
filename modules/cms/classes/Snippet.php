@@ -37,6 +37,11 @@ class Snippet
     protected $componentClass = null;
 
     /**
+     * @var bool useAjax for the snippet.
+     */
+    protected $useAjax = null;
+
+    /**
      * @var array pageSnippetMap is an internal cache of snippet declarations defined on a page.
      */
     protected static $pageSnippetMap = [];
@@ -58,6 +63,7 @@ class Snippet
         $this->description = $viewBag->property('snippetDescription');
         $this->name = $viewBag->property('snippetName');
         $this->properties = $viewBag->property('snippetProperties', []);
+        $this->useAjax = $viewBag->property('snippetAjax', false);
     }
 
     /**
@@ -109,6 +115,25 @@ class Snippet
         $component = $this->getComponent();
 
         return $this->description = ComponentHelpers::getComponentDescription($component);
+    }
+
+    /**
+     * useAjaxPartial determines if the snippet should have AJAX enabled.
+     * @return bool
+     */
+    public function useAjaxPartial()
+    {
+        if ($this->useAjax !== null) {
+            return $this->useAjax;
+        }
+
+        if ($this->componentClass === null) {
+            return null;
+        }
+
+        $component = $this->getComponent();
+
+        return $this->useAjax = ComponentHelpers::getComponentSnippetAjax($component);
     }
 
     /**

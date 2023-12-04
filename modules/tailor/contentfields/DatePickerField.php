@@ -48,6 +48,6 @@ class DatePickerField extends FallbackField
      */
     public function extendDatabaseTable($table)
     {
-        $table->timestamp($this->fieldName)->nullable();
+        $table->datetime($this->fieldName)->nullable();
     }
 }

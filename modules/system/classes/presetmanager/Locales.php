@@ -35,11 +35,12 @@ class Locales
             'fi'    => Lang::get('system::lang.locale.fi'),
             'fr'    => Lang::get('system::lang.locale.fr'),
             'fr-ca' => Lang::get('system::lang.locale.fr-ca'),
+            'hr'    => Lang::get('system::lang.locale.hr'),
             'hu'    => Lang::get('system::lang.locale.hu'),
             'id'    => Lang::get('system::lang.locale.id'),
             'it'    => Lang::get('system::lang.locale.it'),
             'ja'    => Lang::get('system::lang.locale.ja'),
-            'kr'    => Lang::get('system::lang.locale.kr'),
+            'ko'    => Lang::get('system::lang.locale.ko'),
             'lt'    => Lang::get('system::lang.locale.lt'),
             'lv'    => Lang::get('system::lang.locale.lv'),
             'nb-no' => Lang::get('system::lang.locale.nb-no'),
@@ -68,9 +69,9 @@ class Locales
     }
 
     /**
-     * localeFlags returns list of available locales with flag icons
+     * flags returns list of available locales with flag icons
      */
-    public static function localeIcons(): array
+    public static function flags(): array
     {
         $flags = [
             'ar'    => 'flag-sa',
@@ -92,11 +93,12 @@ class Locales
             'fi'    => 'flag-fi',
             'fr'    => 'flag-fr',
             'fr-ca' => 'flag-ca',
+            'hr'    => 'flag-hr',
             'hu'    => 'flag-hu',
             'id'    => 'flag-id',
             'it'    => 'flag-it',
             'ja'    => 'flag-jp',
-            'kr'    => 'flag-kr',
+            'ko'    => 'flag-kr',
             'lt'    => 'flag-lt',
             'lv'    => 'flag-lv',
             'nb-no' => 'flag-no',
@@ -127,5 +129,13 @@ class Locales
         }
 
         return $locales;
+    }
+
+    /**
+     * @deprecated
+     */
+    public static function localeIcons(): array
+    {
+        return self::flags();
     }
 }

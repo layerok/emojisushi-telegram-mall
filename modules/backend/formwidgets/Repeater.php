@@ -89,18 +89,10 @@ class Repeater extends FormWidgetBase
     /**
      * @var string Defines a mount point for the editor toolbar.
      * Must include a module name that exports the Vue application and a state element name.
-     * Format: module.name::stateElementName
+     * Format: stateElementName
      * Only works in Vue applications and form document layouts.
      */
     public $externalToolbarAppState = null;
-
-    /**
-     * @var string Defines an event bus for an external toolbar.
-     * Must include a module name that exports the Vue application and a state element name.
-     * Format: module.name::eventBus
-     * Only works in Vue applications and form document layouts.
-     */
-    public $externalToolbarEventBus = null;
 
     //
     // Object Properties
@@ -169,8 +161,7 @@ class Repeater extends FormWidgetBase
             'minItems',
             'maxItems',
             'useTabs',
-            'externalToolbarAppState',
-            'externalToolbarEventBus'
+            'externalToolbarAppState'
         ]);
 
         if ($this->formField->disabled) {
@@ -223,7 +214,6 @@ class Repeater extends FormWidgetBase
         $this->vars['showReorder'] = $this->showReorder;
         $this->vars['showDuplicate'] = $this->showDuplicate;
         $this->vars['externalToolbarAppState'] = $this->externalToolbarAppState;
-        $this->vars['externalToolbarEventBus'] = $this->externalToolbarEventBus;
     }
 
     /**
@@ -299,10 +289,6 @@ class Repeater extends FormWidgetBase
      */
     protected function processSaveValue($value)
     {
-        if (!is_array($value) || !$value) {
-            return null;
-        }
-
         return $this->useRelation
             ? $this->processSaveForRelation($value)
             : $this->processSaveForJson($value);
@@ -340,8 +326,9 @@ class Repeater extends FormWidgetBase
                 $currentValue = [];
             }
 
+            $emptyItem = $this->useRelation ? $this->getRelationModel() : [];
             if (count($currentValue) < $this->minItems) {
-                $currentValue = array_pad($currentValue, $this->minItems, []);
+                $currentValue = array_pad($currentValue, $this->minItems, $emptyItem);
             }
         }
 
@@ -400,7 +387,8 @@ class Repeater extends FormWidgetBase
         ];
 
         // Convert to tabbed config
-        if ($this->useTabs || ($config->useTabs ?? false)) {
+        $useTabs = isset($config->useTabs) ? $config->useTabs : $this->useTabs;
+        if ($useTabs) {
             $widget->bindEvent('form.extendFields', function() use ($widget) {
                 $this->moveTabbedFormFields($widget, 'outside', 'secondary');
             });

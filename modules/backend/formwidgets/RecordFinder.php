@@ -96,6 +96,11 @@ class RecordFinder extends FormWidgetBase
      */
     public $modelClass;
 
+    /**
+     * @var string popupSize as, either giant, huge, large, small, tiny or adaptive
+     */
+    public $popupSize = 'huge';
+
     //
     // Object Properties
     //
@@ -144,6 +149,7 @@ class RecordFinder extends FormWidgetBase
             'recordsPerPage',
             'useRelation',
             'modelClass',
+            'popupSize',
         ]);
 
         if (!$this->useRelation && !class_exists($this->modelClass)) {
@@ -197,6 +203,7 @@ class RecordFinder extends FormWidgetBase
         }
 
         $this->vars['displayMode'] = 'single';
+        $this->vars['popupSize'] = $this->popupSize;
         $this->vars['value'] = $this->getKeyValue();
         $this->vars['field'] = $this->formField;
         $this->vars['nameValue'] = $this->getNameValue();

@@ -25,7 +25,7 @@ oc.Modules.register('backend.component.richeditor.document.connector', function 
                 type: Boolean,
                 default: false
             },
-            externalToolbarEventBus: String
+            externalToolbarAppState: String
         },
         data: function() {
             const imageDropdownItems = [
@@ -268,18 +268,16 @@ oc.Modules.register('backend.component.richeditor.document.connector', function 
             },
 
             externalToolbarEventBusObj: function computeExternalToolbarEventBusObj() {
-                if (!this.externalToolbarEventBus) {
+                if (!this.externalToolbarAppState) {
                     return null;
                 }
 
-                // Expected format: tailor.app::eventBus
-                const parts = this.externalToolbarEventBus.split('::');
-                if (parts.length !== 2) {
-                    throw new Error('Invalid externalToolbarEventBus format. Expected format: module.name::stateElementName');
-                }
+                const point = $.oc.vueUtils.getToolbarExtensionPoint(
+                    this.externalToolbarAppState,
+                    this.$el
+                );
 
-                const module = oc.Modules.import(parts[0]);
-                return module.state[parts[1]];
+                return point ? point.bus : null;
             },
 
             hasExternalToolbar: function computeHasExternalToolbar() {

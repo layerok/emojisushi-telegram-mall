@@ -2,10 +2,9 @@
 
 use Db;
 use App;
+use Date;
 use File;
 use Yaml;
-use Carbon\Carbon;
-use October\Rain\Database\Updater;
 use Exception;
 
 /**
@@ -435,13 +434,13 @@ class VersionManager
             Db::table('system_plugin_versions')->insert([
                 'code' => $code,
                 'version' => $version,
-                'created_at' => new Carbon
+                'created_at' => Date::now()
             ]);
         }
         elseif ($version && $currentVersion) {
             Db::table('system_plugin_versions')->where('code', $code)->update([
                 'version' => $version,
-                'created_at' => new Carbon
+                'created_at' => Date::now()
             ]);
         }
         elseif ($currentVersion) {
@@ -461,7 +460,7 @@ class VersionManager
             'type' => self::HISTORY_TYPE_COMMENT,
             'version' => $version,
             'detail' => $comment,
-            'created_at' => new Carbon
+            'created_at' => Date::now()
         ]);
     }
 
@@ -498,7 +497,7 @@ class VersionManager
                 'type' => self::HISTORY_TYPE_SCRIPT,
                 'version' => $version,
                 'detail' => $script,
-                'created_at' => new Carbon
+                'created_at' => Date::now()
             ]);
         }
         catch (Exception $ex) {

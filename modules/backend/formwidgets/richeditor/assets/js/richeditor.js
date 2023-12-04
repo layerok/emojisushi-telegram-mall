@@ -54,6 +54,7 @@
         paragraphFormat: null,
         tableStyles: null,
         tableCellStyles: null,
+        useLineBreaks: null,
         aceVendorPath: '/',
         readOnly: false
     };
@@ -85,6 +86,10 @@
             aceEditorVendorPath: this.options.aceVendorPath,
             toolbarSticky: false
         };
+
+        if (this.options.useLineBreaks) {
+            froalaOptions.enter = $.FroalaEditor.ENTER_BR;
+        }
 
         if (this.options.toolbarButtons) {
             froalaOptions.toolbarButtons = this.options.toolbarButtons.split(',');

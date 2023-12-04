@@ -1,8 +1,8 @@
 <?php namespace System\Helpers;
 
+use Date;
 use Carbon\Carbon;
 use DateTime as PhpDateTime;
-use DateTimeZone;
 use InvalidArgumentException;
 use Exception;
 
@@ -62,17 +62,17 @@ class DateTime
             // Do nothing
         }
         elseif ($value instanceof PhpDateTime) {
-            $value = Carbon::instance($value);
+            $value = Date::instance($value);
         }
         elseif (is_numeric($value)) {
-            $value = Carbon::createFromTimestamp($value);
+            $value = Date::createFromTimestamp($value);
         }
         elseif (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value)) {
-            $value = Carbon::createFromFormat('Y-m-d', $value)->startOfDay();
+            $value = Date::createFromFormat('Y-m-d', $value)->startOfDay();
         }
         else {
             try {
-                $value = Carbon::parse($value);
+                $value = Date::parse($value);
             }
             catch (Exception $ex) {
                 // Do nothing
@@ -84,42 +84,6 @@ class DateTime
         }
 
         return $value;
-    }
-
-    /**
-     * listTimezones returns list of available timezones
-     * @return array
-     */
-    public static function listTimezones()
-    {
-        $timezoneIdentifiers = DateTimeZone::listIdentifiers();
-        $utcTime = new PhpDateTime('now', new DateTimeZone('UTC'));
-
-        $tempTimezones = [];
-        foreach ($timezoneIdentifiers as $timezoneIdentifier) {
-            $currentTimezone = new DateTimeZone($timezoneIdentifier);
-
-            $tempTimezones[] = [
-                'offset' => (int) $currentTimezone->getOffset($utcTime),
-                'identifier' => $timezoneIdentifier
-            ];
-        }
-
-        // Sort the array by offset, identifier ascending
-        usort($tempTimezones, function ($a, $b) {
-            return $a['offset'] === $b['offset']
-                ? strcmp($a['identifier'], $b['identifier'])
-                : $a['offset'] - $b['offset'];
-        });
-
-        $timezoneList = [];
-        foreach ($tempTimezones as $tz) {
-            $sign = $tz['offset'] == 0 ? '' : ($tz['offset'] > 0 ? '+' : '-');
-            $offset = gmdate('H:i', abs($tz['offset']));
-            $timezoneList[$tz['identifier']] = '(' . $sign . $offset . ') ' . str_replace('_', ' ', $tz['identifier']);
-        }
-
-        return $timezoneList;
     }
 
     /**
@@ -174,5 +138,13 @@ class DateTime
         }
 
         return strtr($format, $replacements);
+    }
+
+    /**
+     * @deprecated use `\System\Helpers\Preset::timezones()`
+     */
+    public static function listTimezones()
+    {
+        return \System\Helpers\Preset::timezones();
     }
 }

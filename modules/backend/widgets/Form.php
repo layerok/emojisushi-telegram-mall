@@ -235,6 +235,7 @@ class Form extends WidgetBase implements FormElement
 
     /**
      * renderFields renders the specified fields.
+     * @deprecated use `render(['section' => 'outside', 'useContainer' => false])`
      */
     public function renderFields(array $fields): string
     {
@@ -243,6 +244,7 @@ class Form extends WidgetBase implements FormElement
 
     /**
      * renderTabSection renders the specified tabs.
+     * @deprecated use `render(['section' => 'outside', 'useContainer' => false])`
      */
     public function renderTabSection($tabs): string
     {
@@ -340,9 +342,7 @@ class Form extends WidgetBase implements FormElement
     }
 
     /**
-     * Prepares the form data
-     *
-     * @return void
+     * prepareVars prepares the form data
      */
     protected function prepareVars()
     {
@@ -1333,7 +1333,7 @@ class Form extends WidgetBase implements FormElement
                 $array = &$array[$part];
             }
             else {
-                continue;
+                return;
             }
         }
 

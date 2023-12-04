@@ -54,7 +54,7 @@ class PageManager
     public static function processLinks($markup): string
     {
         $searches = $replaces = [];
-        if (preg_match_all('/="(october:\/\/.*?[^"])"/i', $markup, $matches)) {
+        if (preg_match_all('/="(october:\/\/.*?[^"])(?:#[^"]+)?"/i', $markup, $matches)) {
             foreach ($matches[0] as $index => $search) {
                 $ocUrl = $matches[1][$index] ?? null;
                 if (!$ocUrl) {
@@ -126,11 +126,13 @@ class PageManager
     {
         $controller = CmsController::getController();
         $partialName = File::anyname($partialName);
+        $snippetAjax = $snippetInfo['useAjax'];
 
         $generatedMarkup = '';
-        $generatedMarkup .= '<div data-ajax-partial="'.e($partialName).'">';
+        $generatedMarkup .= $snippetAjax ? '<div data-ajax-partial="'.e($partialName).'">' : '';
         $generatedMarkup .= $controller->renderPartial($partialName, $snippetInfo['properties']);
-        $generatedMarkup .= '</div>';
+        $generatedMarkup .= $snippetAjax ? '</div>' : '';
+
         return $generatedMarkup;
     }
 
@@ -141,14 +143,18 @@ class PageManager
     {
         $controller = CmsController::getController();
         $snippetCode = $snippetInfo['code'];
+        $snippetAjax = $snippetInfo['useAjax'];
         $snippetProperties = $snippetInfo['properties'] ?? [];
 
-        $controller->addComponent($componentClass, $snippetCode, $snippetProperties);
+        if (!$controller->findComponentByName($snippetCode)) {
+            $componentObj = $controller->addComponent($componentClass, $snippetCode, $snippetProperties);
+            $componentObj->runLifeCycle();
+        }
 
         $generatedMarkup = '';
-        $generatedMarkup .= '<div data-ajax-partial="'.e($snippetCode).'::default">';
+        $generatedMarkup .= $snippetAjax ? '<div data-ajax-partial="'.e($snippetCode).'::default">' : '';
         $generatedMarkup .= $controller->renderComponent($snippetCode);
-        $generatedMarkup .= '</div>';
+        $generatedMarkup .= $snippetAjax ? '</div>' : '';
 
         return $generatedMarkup;
     }
@@ -160,6 +166,13 @@ class PageManager
     {
         $map = [];
         $matches = [];
+
+        // Converts a json: payload from the inspector
+        $processPropertyValue = function($value) {
+            return str_starts_with($value, 'json:')
+                ? json_decode(urldecode(substr($value, 5)), true)
+                : $value;
+        };
 
         if (preg_match_all('/\<figure\s+[^\>]+\>[^<]*\<\/figure\>/i', $markup, $matches)) {
             foreach ($matches[0] as $snippetDeclaration) {
@@ -173,7 +186,7 @@ class PageManager
                 $propertyMatches = [];
                 if (preg_match_all('/data\-property-(?<property>[^=]+)\s*=\s*\"(?<value>[^\"]+)\"/i', $snippetDeclaration, $propertyMatches)) {
                     foreach ($propertyMatches['property'] as $index => $propertyName) {
-                        $properties[$propertyName] = $propertyMatches['value'][$index];
+                        $properties[$propertyName] = $processPropertyValue($propertyMatches['value'][$index]);
                     }
                 }
 
@@ -183,11 +196,18 @@ class PageManager
                     $componentClass = $componentMatch[1];
                 }
 
+                $snippetAjaxMatches = [];
+                $snippetAjax = false;
+                if (preg_match('/data\-ajax\s*=\s*"([^"]+)"/', $snippetDeclaration, $snippetAjaxMatches)) {
+                    $snippetAjax = $snippetAjaxMatches[1] === 'true' || $snippetAjaxMatches[1] === '1';
+                }
+
                 // Apply default values for properties not defined in the markup
                 // and normalize property code names.
                 $properties = self::preprocessPropertyValues($theme, $snippetCode, $componentClass, $properties);
                 $map[$snippetDeclaration] = [
                     'code' => $snippetCode,
+                    'useAjax' => $snippetAjax,
                     'component' => $componentClass,
                     'properties' => $properties
                 ];

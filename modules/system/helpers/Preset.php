@@ -27,10 +27,26 @@ class Preset
     }
 
     /**
-     * localeFlags returns list of available locales with flag icons
+     * flags returns list of available locales with flag icons
+     */
+    public static function flags(): array
+    {
+        return PresetManager::instance()->getPreset('flags');
+    }
+
+    /**
+     * timezones returns list of available timezones
+     */
+    public static function timezones(): array
+    {
+        return PresetManager::instance()->getPreset('timezones');
+    }
+
+    /**
+     * @deprecated
      */
     public static function localeIcons(): array
     {
-        return PresetManager::instance()->getPreset('localeIcons');
+        return self::flags();
     }
 }

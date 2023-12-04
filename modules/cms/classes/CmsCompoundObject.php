@@ -166,23 +166,14 @@ class CmsCompoundObject extends CmsObject
     //
 
     /**
-     * runComponents defined in the settings
-     * Process halts if a component returns a value
-     * @return void
+     * runComponents defined in the settings, this process halts
+     * if a component returns a value.
      */
     public function runComponents()
     {
         foreach ($this->components as $component) {
-            if ($event = $component->fireEvent('component.beforeRun', [], true)) {
-                return $event;
-            }
-
-            if ($result = $component->onRun()) {
+            if ($result = $component->runLifeCycle()) {
                 return $result;
-            }
-
-            if ($event = $component->fireEvent('component.run', [], true)) {
-                return $event;
             }
         }
     }

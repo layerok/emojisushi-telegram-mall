@@ -4,7 +4,7 @@
 <div data-control="toolbar" data-list-linkage="<?= $this->listGetId() ?>">
 
     <?php if ($this->hasSourcePermission('create')): ?>
-        <a href="<?= Backend::url('tailor/entries/'.$section->handleSlug.'/create') ?>" class="btn btn-primary">
+        <a href="<?= Backend::url('tailor/entries/'.$section->handleSlug.'/create') ?>" class="btn btn-primary oc-icon-plus">
             <?= $section->getMessage('buttonCreate', "Create :name Entry", ['name' => "<strong>".e(__($section->name))."</strong>"]) ?>
         </a>
     <?php endif ?>

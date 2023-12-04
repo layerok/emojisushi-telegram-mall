@@ -83,31 +83,35 @@
                 <?= $field->disabled ? 'disabled' : '' ?>
             />
 
-            <?php $index = 0; foreach ($fieldOptions as $value => $option): ?>
-                <?php
-                    $index++;
-                    $checkboxId = 'checkbox_'.$field->getId().'_'.$index;
-                    if (!is_array($option)) $option = [$option];
-                ?>
-                <div class="form-check <?= $inlineOptions ? 'form-check-inline' : '' ?>">
-                    <input
-                        class="form-check-input"
-                        type="checkbox"
-                        id="<?= $checkboxId ?>"
-                        name="<?= $field->getName() ?>[]"
-                        value="<?= e($value) ?>"
-                        <?= in_array($value, $checkedValues) ? 'checked="checked"' : '' ?>
-                        <?= $field->disabled ? 'disabled' : '' ?>
-                        <?= $field->readOnly ? 'onclick="return false"' : '' ?>
-                    />
-                    <label class="form-check-label" for="<?= $checkboxId ?>">
-                        <?= e(__($option[0])) ?>
-                    </label>
-                    <?php if (isset($option[1]) && strlen($option[1])): ?>
-                        <p class="form-text"><?= e(__($option[1])) ?></p>
-                    <?php endif ?>
-                </div>
-            <?php endforeach ?>
+            <?php if (count($fieldOptions)): ?>
+                <?php $index = 0; foreach ($fieldOptions as $value => $option): ?>
+                    <?php
+                        $index++;
+                        $checkboxId = 'checkbox_'.$field->getId().'_'.$index;
+                        if (!is_array($option)) $option = [$option];
+                    ?>
+                    <div class="form-check <?= $inlineOptions ? 'form-check-inline' : '' ?>">
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            id="<?= $checkboxId ?>"
+                            name="<?= $field->getName() ?>[]"
+                            value="<?= e($value) ?>"
+                            <?= in_array($value, $checkedValues) ? 'checked="checked"' : '' ?>
+                            <?= $field->disabled ? 'disabled' : '' ?>
+                            <?= $field->readOnly ? 'onclick="return false"' : '' ?>
+                        />
+                        <label class="form-check-label" for="<?= $checkboxId ?>">
+                            <?= e(__($option[0])) ?>
+                        </label>
+                        <?php if (isset($option[1]) && strlen($option[1])): ?>
+                            <p class="form-text"><?= e(__($option[1])) ?></p>
+                        <?php endif ?>
+                    </div>
+                <?php endforeach ?>
+            <?php else: ?>
+                <p class="text-muted"><?= e(__($field->emptyOption)) ?></p>
+            <?php endif ?>
 
             <?php if ($isScrollable): ?>
                     </div>
