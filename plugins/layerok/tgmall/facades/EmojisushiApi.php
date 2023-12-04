@@ -24,6 +24,7 @@ use Layerok\TgMall\Objects2\PlaceOrderResponse;
  * Class EmojisushiApi
  *
  * @method static void init(array $conf)
+ * @method static void setHeader(string $name, string $value)
  * @method static City getCity(array $params = [], array $guzzleOptions = [])
  * @method static CitiesList getCities(array $params = [], array $guzzleOptions = [])
  * @method static Spot getSpot(array $params = [], array $guzzleOptions = [])

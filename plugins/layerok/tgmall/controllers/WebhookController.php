@@ -1,7 +1,6 @@
 <?php namespace Layerok\TgMall\Controllers;
 
 use GuzzleHttp\Exception\ClientException;
-use Layerok\TgMall\Casts\AsAppState;
 use Layerok\TgMall\Classes\Callbacks\NoopHandler;
 use Layerok\TgMall\Facades\EmojisushiApi;
 use Layerok\TgMall\Facades\Hydrator;
@@ -13,7 +12,6 @@ use Layerok\TgMall\Features\Index\ChangeCityHandler;
 use Layerok\TgMall\Features\Index\ListCitiesHandler;
 use Layerok\TgMall\Models\User;
 use Layerok\TgMall\Objects2\AppState;
-use Layerok\TgMall\Objects2\Order;
 use Layerok\TgMall\Stores\UserStore;
 use Layerok\TgMall\Features\Checkout\Handlers\ConfirmOrderHandler;
 use Layerok\Tgmall\Features\Cart\CartHandler;
@@ -146,15 +144,16 @@ class WebhookController
         $sessionId = $user->state->session ?? str_random(100);
 
         EmojisushiApi::init([
-            'sessionId' => $sessionId,
             'baseUrl' => (\Config::get('layerok.tgmall::api_url'))
         ]);
+        EmojisushiApi::setHeader('X-Session-Id', $sessionId);
 
         $user->state->session = $sessionId;
         $user->save();
 
         // it is required for the cart to function correctly
         Session::put('cart_session_id', $sessionId);
+
 
         switch ($update->detectType()) {
             case "callback_query":
@@ -204,9 +203,11 @@ class WebhookController
 
         if ($handlerName !== 'change_city') {
             try {
-                EmojisushiApi::getCity([
+                $city = EmojisushiApi::getCity([
                     'slug_or_id' => $user->state->city_id
                 ]);
+                $fakeReferer = 'https://'.$city->slug. '.emojisushi.com.ua';
+                EmojisushiApi::setHeader('Referer', $fakeReferer);
             } catch (ClientException) {
                 $handler = new ListCitiesHandler($user, $this->api);
                 $handler->make($update, []);
