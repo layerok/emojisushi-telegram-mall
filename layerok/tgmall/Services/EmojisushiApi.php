@@ -32,25 +32,22 @@ class EmojisushiApi {
 
     protected string $lang;
 
-    protected string $sessionId;
-
     protected string $baseUrl;
+
+    protected array $headers = [];
 
     protected HandlerStack $handler;
 
     public function init($conf) {
-        $this->sessionId = $conf['sessionId'];
         $this->lang = $conf['lang'] ?? 'uk';
         $this->baseUrl = $conf['baseUrl'];
 
         $this->handler = HandlerStack::create();
 
         $this->handler->push(Middleware::mapRequest(function (RequestInterface $request) {
-            if($this->sessionId) {
+            if(count($this->headers) > 0) {
                 $request = Utils::modifyRequest($request, [
-                    'set_headers' => [
-                        'X-Session-Id' => $this->sessionId
-                    ]
+                    'set_headers' => $this->headers
                 ]);
             }
 
@@ -67,6 +64,10 @@ class EmojisushiApi {
         ];
 
         $this->guzzleClient = new Client($baseConfig);
+    }
+
+    public function setHeader(string $name, string $value) {
+        $this->headers[$name] = $value;
     }
 
     /**

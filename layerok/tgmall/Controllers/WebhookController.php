@@ -152,6 +152,7 @@ class WebhookController
             'sessionId' => $sessionId,
             'baseUrl' => (Config::get('mall.api_url'))
         ]);
+        EmojisushiApi::setHeader('X-Session-Id', $sessionId);
 
         $user->state->session = $sessionId;
         $user->save();
