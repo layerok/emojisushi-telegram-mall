@@ -50,7 +50,7 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => ['daily', 'telegram'],
             'ignore_exceptions' => false,
         ],
 
@@ -114,6 +114,16 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+
+        'telegram' => [
+            'driver' => 'monolog',
+            'level'  => 'error',
+            'handler' => \Monolog\Handler\TelegramBotHandler::class,
+            'with'    => [
+                'apiKey' => env('MY_LOG_BOT_TOKEN'),
+                'channel' => env('MY_LOG_BOT_CHAT_ID')
+            ],
+        ]
     ],
 
 ];
