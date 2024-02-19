@@ -14,8 +14,7 @@ return [
     */
 
     'paths' => [
-        // Default Laravel Blade template location
-        // realpath(base_path('resources/views'))
+        resource_path('views'),
     ],
 
     /*
@@ -29,6 +28,9 @@ return [
     |
     */
 
-    'compiled' => realpath(storage_path('framework/views')),
+    'compiled' => env(
+        'VIEW_COMPILED_PATH',
+        realpath(storage_path('framework/views'))
+    ),
 
 ];

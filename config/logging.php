@@ -1,5 +1,9 @@
 <?php
 
+use Monolog\Handler\NullHandler;
+use Monolog\Handler\StreamHandler;
+use Monolog\Handler\SyslogUdpHandler;
+
 return [
 
     /*
@@ -17,6 +21,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Deprecations Log Channel
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the log channel that should be used to log warnings
+    | regarding deprecated PHP and library features. This allows you to get
+    | your application ready for upcoming major versions of dependencies.
+    |
+    */
+
+    'deprecations' => env('LOG_DEPRECATIONS_CHANNEL', 'null'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Log Channels
     |--------------------------------------------------------------------------
     |
@@ -31,49 +48,48 @@ return [
     */
 
     'channels' => [
-
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['daily', 'telegram'],
+            'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
 
         'single' => [
             'driver' => 'single',
-            'path' => storage_path('logs/system.log'),
-            'level' => 'debug',
-            'permission' => octdec((string) env('DEFAULT_FILE_MASK')) ?: null,
+            'path' => storage_path('logs/laravel.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
         ],
 
         'daily' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/system.log'),
-            'level' => 'debug',
+            'path' => storage_path('logs/laravel.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14,
-            'permission' => octdec((string) env('DEFAULT_FILE_MASK')) ?: null,
         ],
 
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
-            'username' => 'October CMS Log',
+            'username' => 'Laravel Log',
             'emoji' => ':boom:',
-            'level' => 'critical',
+            'level' => env('LOG_LEVEL', 'critical'),
         ],
 
         'papertrail' => [
             'driver' => 'monolog',
-            'level' => 'debug',
-            'handler' => Monolog\Handler\SyslogUdpHandler::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+            'handler' => env('LOG_PAPERTRAIL_HANDLER', SyslogUdpHandler::class),
             'handler_with' => [
                 'host' => env('PAPERTRAIL_URL'),
                 'port' => env('PAPERTRAIL_PORT'),
+                'connectionString' => 'tls://'.env('PAPERTRAIL_URL').':'.env('PAPERTRAIL_PORT'),
             ],
         ],
 
         'stderr' => [
             'driver' => 'monolog',
-            'handler' => Monolog\Handler\StreamHandler::class,
+            'level' => env('LOG_LEVEL', 'debug'),
+            'handler' => StreamHandler::class,
             'formatter' => env('LOG_STDERR_FORMATTER'),
             'with' => [
                 'stream' => 'php://stderr',
@@ -82,24 +98,22 @@ return [
 
         'syslog' => [
             'driver' => 'syslog',
-            'level' => 'debug',
+            'level' => env('LOG_LEVEL', 'debug'),
         ],
 
         'errorlog' => [
             'driver' => 'errorlog',
-            'level' => 'debug',
+            'level' => env('LOG_LEVEL', 'debug'),
         ],
 
-        'telegram' => [
+        'null' => [
             'driver' => 'monolog',
-            'level'  => 'error',
-            'handler' => \Monolog\Handler\TelegramBotHandler::class,
-            'with'    => [
-                'apiKey' => env('MY_LOG_BOT_TOKEN'),
-                'channel' => env('MY_LOG_BOT_CHAT_ID')
-            ],
-        ]
+            'handler' => NullHandler::class,
+        ],
 
+        'emergency' => [
+            'path' => storage_path('logs/laravel.log'),
+        ],
     ],
 
 ];

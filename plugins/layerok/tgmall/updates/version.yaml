@@ -1,6 +1,0 @@
-1.0.0:
-    - 'Init plugin'
-1.0.1:
-    - 'Create users table'
-    - create_layerok_tgmall_users.php
-

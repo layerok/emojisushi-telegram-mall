@@ -29,7 +29,7 @@ return [
     | mailers below. You are free to add additional mailers as required.
     |
     | Supported: "smtp", "sendmail", "mailgun", "ses",
-    |            "postmark", "log", "array"
+    |            "postmark", "log", "array", "failover"
     |
     */
 
@@ -42,7 +42,6 @@ return [
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
-            'auth_mode' => null,
         ],
 
         'ses' => [
@@ -92,8 +91,27 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'noreply@example.tld'),
-        'name' => env('MAIL_FROM_NAME', 'October CMS'),
+        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+        'name' => env('MAIL_FROM_NAME', 'Example'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Markdown Mail Settings
+    |--------------------------------------------------------------------------
+    |
+    | If you are using Markdown based email rendering, you may configure your
+    | theme and component paths here, allowing you to customize the design
+    | of the emails. Or, you may simply stick with the Laravel defaults!
+    |
+    */
+
+    'markdown' => [
+        'theme' => 'default',
+
+        'paths' => [
+            resource_path('views/vendor/mail'),
+        ],
     ],
 
 ];

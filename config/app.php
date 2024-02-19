@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Facade;
+
 return [
 
     /*
@@ -10,9 +12,10 @@ return [
     | This value is the name of your application. This value is used when the
     | framework needs to place the application's name in a notification or
     | any other location as required by the application or its packages.
+    |
     */
 
-    'name' => env('APP_NAME', 'October CMS'),
+    'name' => env('APP_NAME', 'Laravel'),
 
     /*
     |--------------------------------------------------------------------------
@@ -36,9 +39,6 @@ return [
     | stack traces will be shown on every error that occurs within your
     | application. If disabled, a simple generic error page is shown.
     |
-    | You can create a CMS page with route "/error" to set the contents
-    | of this page. Otherwise a default error page is shown.
-    |
     */
 
     'debug' => (bool) env('APP_DEBUG', false),
@@ -56,7 +56,20 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
-    'asset_url' => env('ASSET_URL'),
+    'asset_url' => env('ASSET_URL', null),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Timezone
+    |--------------------------------------------------------------------------
+    |
+    | Here you may specify the default timezone for your application, which
+    | will be used by the PHP date and date-time functions. We have gone
+    | ahead and set this to a sensible default for you out of the box.
+    |
+    */
+
+    'timezone' => 'UTC',
 
     /*
     |--------------------------------------------------------------------------
@@ -69,7 +82,7 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => 'uk',
 
     /*
     |--------------------------------------------------------------------------
@@ -83,6 +96,19 @@ return [
     */
 
     'fallback_locale' => 'ru',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Faker Locale
+    |--------------------------------------------------------------------------
+    |
+    | This locale will be used by the Faker PHP library when generating fake
+    | data for your database seeds. For example, this will be used to get
+    | localized telephone numbers, street address information and more.
+    |
+    */
+
+    'faker_locale' => 'en_US',
 
     /*
     |--------------------------------------------------------------------------
@@ -110,12 +136,49 @@ return [
     |
     */
 
-    'providers' => array_merge(include(base_path('modules/system/providers.php')), [
+    'providers' => [
 
-        // Illuminate\Html\HtmlServiceProvider::class, // Example
+        /*
+         * Laravel Framework Service Providers...
+         */
+        Illuminate\Auth\AuthServiceProvider::class,
+        Illuminate\Broadcasting\BroadcastServiceProvider::class,
+        Illuminate\Bus\BusServiceProvider::class,
+        Illuminate\Cache\CacheServiceProvider::class,
+        Illuminate\Foundation\Providers\ConsoleSupportServiceProvider::class,
+        Illuminate\Cookie\CookieServiceProvider::class,
+        Illuminate\Database\DatabaseServiceProvider::class,
+        Illuminate\Encryption\EncryptionServiceProvider::class,
+        Illuminate\Filesystem\FilesystemServiceProvider::class,
+        Illuminate\Foundation\Providers\FoundationServiceProvider::class,
+        Illuminate\Hashing\HashServiceProvider::class,
+        Illuminate\Mail\MailServiceProvider::class,
+        Illuminate\Notifications\NotificationServiceProvider::class,
+        Illuminate\Pagination\PaginationServiceProvider::class,
+        Illuminate\Pipeline\PipelineServiceProvider::class,
+        Illuminate\Queue\QueueServiceProvider::class,
+        Illuminate\Redis\RedisServiceProvider::class,
+        Illuminate\Auth\Passwords\PasswordResetServiceProvider::class,
+        Illuminate\Session\SessionServiceProvider::class,
+        Illuminate\Translation\TranslationServiceProvider::class,
+        Illuminate\Validation\ValidationServiceProvider::class,
+        Illuminate\View\ViewServiceProvider::class,
 
-        System\ServiceProvider::class,
-    ]),
+        /*
+         * Package Service Providers...
+         */
+
+        /*
+         * Application Service Providers...
+         */
+        App\Providers\AppServiceProvider::class,
+        App\Providers\AuthServiceProvider::class,
+        // App\Providers\BroadcastServiceProvider::class,
+        App\Providers\EventServiceProvider::class,
+        App\Providers\RouteServiceProvider::class,
+        \Layerok\TgMall\Plugin::class,
+
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -128,31 +191,8 @@ return [
     |
     */
 
-    'aliases' => array_merge(include(base_path('modules/system/aliases.php')), [
-
-        // 'Str' => Illuminate\Support\Str::class, // Example
-
-    ]),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Timezone
-    |--------------------------------------------------------------------------
-    |
-    | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. We have gone
-    | ahead and set this to a sensible default for you out of the box.
-    |
-    |-------------------------------- WARNING! --------------------------------
-    |
-    | Before you change this value, consider carefully if that is actually
-    | what you want to do. It is highly recommended that this is always set
-    | to UTC (as your server & DB timezone should be as well) and instead you
-    | use backend.timezone to set the default timezone used in the backend
-    | to display dates & times.
-    |
-    */
-
-    'timezone' => 'UTC',
+    'aliases' => Facade::defaultAliases()->merge([
+        // ...
+    ])->toArray(),
 
 ];

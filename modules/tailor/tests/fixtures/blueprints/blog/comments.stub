@@ -1,7 +1,0 @@
-name: Comments
-handle: blogComments
-type: entry
-
-fields:
-    comment:
-        label: Description
