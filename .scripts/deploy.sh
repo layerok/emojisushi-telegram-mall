@@ -25,6 +25,8 @@ php artisan optimize
 # Run database migrations
 php artisan migrate --force
 
+curl "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${APP_URL}/webhook"
+
 # Exit maintenance mode
 php artisan up
 
