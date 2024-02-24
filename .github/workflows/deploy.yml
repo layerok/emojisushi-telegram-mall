@@ -20,4 +20,4 @@ jobs:
           username: ${{ secrets.USERNAME }}
           port: ${{ secrets.PORT }}
           key: ${{ secrets.SSHKEY }}
-          script: "cd domains/emojisushi.com.ua/emojisushi-telegram && ./.scripts/deploy.sh"
+          script: "cd domains/emojisushi.com.ua/emojisushi-telegram && chmod 777 ./.scripts/deploy.sh && ./.scripts/deploy.sh"
