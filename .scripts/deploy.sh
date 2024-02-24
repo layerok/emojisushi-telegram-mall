@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+source .env
+
 echo "Deployment started ..."
 
 # Enter maintenance mode or return true
@@ -25,7 +27,11 @@ php artisan optimize
 # Run database migrations
 php artisan migrate --force
 
-curl "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${APP_URL}/webhook"
+WEBHOOK_URL="${APP_URL}/webhook"
+
+echo "Webhook url: ${WEBHOOK_URL}"
+
+curl "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${WEBHOOK_URL}"
 
 # Exit maintenance mode
 php artisan up
