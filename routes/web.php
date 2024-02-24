@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\WebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,3 +17,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::post('/webhook', WebhookController::class);
+
+// to set webhook
+// https://api.telegram.org/bot{{token}}/setWebhook?url={{ngrokUrl}}/webhook
+
+// to proxy webhook requests
+// ngrok http {{host}} --host-header=rewrite

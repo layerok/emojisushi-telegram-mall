@@ -29,7 +29,6 @@
     "autoload": {
         "psr-4": {
             "App\\": "app/",
-            "Layerok\\TgMall\\": "layerok/tgmall/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         }

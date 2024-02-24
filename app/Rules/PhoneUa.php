@@ -21,7 +21,7 @@ class PhoneUa implements InvokableRule
         ([0-9]{3})|([0-9]{2})(\-|\s)?([0-9]{3})(\-|\s)?([0-9]{2}))$/";
 
          if(!preg_match($regex, $value)) {
-             $fail("layerok.tgmall::lang.validation.phone_ua")->translate();
+             $fail("lang.validation.phone_ua")->translate();
          }
     }
 }
