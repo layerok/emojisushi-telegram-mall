@@ -13,6 +13,7 @@
         "laravel/sanctum": "^2.14",
         "laravel/tinker": "^2.7",
         "phpdocumentor/reflection-docblock": "^5.3",
+        "phpstan/phpstan": "^1.10",
         "symfony/property-access": "^6.4",
         "symfony/property-info": "6.3",
         "symfony/serializer": "^6.4"
