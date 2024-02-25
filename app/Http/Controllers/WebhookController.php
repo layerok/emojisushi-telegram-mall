@@ -98,7 +98,7 @@ class WebhookController
                         $this->handleUpdate($event);
                     }
                 }  catch (\Throwable $e) {
-                    Log::error($e->getMessage() . PHP_EOL . $e->getTraceAsString());
+                    $this->handleError($e);
                 }
 
                 if ($event->update->isType('callback_query')) {
@@ -109,9 +109,29 @@ class WebhookController
             });
             $this->api->commandsHandler(true);
         } catch (\Throwable $e) {
-            Log::error($e->getMessage() . PHP_EOL . $e->getTraceAsString());
+           $this->handleError($e);
         }
 
+    }
+
+    public function handleError(\Throwable $e) {
+        if(!$this->isIgnored($e)) {
+            Log::error($e->getMessage() . PHP_EOL . $e->getTraceAsString());
+        }
+    }
+
+    public function isIgnored(\Throwable $e): bool {
+        $patterns = [
+            "Bad Request: query is too old",
+            "Bad Request: message is not modified"
+        ];
+
+        foreach($patterns as $pattern) {
+            if(str_contains($e->getMessage(), $pattern)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function handleUpdate(UpdateWasReceived $event)
@@ -230,6 +250,6 @@ class WebhookController
 
     public function isMaintenance(): bool
     {
-        return env('TG_MALL_IS_MAINTENANCE_MODE', false);
+        return app()->maintenanceMode()->active();
     }
 }
