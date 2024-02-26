@@ -30,4 +30,7 @@ class Product {
      * @var Price[]
      */
     public array $prices;
+
+
+    public bool $published;
 }

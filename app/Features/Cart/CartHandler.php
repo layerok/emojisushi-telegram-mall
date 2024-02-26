@@ -1,4 +1,6 @@
-<?php namespace App\Features\Cart;
+<?php
+
+namespace App\Features\Cart;
 
 use App\Classes\Callbacks\Handler;
 use App\Classes\Html;
@@ -43,6 +45,32 @@ class CartHandler extends Handler
         }
     }
 
+    public function eraseCartProductMessage()
+    {
+        $message = $this->getUpdate()->getMessage();
+        if($message->getCaption()) {
+            $this->api->editMessageCaption([
+                'message_id' => $this->getUpdate()->getMessage()->message_id,
+                'chat_id' => $this->getUpdate()->getChat()->id,
+                'caption' => sprintf(
+                    \Lang::get('lang.telegram.texts.product_no_longer_exists'),
+                    $this->getCartProductTitleFromCaption(
+                        $message->getCaption()
+                    )
+                )
+            ]);
+        } else {
+            $this->api->editMessageText([
+                'message_id' => $this->getUpdate()->getMessage()->message_id,
+                'chat_id' => $this->getUpdate()->getChat()->id,
+                'text' => sprintf(
+                    \Lang::get('lang.telegram.texts.product_no_longer_exists'),
+                    $message->getText()
+                )
+            ]);
+        }
+    }
+
     public function updateProduct()
     {
         $cart = EmojisushiApi::getCart();
@@ -50,11 +78,15 @@ class CartHandler extends Handler
         /**
          * @var CartProduct $cartProduct
          */
-        $cartProduct = collect($cart->data)->first(function(CartProduct $cartProduct) {
+        $cartProduct = collect($cart->data)->first(function (CartProduct $cartProduct) {
             return $cartProduct->id === $this->arguments['id'];
         });
 
-        // todo: check if cart product exists
+        $cartProductExists = $this->checkCartProduct($cart, $cartProduct);
+
+        if (!$cartProductExists) {
+            return;
+        }
 
         if (isset($cartProduct) && ($cartProduct->quantity + $this->arguments['qty']) < 1) {
             return;
@@ -62,53 +94,78 @@ class CartHandler extends Handler
 
         $cart = EmojisushiApi::addCartProduct(
             array_merge([
-                'product_id'=> $cartProduct->product->id,
+                'product_id' => $cartProduct->product->id,
                 'quantity' => $this->arguments['qty']
             ], $cartProduct->variant ? [
                 'variant_id' => $cartProduct->variant->id,
-            ]: [])
+            ] : [])
         );
 
-        $cartProduct = collect($cart->data)->first(function(CartProduct $cartProduct) {
+        $cartProduct = collect($cart->data)->first(function (CartProduct $cartProduct) {
             return $cartProduct->id === $this->arguments['id'];
         });
-
-        $markup = new CartProductKeyboard($cartProduct);
 
         $this->api->editMessageReplyMarkup([
             'message_id' => $this->getUpdate()->getMessage()->message_id,
             'chat_id' => $this->getUpdate()->getChat()->id,
-            'reply_markup' => $markup->getKeyboard()
+            'reply_markup' => (new CartProductKeyboard($cartProduct))->getKeyboard()
         ]);
 
         $this->editCartFooterMessage($cart);
 
     }
 
+    public function getCartProductTitleFromCaption(string $caption)
+    {
+        $matches = [];
+        preg_match('/.*/', $caption, $matches);
+        return $matches[0];
+    }
+
     public function removeProduct()
     {
+        $cart = EmojisushiApi::getCart();
+
+        /** @var CartProduct $cartProduct */
+        $cartProduct = collect($cart->data)->first(function (CartProduct $cartProduct) {
+            return $this->arguments['id'] === $cartProduct->id;
+        });
+
+        $cartProductExists = $this->checkCartProduct($cart, $cartProduct);
+
+        if (!$cartProductExists) {
+            return;
+        }
+
+        $cart = EmojisushiApi::removeFromCart([
+            'cart_product_id' => $cartProduct->id
+        ]);
+
         $this->api->deleteMessage([
             'chat_id' => $this->getUpdate()->getChat()->id,
             'message_id' => $this->getUpdate()->getMessage()->message_id
         ]);
 
-        $cart = EmojisushiApi::getCart();
+        $this->editCartFooterMessage($cart);
+    }
 
-        /** @var CartProduct $cartProduct */
-        $cartProduct = collect($cart->data)->first(function(CartProduct $cartProduct) {
-            return $this->arguments['id'] === $cartProduct->id;
-        });
-
-        if(!isset($cartProduct)) {
-            return;
+    public function checkCartProduct(Cart $cart, ?CartProduct $cartProduct)
+    {
+        if (!isset($cartProduct)) {
+            $this->eraseCartProductMessage();
+            $this->editCartFooterMessage($cart);
+            return false;
         }
 
-        $cart = EmojisushiApi::addCartProduct([
-            'product_id' => $cartProduct->product->id,
-            'quantity' => $cartProduct->quantity * -1
-        ]);
-
-        $this->editCartFooterMessage($cart);
+        if (!$cartProduct->product->published) {
+            $cart = EmojisushiApi::removeFromCart([
+                'cart_product_id' => $cartProduct->id
+            ]);
+            $this->eraseCartProductMessage();
+            $this->editCartFooterMessage($cart);
+            return false;
+        }
+        return true;
     }
 
 
@@ -146,15 +203,15 @@ class CartHandler extends Handler
     {
         $caption = sprintf(
             "<b>%s</b>\n\n%s",
-                $cartProduct->product->name,
-                Html::strip($cartProduct->product->description_short)
-            );
+            $cartProduct->product->name,
+            Html::strip($cartProduct->product->description_short)
+        );
 
         $markup = new CartProductKeyboard($cartProduct);
 
         $keyboard = $markup->getKeyboard();
 
-        if(\Cache::has("telegram.files." . $cartProduct->product->id)) {
+        if (\Cache::has("telegram.files." . $cartProduct->product->id)) {
             $response = $this->replyWithPhoto([
                 'photo' => \Cache::get("telegram.files." . $cartProduct->product->id),
                 'caption' => $caption,
@@ -166,7 +223,7 @@ class CartHandler extends Handler
                 "telegram.files." . $cartProduct->product->id,
                 $response->getPhoto()->last()['file_id']
             );
-        } else if(isset($cartProduct->product->image_sets[0]->images[0]->path)) {
+        } else if (isset($cartProduct->product->image_sets[0]->images[0]->path)) {
             $this->replyWithPhoto([
                 'photo' => InputFile::create($cartProduct->product->image_sets[0]->images[0]->path),
                 'caption' => $caption,

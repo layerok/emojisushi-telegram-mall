@@ -37,7 +37,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static Cart getCart(array $params = [], array $guzzleOptions = [])
  * @method static CartProduct getCartProduct(array $params = [], array $guzzleOptions = [])
  * @method static Cart addCartProduct(array $params = [], array $guzzleOptions = [])
- * @method static Cart removeCartProduct(array $params = [], array $guzzleOptions = [])
+ * @method static Cart removeFromCart(array $params = [], array $guzzleOptions = [])
  * @method static PaymentMethodsList getPaymentMethods(array $params = [], array $guzzleOptions = [])
  * @method static PaymentMethod getPaymentMethod(array $params = [], array $guzzleOptions = [])
  * @method static ShipmentMethodsList getShippingMethods(array $params = [], array $guzzleOptions = [])

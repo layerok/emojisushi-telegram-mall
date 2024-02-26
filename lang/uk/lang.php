@@ -52,7 +52,8 @@ return [
             "type_your_phone" => "Введіть Ваш телефон в форматі +380xxxxxxxxx",
             "add_sticks" => "Вкажіть кількість персон",
             "try_again" => "Спробуйте знову",
-            "order_comment" => "Коментар до замовлення"
+            "order_comment" => "Коментар до замовлення",
+            "product_no_longer_exists" => "Продукта '%s' більше не існує"
         ],
 
         'receipt' => [
