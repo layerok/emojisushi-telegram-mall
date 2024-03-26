@@ -17,7 +17,6 @@ class Spot {
     public ?int $is_main;
     public ?string $phones;
     public ?int $poster_account_id;
-    public ?int $poster_id;
     public ?string $slug;
     public ?int $published;
     public ?string $updated_at;

@@ -26,16 +26,10 @@ class PreConfirmOrderHandler extends Handler
         $cart = EmojisushiApi::getCart();
 
         $posterProducts = collect($cart->data)->map(function (CartProduct $cartProduct) {
-            $posterProduct = [
+            return [
                 'name' => $cartProduct->product->name,
-                'product_id' => $cartProduct->product->poster_id,
                 'count' => $cartProduct->quantity,
             ];
-            if (isset($cartProduct->variant->poster_id)) {
-                $posterProduct['modificator_id'] = $cartProduct->variant->poster_id;
-            }
-
-            return $posterProduct;
         })->values()->toArray();
 
         $receipt = new Receipt();

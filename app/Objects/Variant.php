@@ -9,8 +9,6 @@ class Variant {
 
     public bool $published;
 
-    public ?int $poster_id;
-
     public Product $product;
 
     public int $product_id;

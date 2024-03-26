@@ -39,6 +39,7 @@ use Illuminate\Support\Str;
 use Telegram\Bot\Api;
 use Telegram\Bot\Commands\HelpCommand;
 use Telegram\Bot\Events\UpdateWasReceived;
+use Telegram\Bot\Keyboard\Keyboard;
 use Telegram\Bot\Objects\Update;
 
 
@@ -88,17 +89,12 @@ class WebhookController
             ]);
 
             $this->api->on(UpdateWasReceived::class, function (UpdateWasReceived $event) {
+
                 try {
-                    if ($this->isMaintenance()) {
-                        $this->api->sendMessage([
-                            'text' => \Lang::get('lang.telegram.maintenance_msg'),
-                            'chat_id' => $event->update->getChat()->id
-                        ]);
-                    } else {
-                        $this->handleUpdate($event);
-                    }
-                }  catch (\Throwable $e) {
-                    $this->handleError($e);
+                    $this->handleUpdate($event);
+                } catch (\Throwable $e) {
+                    $this->notifyUserAboutError($event);
+                    $this->logError($e);
                 }
 
                 if ($event->update->isType('callback_query')) {
@@ -109,25 +105,46 @@ class WebhookController
             });
             $this->api->commandsHandler(true);
         } catch (\Throwable $e) {
-           $this->handleError($e);
+            $this->logError($e);
         }
-
     }
 
-    public function handleError(\Throwable $e) {
-        if(!$this->isIgnored($e)) {
+    public function notifyUserAboutError(UpdateWasReceived $event) {
+        $keyboard = (new Keyboard())->inline();
+        $keyboard->row([
+            Keyboard::inlineButton([
+                'text' => \Lang::get('lang.telegram.use_our_website'),
+                'url' => 'https://emojisushi.com.ua',
+            ])
+        ])->row([]);
+        try {
+            $this->api->sendMessage([
+                'text' => \Lang::get('lang.telegram.unexpected_error_message'),
+                'chat_id' => $event->update->getChat()->id,
+                'reply_markup' => $keyboard
+            ]);
+        } catch (\Throwable) {
+            // don't throw otherwise telegram will keep sending requests to the webhook
+        }
+    }
+
+
+    public function logError(\Throwable $e)
+    {
+        if (!$this->isIgnored($e)) {
             Log::error($e->getMessage() . PHP_EOL . $e->getTraceAsString());
         }
     }
 
-    public function isIgnored(\Throwable $e): bool {
+    public function isIgnored(\Throwable $e): bool
+    {
         $patterns = [
             "Bad Request: query is too old",
             "Bad Request: message is not modified"
         ];
 
-        foreach($patterns as $pattern) {
-            if(str_contains($e->getMessage(), $pattern)) {
+        foreach ($patterns as $pattern) {
+            if (str_contains($e->getMessage(), $pattern)) {
                 return true;
             }
         }
@@ -136,6 +153,14 @@ class WebhookController
 
     public function handleUpdate(UpdateWasReceived $event)
     {
+        if ($this->isMaintenance()) {
+            $this->api->sendMessage([
+                'text' => \Lang::get('lang.telegram.maintenance_msg'),
+                'chat_id' => $event->update->getChat()->id
+            ]);
+            return;
+        }
+
         $update = $event->update;
 
         $user = $this->userStore->findByChat($update->getChat()) ??
@@ -156,7 +181,7 @@ class WebhookController
         }
 
         // todo: user spatie/laravel-data package
-        if(is_null($user->state)) {
+        if (is_null($user->state)) {
             $user->state = Hydrator::hydrate(AppState::class, []);
         }
 
@@ -236,7 +261,7 @@ class WebhookController
         $user->state->message_handler = null;
         $user->save();
 
-        $handler = collect($this->handlers)->mapWithKeys(function ($handler) use($user) {
+        $handler = collect($this->handlers)->mapWithKeys(function ($handler) use ($user) {
             $inst = new $handler($user, $this->api);
             return [$inst->getName() => $inst];
         })->get($handlerName);

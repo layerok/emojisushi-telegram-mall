@@ -9,8 +9,6 @@ class Product {
 
     public ?string $description;
 
-    public ?int $poster_id;
-
     public ?string $description_short;
 
     public string $slug;
